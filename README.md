@@ -1,2 +1,3 @@
-# Ansible-FRP
-Ansible automation collection for deploying and configuring FRP (Fast Reverse Proxy)
+# Ansible Collection - wiphoo.frp
+
+Documentation for the collection.
