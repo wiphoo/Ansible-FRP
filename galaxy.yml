@@ -1,4 +1,4 @@
-#SPDX-License-Identifier: MIT-0
+# SPDX-License-Identifier: MIT-0
 ### REQUIRED
 # The namespace of the collection. This can be a company/brand/organization or product namespace under which all
 # content lives. May only contain alphanumeric lowercase characters and underscores. Namespaces cannot start with
@@ -17,25 +17,25 @@ readme: README.md
 # A list of the collection's content authors. Can be just the name or in the format 'Full Name <email> (url)
 # @nicks:irc/im.site#channel'
 authors:
-- your name <example@domain.com>
+  - Wiphoo <me@wiphoo.dev>
 
 
 ### OPTIONAL but strongly recommended
 # A short summary description of the collection
-description: your collection description
+description: An Ansible collection for installing and managing Fast Reverse Proxy (frp) on Linux systems.
 
 # Either a single license or a list of licenses for content inside of a collection. Ansible Galaxy currently only
 # accepts L(SPDX,https://spdx.org/licenses/) licenses. This key is mutually exclusive with 'license_file'
 license:
-- GPL-2.0-or-later
+  - MIT
 
 # The path to the license file for the collection. This path is relative to the root of the collection. This key is
 # mutually exclusive with 'license'
-license_file: ''
+license_file: 'LICENSE'
 
 # A list of tags you want to associate with the collection for indexing/searching. A tag name has the same character
 # requirements as 'namespace' and 'name'
-tags: []
+tags: [frp, proxy, reverse-proxy, networking, installation, security, hardening, compliance]
 
 # Collections that this collection requires to be installed for it to be usable. The key of the dict is the
 # collection label 'namespace.name'. The value is a version range
@@ -44,22 +44,43 @@ tags: []
 dependencies: {}
 
 # The URL of the originating SCM repository
-repository: http://example.com/repository
+repository: https://github.com/wiphoo/Ansible-FRP
 
 # The URL to any online docs
-documentation: http://docs.example.com
+documentation: https://wiphoo.github.io/Ansible-FRP/
 
 # The URL to the homepage of the collection/project
-homepage: http://example.com
+homepage: https://wiphoo.dev
 
 # The URL to the collection issue tracker
-issues: http://example.com/issue/tracker
+issues: https://github.com/wiphoo/Ansible-FRP/issues
 
 # A list of file glob-like patterns used to filter any files or directories that should not be included in the build
 # artifact. A pattern is matched from the relative path of the file or directory of the collection directory. This
 # uses 'fnmatch' to match the files or directories. Some directories and files like 'galaxy.yml', '*.pyc', '*.retry',
 # and '.git' are always filtered. Mutually exclusive with 'manifest'
-build_ignore: []
+build_ignore:
+  - .venv/
+  - .venv
+  - .ansible/
+  - .ansible
+  - collections/
+  - collections/*
+  - collections/**/*
+  - .mypy_cache/
+  - .mypy_cache/**/*
+  - .pytest_cache/
+  - __pycache__/
+  - "*.pyc"
+  - .coverage
+  - htmlcov/
+  - .tox/
+  - .cache/
+  - "*.retry"
+  - test-results/
+  - test-output/
+  - .DS_Store
+  - Thumbs.db
 
 # A dict controlling use of manifest directives used in building the collection artifact. The key 'directives' is a
 # list of MANIFEST.in style
@@ -67,4 +88,3 @@ build_ignore: []
 # 'omit_default_directives' is a boolean that controls whether the default directives are used. Mutually exclusive
 # with 'build_ignore'
 # manifest: null
-

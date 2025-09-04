@@ -1,0 +1,36 @@
+---
+# Default variables for frp_install role
+# These can be overridden by users
+
+# User and group configuration
+frp_install_user: frp
+frp_install_group: frp
+
+# Directory configuration (can be overridden)
+frp_install_tmp_dir: "/tmp"
+frp_install_dir: "/usr/local/bin/frp"
+frp_install_config_dir: "/etc/frp"
+frp_install_log_dir: "/var/log/frp"
+
+frp_install_dirs:
+  - "{{ frp_install_dir }}"
+  - "{{ frp_install_log_dir }}"
+  - "{{ frp_install_config_dir }}"
+
+# System detection (leave empty for auto-detection)
+frp_install_system: ""
+frp_install_architecture: ""
+
+# Installation options
+frp_install_cleanup_tmp: true
+frp_install_create_service: true
+frp_install_configure_firewall: true
+frp_install_verify_checksums: true
+
+# Files to install (can be overridden to install only specific binaries)
+frp_install_files:
+  - "frps"
+  - "frpc"
+
+# Version (can be overridden)
+frp_install_version: "0.63.0"  # Specify the version of frp to install

@@ -1,0 +1,128 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        echo "UV_CACHE_DIR=$HOME/.uv-cache" >> $GITHUB_ENV
+
+    - name: Cache uv dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.uv-cache
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
+
+    - name: Install Ansible
+      run: |
+        uv pip install --system ansible
+
+    - name: Install ansible-lint
+      run: |
+        uv pip install --system ansible-lint
+
+    - name: Lint Ansible code
+      run: |
+        ansible-lint roles/
+
+    - name: Build collection
+      run: |
+        ansible-galaxy collection build
+
+    - name: Test collection installation
+      run: |
+        ansible-galaxy collection install wiphoo-frp-*.tar.gz --force -p ~/.ansible/collections
+        ansible-galaxy collection list | grep wiphoo.frp
+
+    - name: Install test dependencies
+      run: |
+        uv pip install --system -e ".[test]"
+
+    - name: Run pytest tests
+      run: |
+        pytest tests/ -v --cov=tests --cov-report=xml --cov-report=term-missing
+      env:
+        PY_COLORS: '1'
+
+    - name: Publish to Ansible Galaxy
+      run: |
+        ansible-galaxy collection publish wiphoo-frp-*.tar.gz --api-key ${{ secrets.ANSIBLE_GALAXY_API_KEY }}
+
+    - name: Create GitHub release assets
+      run: |
+        # Upload collection tarball to GitHub release
+        gh release upload ${{ github.event.release.tag_name }} wiphoo-frp-*.tar.gz
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  docs-deploy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install docs dependencies
+      run: |
+        uv pip install --system -e ".[dev]"
+
+    - name: Build documentation
+      run: |
+        mkdocs build --clean
+
+    - name: Deploy documentation to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./site
+        cname: wiphoo.github.io
+
+  notify:
+    runs-on: ubuntu-latest
+    needs: [release, docs-deploy]
+    if: always() && github.event_name == 'release'
+    steps:
+    - name: Notify on success
+      if: needs.release.result == 'success' && needs.docs-deploy.result == 'success'
+      run: |
+        echo "🎉 Release ${{ github.event.release.tag_name }} published successfully!"
+        echo "📦 Collection published to Ansible Galaxy"
+        echo "📚 Documentation deployed to GitHub Pages"
+
+    - name: Notify on failure
+      if: needs.release.result == 'failure' || needs.docs-deploy.result == 'failure'
+      run: |
+        echo "❌ Release failed!"
+        echo "Release job: ${{ needs.release.result }}"
+        echo "Docs deploy job: ${{ needs.docs-deploy.result }}"

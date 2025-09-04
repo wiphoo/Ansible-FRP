@@ -1,0 +1,43 @@
+site_name: Ansible Collection - wiphoo.frp
+site_description: Documentation for the wiphoo.frp Ansible collection
+site_author: Wiphoo
+site_url: https://wiphoo.github.io/Ansible-FRP/
+
+theme:
+  name: material
+  palette:
+    primary: blue
+    accent: blue
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - toc.integrate
+    - search.suggest
+    - search.highlight
+
+plugins:
+  - search
+  - minify:
+      minify_html: true
+
+nav:
+  - Home: README.md
+  - Installation: docs/installation.md
+  - Usage: docs/usage.md
+  - Roles:
+      - frp_install: docs/roles/frp_install.md
+  - API Reference: docs/api.md
+  - Contributing: docs/contributing.md
+  - Security: SECURITY.md
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed
+  - admonition
+  - pymdownx.details
+  - pymdownx.emoji

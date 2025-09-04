@@ -1,0 +1,79 @@
+---
+- name: Converge
+  hosts: all
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: wiphoo.frp.frp_install
+
+  post_tasks:
+    - name: Verify frp binaries are installed
+      ansible.builtin.stat:
+        path: "{{ frp_install_dir }}/{{ item }}"
+      loop: "{{ frp_install_files }}"
+      register: frp_binaries
+
+    - name: Assert frp binaries exist
+      ansible.builtin.assert:
+        that: item.stat.exists
+        fail_msg: "frp binary {{ item.item }} was not installed"
+      loop: "{{ frp_binaries.results }}"
+
+    - name: Verify frp user exists
+      ansible.builtin.getent:
+        database: passwd
+        key: "{{ frp_install_user }}"
+
+    - name: Verify frp group exists
+      ansible.builtin.getent:
+        database: group
+        key: "{{ frp_install_group }}"
+
+    - name: Verify directories exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop: "{{ frp_install_dirs }}"
+      register: frp_directories
+
+    - name: Assert directories exist
+      ansible.builtin.assert:
+        that: item.stat.exists
+        fail_msg: "Directory {{ item.item }} was not created"
+      loop: "{{ frp_directories.results }}"
+
+    - name: Verify frp service can be started (if systemd is available)
+      ansible.builtin.systemd:
+        name: frps
+        state: started
+        enabled: true
+      ignore_errors: true
+      register: service_check
+
+    - name: Check if frp binaries are executable
+      ansible.builtin.command: "ls -la {{ frp_install_dir }}"
+      register: ls_output
+      changed_when: false
+
+    - name: Assert binaries are executable
+      ansible.builtin.assert:
+        that: "'-rwxr-xr-x' in ls_output.stdout"
+        fail_msg: "frp binaries are not executable"
+
+    - name: Verify frp service files exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - "/etc/systemd/system/frps.service"
+        - "/etc/systemd/system/frpc.service"
+        - "{{ frp_install_config_dir }}/frps.toml"
+        - "{{ frp_install_config_dir }}/frpc.toml"
+      register: service_files
+      when: frp_install_create_service | default(true) | bool
+
+    - name: Assert service files exist
+      ansible.builtin.assert:
+        that: item.stat.exists
+        fail_msg: "Service file {{ item.item }} was not created"
+      loop: "{{ service_files.results }}"
+      when: frp_install_create_service | default(true) | bool

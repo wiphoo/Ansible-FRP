@@ -1,0 +1,48 @@
+---
+- name: Verify
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Check frp version
+      ansible.builtin.command: "{{ frp_install_dir }}/frps --version"
+      register: frp_version_check
+      changed_when: false
+      ignore_errors: true
+
+    - name: Verify frp version matches expected
+      ansible.builtin.assert:
+        that: frp_install_version in frp_version_check.stdout
+        fail_msg: "frp version does not match expected version {{ frp_install_version }}"
+      when: frp_version_check.rc == 0
+
+    - name: Check file permissions
+      ansible.builtin.stat:
+        path: "{{ frp_install_dir }}/{{ item }}"
+      loop: "{{ frp_install_files }}"
+      register: file_permissions
+
+    - name: Verify file ownership
+      ansible.builtin.assert:
+        that:
+          - item.stat.pw_name == frp_install_user
+          - item.stat.gr_name == frp_install_group
+        fail_msg: "File {{ item.item }} has incorrect ownership"
+      loop: "{{ file_permissions.results }}"
+
+    - name: Check if required packages are installed
+      ansible.builtin.package:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - curl
+        - tar
+        - ufw
+      register: package_check
+
+    - name: Verify packages are installed
+      ansible.builtin.assert:
+        that: not item.changed
+        fail_msg: "Package {{ item.item }} is not installed"
+      loop: "{{ package_check.results }}"

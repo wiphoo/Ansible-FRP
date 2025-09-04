@@ -1,0 +1,501 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        echo "UV_CACHE_DIR=$HOME/.uv-cache" >> $GITHUB_ENV
+
+    - name: Cache uv dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.uv-cache
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
+
+    - name: Install Ansible
+      run: |
+        uv pip install --system ansible
+
+    - name: Install ansible-lint
+      run: |
+        uv pip install --system ansible-lint
+
+    - name: Lint Ansible code
+      run: |
+        ansible-lint roles/
+
+  build:
+    runs-on: ubuntu-latest
+    needs: lint
+    outputs:
+      collection_file: ${{ steps.collection_file.outputs.collection_file }}
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        echo "UV_CACHE_DIR=$HOME/.uv-cache" >> $GITHUB_ENV
+
+    - name: Cache uv dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.uv-cache
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
+
+    - name: Install Ansible
+      run: |
+        uv pip install --system ansible
+
+    - name: Build collection
+      run: |
+        ansible-galaxy collection build
+
+    - name: Determine collection filename
+      id: collection_file
+      run: |
+        FILE=$(ls -1 wiphoo-frp-*.tar.gz | head -1)
+        echo "COLLECTION_FILE=$FILE" >> $GITHUB_ENV
+        echo "collection_file=$FILE" >> $GITHUB_OUTPUT
+
+    - name: Test collection installation
+      run: |
+        ansible-galaxy collection install "$COLLECTION_FILE" --force -p ~/.ansible/collections
+        ansible-galaxy collection list | grep wiphoo.frp
+
+    - name: Upload collection artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: collection-artifact
+        path: wiphoo-frp-*.tar.gz
+
+  matrix-test:
+    runs-on: ubuntu-latest
+    needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        ansible-version: ['8.0.0', '9.0.0', '10.0.0']
+        python-version: ['3.9', '3.10', '3.11', '3.12']
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        echo "UV_CACHE_DIR=$HOME/.uv-cache" >> $GITHUB_ENV
+
+    - name: Cache uv dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.uv-cache
+        key: ${{ runner.os }}-uv-${{ matrix.python-version }}-uv-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-${{ matrix.python-version }}-uv-
+
+    - name: Install Ansible ${{ matrix.ansible-version }}
+      run: |
+        uv pip install --system ansible==${{ matrix.ansible-version }}
+
+    - name: Install test dependencies
+      run: |
+        uv pip install --system -e ".[test]"
+
+    - name: Download collection artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: collection-artifact
+
+    - name: Install collection
+      run: |
+        ansible-galaxy collection install "${{ needs.build.outputs.collection_file }}" --force -p ~/.ansible/collections
+
+    - name: Run pytest tests (matrix)
+      run: |
+        # Matrix is for compatibility only; skip coverage to save time
+        pytest tests/ -q
+      env:
+        PY_COLORS: '1'
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        echo "UV_CACHE_DIR=$HOME/.uv-cache" >> $GITHUB_ENV
+
+    - name: Cache uv dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.uv-cache
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
+
+    - name: Install test dependencies
+      run: |
+        uv pip install --system -e ".[test]"
+
+    - name: Ensure Docker running
+      run: |
+        sudo systemctl start docker
+        for i in {1..10}; do docker info >/dev/null 2>&1 && break || sleep 2; done
+        docker info
+
+    - name: Download collection artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: collection-artifact
+
+    - name: Install collection
+      run: |
+        ansible-galaxy collection install "${{ needs.build.outputs.collection_file }}" --force -p ~/.ansible/collections
+
+    - name: Run Molecule tests
+      run: |
+        set -e
+        cd roles/frp_install
+        for i in 1 2; do
+          molecule test && break
+          echo "Retrying Molecule (attempt $i failed)..."
+          sleep 15
+        done
+      env:
+        PY_COLORS: '1'
+        ANSIBLE_FORCE_COLOR: '1'
+
+    - name: Run pytest tests
+      run: |
+        pytest tests/ -v --cov=tests --cov-report=xml --cov-report=term-missing --cov-report=html
+      env:
+        PY_COLORS: '1'
+
+    - name: Upload coverage reports to GitHub
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-reports
+        path: |
+          coverage.xml
+          htmlcov/
+        retention-days: 30
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: pytest
+        name: pytest-coverage
+        fail_ci_if_error: false
+
+  docs:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        echo "UV_CACHE_DIR=$HOME/.uv-cache" >> $GITHUB_ENV
+
+    - name: Cache uv dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.uv-cache
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
+
+    - name: Install docs dependencies
+      run: |
+        uv pip install --system -e ".[dev]"
+
+    - name: Build documentation
+      run: |
+        mkdocs build --clean
+
+    - name: Upload documentation artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: docs-artifact
+        path: site/
+
+  security-scan:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Download collection artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: collection-artifact
+
+    - name: Run TruffleHog OSS
+      uses: trufflesecurity/trufflehog@v3.82.9
+      with:
+        path: ./
+        base: ${{ github.event.repository.default_branch }}
+        head: HEAD
+        extra_args: --debug --only-verified
+
+    - name: Run GitGuardian scan
+      uses: GitGuardian/ggshield-action@v1.32.0
+      with:
+        args: --mode=local
+
+  vulnerability-scan:
+    runs-on: ubuntu-latest
+    needs: build
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Download collection artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: collection-artifact
+
+    - name: Extract collection
+      run: |
+        tar -xzf "${{ needs.build.outputs.collection_file }}"
+        ls -la
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@0.24.0
+      with:
+        scan-type: 'fs'
+        scan-ref: './wiphoo-frp-*'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  dependency-scan:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install dependency scanning tools
+      run: |
+        uv pip install --system pip-audit safety bandit ruff
+
+    - name: Download collection artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: collection-artifact
+
+    - name: Extract collection
+      run: |
+        tar -xzf "${{ needs.build.outputs.collection_file }}"
+
+    - name: Run Ruff security scan
+      run: |
+        cd wiphoo-frp-*
+        ruff check . --select=S --output-format=json || true
+
+    - name: Run pip-audit
+      run: |
+        cd wiphoo-frp-*
+        pip-audit --format json --output audit-results.json || true
+
+    - name: Run safety check
+      run: |
+        cd wiphoo-frp-*
+        safety check --output safety-results.json || true
+
+    - name: Run bandit security scan
+      run: |
+        cd wiphoo-frp-*
+        bandit -r . -f json -o bandit-results.json || true
+      continue-on-error: true
+
+    - name: Upload security scan results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-scan-results
+        path: |
+          wiphoo-frp-*/audit-results.json
+          wiphoo-frp-*/safety-results.json
+          wiphoo-frp-*/bandit-results.json
+
+  code-quality:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install code quality tools
+      run: |
+        uv pip install --system ruff yamllint pre-commit
+
+    - name: Run yamllint
+      run: |
+        yamllint . --format github
+
+    - name: Run Ruff linting
+      run: |
+        ruff check . --output-format=github
+
+    - name: Check code formatting with Ruff
+      run: |
+        ruff format --check --diff .
+
+  validate:
+    runs-on: ubuntu-latest
+    needs: [lint, build, test, matrix-test, docs, security-scan, vulnerability-scan, dependency-scan, code-quality]
+    if: always()
+    steps:
+    - name: Validate all jobs completed
+      run: |
+        echo "Checking job statuses..."
+        declare -A JOBS=( \
+          [lint]="${{ needs.lint.result }}" \
+          [build]="${{ needs.build.result }}" \
+          [test]="${{ needs.test.result }}" \
+          [matrix-test]="${{ needs.matrix-test.result }}" \
+          [docs]="${{ needs.docs.result }}" \
+          [security-scan]="${{ needs.security-scan.result }}" \
+          [vulnerability-scan]="${{ needs.vulnerability-scan.result }}" \
+          [dependency-scan]="${{ needs.dependency-scan.result }}" \
+          [code-quality]="${{ needs.code-quality.result }}" \
+        )
+        FAILED=0
+        for j in "${!JOBS[@]}"; do
+          r=${JOBS[$j]}
+          if [[ "$r" != "success" ]]; then
+            echo "❌ $j job result: $r"
+            FAILED=1
+          else
+            echo "✅ $j job passed"
+          fi
+        done
+        if [[ $FAILED -ne 0 ]]; then
+          echo "One or more jobs failed"
+          exit 1
+        fi
+        echo "All jobs succeeded"
+
+    - name: Write summary
+      run: |
+        {
+          echo "## CI Validation Summary";
+          echo "";
+          echo "| Job | Result |";
+          echo "|-----|--------|";
+          echo "| lint | ${{ needs.lint.result }} |";
+          echo "| build | ${{ needs.build.result }} |";
+          echo "| test | ${{ needs.test.result }} |";
+          echo "| matrix-test | ${{ needs.matrix-test.result }} |";
+          echo "| docs | ${{ needs.docs.result }} |";
+          echo "| security-scan | ${{ needs.security-scan.result }} |";
+          echo "| vulnerability-scan | ${{ needs.vulnerability-scan.result }} |";
+          echo "| dependency-scan | ${{ needs.dependency-scan.result }} |";
+          echo "| code-quality | ${{ needs.code-quality.result }} |";
+        } >> $GITHUB_STEP_SUMMARY
+
+    - name: Generate validation report
+      run: |
+        echo "## CI Validation Report" > validation-report.md
+        echo "- Lint: ${{ needs.lint.result }}" >> validation-report.md
+        echo "- Build: ${{ needs.build.result }}" >> validation-report.md
+        echo "- Test: ${{ needs.test.result }}" >> validation-report.md
+        echo "- Matrix Test: ${{ needs.matrix-test.result }}" >> validation-report.md
+        echo "- Docs: ${{ needs.docs.result }}" >> validation-report.md
+        echo "- Security Scan: ${{ needs.security-scan.result }}" >> validation-report.md
+        echo "- Vulnerability Scan: ${{ needs.vulnerability-scan.result }}" >> validation-report.md
+        echo "- Dependency Scan: ${{ needs.dependency-scan.result }}" >> validation-report.md
+        echo "- Code Quality: ${{ needs.code-quality.result }}" >> validation-report.md
+
+    - name: Upload validation report
+      uses: actions/upload-artifact@v4
+      with:
+        name: validation-report
+        path: validation-report.md

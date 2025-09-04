@@ -1,0 +1,97 @@
+# ==========================================
+# FRP Client Configuration (TOML Format)
+# ==========================================
+# This is a basic configuration template
+# Please customize according to your needs
+
+# Server connection configuration
+serverAddr = "your_server_address"
+serverPort = 7000
+
+# Authentication configuration
+auth = { method = "token", token = "your_secret_token_here" }
+
+# Log configuration
+log = { to = "{{ frp_install_log_dir | default('/var/log/frp') }}/frpc.log", level = "info", maxDays = 3 }
+
+# Transport configuration
+transport = { tcpMux = true, tcpMuxKeepaliveInterval = 60 }
+
+# ==========================================
+# Proxy Configurations
+# ==========================================
+# Uncomment and modify the proxy configurations below as needed
+
+# Example HTTP tunnel configuration
+# [[proxies]]
+# name = "web"
+# type = "http"
+# localAddr = "127.0.0.1"
+# localPort = 80
+# customDomains = ["your.domain.com"]
+# # Optional: custom headers
+# # customHeaders = { "X-Forwarded-For" = "$remote_addr" }
+
+# Example HTTPS tunnel configuration
+# [[proxies]]
+# name = "web-ssl"
+# type = "https"
+# localAddr = "127.0.0.1"
+# localPort = 443
+# customDomains = ["your.domain.com"]
+# # Optional: custom headers
+# # customHeaders = { "X-Forwarded-For" = "$remote_addr" }
+
+# Example SSH tunnel configuration
+# [[proxies]]
+# name = "ssh"
+# type = "tcp"
+# localAddr = "127.0.0.1"
+# localPort = 22
+# remotePort = 6000
+
+# Example RDP tunnel configuration
+# [[proxies]]
+# name = "rdp"
+# type = "tcp"
+# localAddr = "127.0.0.1"
+# localPort = 3389
+# remotePort = 7001
+
+# Example VNC tunnel configuration
+# [[proxies]]
+# name = "vnc"
+# type = "tcp"
+# localAddr = "127.0.0.1"
+# localPort = 5900
+# remotePort = 7002
+
+# Example database tunnel configuration
+# [[proxies]]
+# name = "mysql"
+# type = "tcp"
+# localAddr = "127.0.0.1"
+# localPort = 3306
+# remotePort = 7003
+
+# ==========================================
+# Advanced Configuration (Optional)
+# ==========================================
+
+# Health check configuration
+# healthCheck = { type = "tcp", timeoutSeconds = 3, maxFailed = 3 }
+
+# Bandwidth limit configuration
+# transport = { bandwidthLimit = "1MB", bandwidthLimitMode = "client" }
+
+# Connection pool configuration
+# transport = { poolCount = 5 }
+
+# TLS configuration for client
+# transport = { tls = { enable = true, disableCustomTLSFirstByte = false } }
+
+# Login fail exit configuration
+# auth = { additionalScopes = ["HeartBeats"], loginFailExit = true }
+
+# Detailed logging
+# log = { to = "{{ frp_install_log_dir | default('/var/log/frp') }}/frpc.log", level = "debug", maxDays = 7, disablePrintColor = false }

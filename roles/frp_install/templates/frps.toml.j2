@@ -1,0 +1,41 @@
+# ==========================================
+# FRP Server Configuration (TOML Format)
+# ==========================================
+# This is a basic configuration template
+# Please customize according to your needs
+
+# Server binding configuration
+bindAddr = "0.0.0.0"
+bindPort = 7000
+
+# Authentication configuration
+auth = { method = "token", token = "your_secret_token_here" }
+
+# Dashboard configuration (optional)
+webServer = { addr = "127.0.0.1", port = 7500, user = "admin", password = "admin" }
+
+# Log configuration
+log = { to = "{{ frp_install_log_dir | default('/var/log/frp') }}/frps.log", level = "info", maxDays = 3 }
+
+# Allow ports configuration
+allowPorts = [
+  { start = 2000, end = 3000 },
+  { single = 3001 },
+  { single = 3003 },
+  { start = 4000, end = 50000 }
+]
+
+# Transport configuration
+transport = { tcpMux = true, tcpMuxKeepaliveInterval = 60 }
+
+# Detailed logging (optional)
+# log = { to = "{{ frp_install_log_dir | default('/var/log/frp') }}/frps.log", level = "debug", maxDays = 7, disablePrintColor = false }
+
+# HTTPS configuration (optional)
+# transport = { tls = { enable = true, certFile = "/path/to/cert.pem", keyFile = "/path/to/key.pem" } }
+
+# Plugin configuration (optional)
+# plugin = { type = "http_proxy", addr = "127.0.0.1", port = 8080 }
+
+# Health check configuration (optional)
+# healthz = { addr = "127.0.0.1", port = 8081 }

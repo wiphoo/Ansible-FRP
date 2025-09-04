@@ -1,0 +1,6 @@
+---
+# handlers file for frp_install role
+
+- name: Reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true

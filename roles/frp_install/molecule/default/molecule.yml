@@ -1,0 +1,42 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: instance
+    image: ubuntu:22.04
+    command: ""
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - /tmp:/tmp:rw
+    privileged: true
+    pre_build_image: true
+    environment:
+      TMPDIR: /tmp
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      interpreter_python: auto_silent
+      deprecation_warnings: false
+      callback_whitelist: profile_tasks, timer
+      collections_path: /home/terng/work/personal/wiphoo_ansible_frp/collections
+      remote_tmp: /tmp
+      local_tmp: /tmp
+  playbooks:
+    converge: ../resources/playbook.yml
+  inventory:
+    group_vars:
+      all:
+        frp_install_version: "0.63.0"
+        frp_install_user: "frp"
+        frp_install_group: "frp"
+        frp_install_dir: "/usr/local/bin/frp"
+        frp_install_config_dir: "/etc/frp"
+        frp_install_log_dir: "/var/log/frp"
+        frp_install_create_service: true
+        frp_install_configure_firewall: false
+        frp_install_cleanup_tmp: true
+verifier:
+  name: ansible
