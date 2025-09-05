@@ -39,9 +39,8 @@
 
     - name: Verify packages are installed
       ansible.builtin.assert:
-        that: item in ansible_facts.packages
-        fail_msg: "Package {{ item }} is not installed"
-      loop:
-        - curl
-        - tar
-        - ufw
+        that:
+          - "'curl' in ansible_facts.packages"
+          - "'tar' in ansible_facts.packages"
+          - "'ufw' in ansible_facts.packages"
+        fail_msg: "Required packages (curl, tar, ufw) are not all installed"
