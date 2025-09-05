@@ -47,10 +47,10 @@ jobs:
 
     - name: Install test dependencies
       run: |
-        # Install pytest-cov first to ensure it's available
-        uv pip install --system pytest-cov coverage
-        # Then install the test dependencies
+        # Install the test dependencies first
         uv sync --extra test
+        # Then install pytest-cov for coverage reporting
+        uv pip install pytest-cov coverage
 
     - name: Run pytest tests
       run: |
@@ -158,7 +158,8 @@ jobs:
 
     - name: Install code quality tools
       run: |
-        uv pip install --system ruff yamllint pre-commit
+        uv sync --extra dev
+        uv pip install ruff yamllint pre-commit
 
     - name: Run yamllint
       run: |
