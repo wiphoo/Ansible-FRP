@@ -28,11 +28,45 @@ dev = [
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
-addopts = ["-v", "--tb=short"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = [
+    "-v",
+    "--tb=short",
+    "--strict-markers",
+    "--cov=tests",
+    "--cov-report=xml",
+    "--cov-report=html",
+    "--cov-report=term-missing",
+    "--cov-fail-under=80",
+]
 markers = [
     "unit: Unit tests",
-    "integration: Integration tests",
-    "slow: Slow running tests"
+    "integration: Integration tests", 
+    "slow: Slow running tests",
+]
+
+[tool.coverage.run]
+source = ["tests"]
+omit = [
+    "*/venv/*",
+    "*/.venv/*",
+    "*/__pycache__/*",
+    "*/migrations/*",
+    "*/.pytest_cache/*",
+    "*/.ansible/*",
+    "*/collections/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "class .*\\bProtocol\\):",
+    "@(abc\\.)?abstractmethod",
 ]
 
 [tool.ansible-lint]
@@ -104,6 +138,12 @@ ignore = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["wiphoo"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
 
 [tool.setuptools]
 # Disable automatic package discovery for Ansible collection
