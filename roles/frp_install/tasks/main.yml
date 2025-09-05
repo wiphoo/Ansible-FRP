@@ -36,6 +36,7 @@
       {% else %}
       {{ ansible_architecture }}
       {% endif %}
+  when: frp_install_architecture | length <= 0
 
 - name: Fail if no valid architecture is set
   ansible.builtin.fail:
