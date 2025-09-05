@@ -5,17 +5,19 @@
   gather_facts: true
 
   tasks:
-    - name: Check frp version
-      ansible.builtin.command: "{{ frp_install_dir }}/frps --version"
+    - name: Check frp binaries version
+      ansible.builtin.command: "{{ frp_install_dir }}/{{ item }} --version"
       register: frp_version_check
       changed_when: false
       ignore_errors: true
+      loop: "{{ frp_install_files }}"
 
     - name: Verify frp version matches expected
       ansible.builtin.assert:
-        that: frp_install_version in frp_version_check.stdout
-        fail_msg: "frp version does not match expected version {{ frp_install_version }}"
-      when: frp_version_check.rc == 0
+        that: frp_install_version in item.stdout
+        fail_msg: "frp version does not match expected version {{ frp_install_version }} for {{ item.item }}"
+      when: item.rc == 0
+      loop: "{{ frp_version_check.results }}"
 
     - name: Check file permissions
       ansible.builtin.stat:

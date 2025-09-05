@@ -22,18 +22,20 @@
 
     - name: Verify the correct version was downloaded
       ansible.builtin.command:
-        cmd: "{{ frp_install_dir }}/frps --version"
+        cmd: "{{ frp_install_dir }}/{{ item }} --version"
       register: frp_version_output
       changed_when: false
       ignore_errors: true
+      loop: "{{ frp_install_files }}"
 
     - name: Check if version matches expected (0.64.0)
       ansible.builtin.debug:
         msg: |
           Expected version: 0.64.0
-          Installed version output: {{ frp_version_output.stdout | default('N/A') }}
-          Version check result: {{ 'PASS' if '0.64.0' in frp_version_output.stdout else
+          Installed version output for {{ item.item }}: {{ item.stdout | default('N/A') }}
+          Version check result: {{ 'PASS' if '0.64.0' in item.stdout else
                                    'Version check inconclusive (binary may not support --version)' }}
+      loop: "{{ frp_version_output.results }}"
 
     - name: Verify download URLs were constructed correctly
       ansible.builtin.debug:

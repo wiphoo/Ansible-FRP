@@ -241,11 +241,12 @@
   when: frp_install_cleanup_tmp | bool
 
 # Final verification
-- name: Verify frp installation
-  ansible.builtin.command: "{{ frp_install_dir }}/frps --version"
+- name: Verify frp binaries
+  ansible.builtin.command: "{{ frp_install_dir }}/{{ item }} --version"
   register: frp_install_version_check
   changed_when: false
   failed_when: frp_install_version_check.rc != 0
+  loop: "{{ frp_install_files }}"
 
 - name: Display installation summary
   ansible.builtin.debug:
