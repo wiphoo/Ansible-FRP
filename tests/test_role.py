@@ -163,12 +163,12 @@ class TestFrpInstallRole:
             "{{ frp_install_filename }}", filename_result
         )
 
-        assert (
-            filename_result == expected_filename
-        ), f"Expected {expected_filename}, got {filename_result}"
-        assert (
-            download_url_result == expected_download_url
-        ), f"Expected {expected_download_url}, got {download_url_result}"
+        assert filename_result == expected_filename, (
+            f"Expected {expected_filename}, got {filename_result}"
+        )
+        assert download_url_result == expected_download_url, (
+            f"Expected {expected_download_url}, got {download_url_result}"
+        )
 
     def test_version_0640_integration(self):
         """Test that version 0.64.0 is properly handled in all contexts."""
@@ -274,14 +274,14 @@ class TestFrpInstallRole:
         ]
 
         for ref in correct_template_refs:
-            assert not ref.startswith(
-                "{{ role_path }}"
-            ), f"Template ref {ref} should not use role_path in collections"
+            assert not ref.startswith("{{ role_path }}"), (
+                f"Template ref {ref} should not use role_path in collections"
+            )
 
         for ref in incorrect_template_refs:
-            assert ref.startswith(
-                "{{ role_path }}"
-            ), f"Incorrect template ref format: {ref}"
+            assert ref.startswith("{{ role_path }}"), (
+                f"Incorrect template ref format: {ref}"
+            )
 
     def test_collection_build_optimization(self):
         """Test that collection build excludes unnecessary files."""
@@ -323,9 +323,9 @@ class TestFrpInstallRole:
                 continue
             else:
                 # Other variables should be role-specific
-                assert var_name.startswith(
-                    "frp_"
-                ), f"Variable {var_name} should follow role naming convention"
+                assert var_name.startswith("frp_"), (
+                    f"Variable {var_name} should follow role naming convention"
+                )
 
     def test_checksum_url_generation(self, role_vars_combined):
         """Test that checksum URLs are generated correctly."""
@@ -354,15 +354,15 @@ class TestFrpInstallRole:
         # Test that installation paths are properly constructed
         for binary in install_files:
             full_path = f"{install_dir}/{binary}"
-            assert full_path.startswith(
-                "/"
-            ), f"Installation path {full_path} should be absolute"
-            assert not full_path.endswith(
-                "/"
-            ), f"Installation path {full_path} should not end with slash"
-            assert (
-                binary in full_path
-            ), f"Binary name {binary} should be in path {full_path}"
+            assert full_path.startswith("/"), (
+                f"Installation path {full_path} should be absolute"
+            )
+            assert not full_path.endswith("/"), (
+                f"Installation path {full_path} should not end with slash"
+            )
+            assert binary in full_path, (
+                f"Binary name {binary} should be in path {full_path}"
+            )
 
     def test_service_configuration_variables(self, role_vars):
         """Test that service configuration variables are properly defined."""
@@ -374,9 +374,9 @@ class TestFrpInstallRole:
 
         for var in service_vars:
             assert var in role_vars, f"Service variable {var} is not defined"
-            assert isinstance(
-                role_vars[var], bool
-            ), f"Service variable {var} should be boolean"
+            assert isinstance(role_vars[var], bool), (
+                f"Service variable {var} should be boolean"
+            )
 
     def test_directory_creation_variables(self, role_vars):
         """Test that directory creation variables are properly structured."""
@@ -392,9 +392,9 @@ class TestFrpInstallRole:
         ]
 
         for expected_dir in expected_dirs:
-            assert (
-                expected_dir in dirs_var
-            ), f"Expected directory {expected_dir} not found in frp_install_dirs"
+            assert expected_dir in dirs_var, (
+                f"Expected directory {expected_dir} not found in frp_install_dirs"
+            )
 
     def test_architecture_detection_logic(self):
         """Test that architecture detection logic works correctly."""
@@ -422,9 +422,9 @@ class TestFrpInstallRole:
             else:
                 result = ansible_arch
 
-            assert (
-                result == expected
-            ), f"Architecture {ansible_arch} should map to {expected}, got {result}"
+            assert result == expected, (
+                f"Architecture {ansible_arch} should map to {expected}, got {result}"
+            )
 
     def test_system_detection_logic(self):
         """Test that system detection logic works correctly."""
@@ -438,9 +438,9 @@ class TestFrpInstallRole:
 
         for ansible_system, expected in test_cases:
             result = ansible_system.lower()
-            assert (
-                result == expected
-            ), f"System {ansible_system} should convert to {expected}, got {result}"
+            assert result == expected, (
+                f"System {ansible_system} should convert to {expected}, got {result}"
+            )
 
     def test_error_handling_variables(self, role_vars):
         """Test that error handling variables are properly configured."""
@@ -455,9 +455,9 @@ class TestFrpInstallRole:
 
         # Check that all error-related variables are defined in defaults
         for var in error_related_vars:
-            assert (
-                var in role_vars
-            ), f"Missing variable required for error handling: {var}"
+            assert var in role_vars, (
+                f"Missing variable required for error handling: {var}"
+            )
 
     def test_idempotency_variables(self, role_vars):
         """Test that variables support idempotent operations."""
@@ -469,9 +469,9 @@ class TestFrpInstallRole:
 
         for var in idempotent_vars:
             assert var in role_vars, f"Idempotency variable {var} should be defined"
-            assert isinstance(
-                role_vars[var], bool
-            ), f"Idempotency variable {var} should be boolean"
+            assert isinstance(role_vars[var], bool), (
+                f"Idempotency variable {var} should be boolean"
+            )
 
     def test_security_variables(self, role_vars):
         """Test that security-related variables are properly configured."""
@@ -485,12 +485,12 @@ class TestFrpInstallRole:
             assert var in role_vars, f"Security variable {var} should be defined"
 
         # Test that user/group are not root
-        assert (
-            role_vars["frp_install_user"] != "root"
-        ), "frp user should not be root for security"
-        assert (
-            role_vars["frp_install_group"] != "root"
-        ), "frp group should not be root for security"
+        assert role_vars["frp_install_user"] != "root", (
+            "frp user should not be root for security"
+        )
+        assert role_vars["frp_install_group"] != "root", (
+            "frp group should not be root for security"
+        )
 
     def test_performance_optimization_variables(self, role_vars):
         """Test that performance optimization variables are configured."""
@@ -504,9 +504,9 @@ class TestFrpInstallRole:
 
         # Test that tmp directory is appropriate
         tmp_dir = role_vars["frp_install_tmp_dir"]
-        assert (
-            tmp_dir == "/tmp"
-        ), f"Temporary directory should be /tmp for performance, got {tmp_dir}"
+        assert tmp_dir == "/tmp", (
+            f"Temporary directory should be /tmp for performance, got {tmp_dir}"
+        )
 
     def test_role_path_undefined_prevention(self):
         """Test that role_path references are properly handled in collections."""
@@ -528,9 +528,9 @@ class TestFrpInstallRole:
                     template_path = os.path.join(template_dir, template_file)
                     with open(template_path) as f:
                         content = f.read()
-                        assert (
-                            "role_path" not in content
-                        ), f"Template {template_file} contains role_path reference"
+                        assert "role_path" not in content, (
+                            f"Template {template_file} contains role_path reference"
+                        )
 
         # Check that tasks don't contain problematic role_path references
         tasks_dir = os.path.join(
@@ -578,9 +578,9 @@ class TestFrpInstallRole:
             content = f.read()
 
             # Should contain correct collection references
-            assert (
-                "wiphoo.frp.frp_install" in content
-            ), "README should contain correct collection reference"
+            assert "wiphoo.frp.frp_install" in content, (
+                "README should contain correct collection reference"
+            )
 
             # Should NOT contain incorrect standalone references (except in warnings)
             lines = content.split("\n")
@@ -903,9 +903,9 @@ class TestPerformanceAndOptimization:
     def test_temporary_file_handling(self, role_vars):
         """Test temporary file handling."""
         tmp_dir = role_vars["frp_install_tmp_dir"]
-        assert (
-            tmp_dir == "/tmp"
-        ), f"Temporary directory should be /tmp for performance, got {tmp_dir}"
+        assert tmp_dir == "/tmp", (
+            f"Temporary directory should be /tmp for performance, got {tmp_dir}"
+        )
 
     def test_binary_permissions(self):
         """Test that binary permissions are set correctly."""
@@ -916,9 +916,9 @@ class TestPerformanceAndOptimization:
     def test_config_file_permissions(self):
         """Test that config file permissions are secure."""
         expected_mode = "0600"
-        assert (
-            expected_mode == "0600"
-        ), "Config files should have restrictive permissions"
+        assert expected_mode == "0600", (
+            "Config files should have restrictive permissions"
+        )
 
 
 class TestAnsibleIntegration:
@@ -958,15 +958,15 @@ class TestAnsibleIntegration:
             )
 
             # Check if the syntax check passed
-            assert (
-                result.returncode == 0
-            ), f"Molecule syntax check failed: {result.stderr}"
+            assert result.returncode == 0, (
+                f"Molecule syntax check failed: {result.stderr}"
+            )
 
             # Verify that the test output contains expected success indicators
             # Check stderr for completion message since stdout only contains playbook path
-            assert (
-                "Completed" in result.stderr or "syntax" in result.stderr.lower()
-            ), "Syntax check did not complete successfully"
+            assert "Completed" in result.stderr or "syntax" in result.stderr.lower(), (
+                "Syntax check did not complete successfully"
+            )
 
         except subprocess.TimeoutExpired:
             pytest.fail("Molecule syntax check timed out after 5 minutes")
