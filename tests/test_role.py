@@ -326,7 +326,7 @@ class TestFrpInstallRole:
             build_cmd = ["ansible-galaxy", "collection", "build", "--force"]
             result = subprocess.run(
                 build_cmd,
-                cwd=os.path.dirname(__file__) + "/..",
+                cwd=os.path.join(os.path.dirname(__file__), ".."),
                 capture_output=True,
                 text=True,
             )
@@ -336,7 +336,9 @@ class TestFrpInstallRole:
             # Check that tar.gz file was created
             import glob
 
-            tar_files = glob.glob(os.path.dirname(__file__) + "/../wiphoo-frp-*.tar.gz")
+            tar_files = glob.glob(
+                os.path.join(os.path.dirname(__file__), "..", "wiphoo-frp-*.tar.gz")
+            )
             assert len(tar_files) > 0, "No collection tar.gz file found"
 
             # Test collection size is reasonable (< 10MB)
@@ -968,7 +970,7 @@ class TestAnsibleIntegration:
                 ["molecule", "--version"],
                 capture_output=True,
                 text=True,
-                cwd=os.path.dirname(__file__) + "/..",
+                cwd=os.path.join(os.path.dirname(__file__), ".."),
             )
             molecule_available = result.returncode == 0
         except FileNotFoundError:
