@@ -23,6 +23,11 @@ dev = [
     "mkdocs>=1.5.0",
     "mkdocs-material>=9.0.0",
     "ruff>=0.6.0",
+    "pre-commit>=4.3.0",
+    "yamllint>=1.35.0",
+    "mypy>=1.0.0",
+    "types-PyYAML>=6.0.0",
+    "types-setuptools>=75.0.0",
 ]
 
 [tool.pytest.ini_options]
@@ -189,8 +194,3 @@ include-package-data = false
 [tool.setuptools.packages.find]
 # Don't try to find packages in this Ansible collection
 exclude = ["*"]
-
-[dependency-groups]
-dev = [
-    "pre-commit>=4.3.0",
-]

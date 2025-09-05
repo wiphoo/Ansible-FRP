@@ -51,9 +51,6 @@ See [examples.yml](examples.yml) for detailed configurations.
 
 ## Troubleshooting
 
-**Error: 'role_path' is undefined**
-
-Use collection syntax: `wiphoo.frp.frp_install` instead of `roles/frp_install`
 
 ## License
 
