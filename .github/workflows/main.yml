@@ -105,7 +105,6 @@ jobs:
     - name: Install Ansible
       run: |
         uv sync --extra dev
-        uv pip install ansible
 
     - name: Build collection
       run: |

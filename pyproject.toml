@@ -5,7 +5,7 @@ description = "Ansible collection for Fast Reverse Proxy (frp) installation and 
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "ansible>=8.0.0",
+    "ansible[dev]>=8.0.0",
 ]
 
 [project.optional-dependencies]

@@ -158,19 +158,14 @@ jobs:
         # Check for broken links in documentation
         find site/ -name "*.html" -exec grep -l "href=" {} \; | head -5 | xargs -I {} sh -c 'echo "Checking {}"; curl -s -o /dev/null -w "%{http_code}" $(grep -o "href=\"[^\"]*\"" {} | head -1 | sed "s/href=\"//;s/\"//") || true'
 
-    - name: Install code quality tools
-      run: |
-        uv sync --extra dev
-        uv pip install ruff yamllint pre-commit
-
     - name: Run yamllint
       run: |
-        yamllint . --format github
+        uv run yamllint . --format github
 
     - name: Run Ruff linting
       run: |
-        ruff check . --output-format=github
+        uv run ruff check . --output-format=github
 
     - name: Check code formatting with Ruff
       run: |
-        ruff format --check --diff .
+        uv run ruff format --check --diff .
