@@ -32,4 +32,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Version-specific binary downloads with checksum verification
 - Integration with modern Python tooling (uv, ruff, mypy)
 
+[Unreleased]: https://github.com/wiphoo/Ansible-FRP/compare/v1.0.0...HEAD
 [1.0.0]: https://github.com/wiphoo/Ansible-FRP/releases/tag/v1.0.0
