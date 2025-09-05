@@ -5,11 +5,18 @@
   gather_facts: true
 
   tasks:
-    - name: Check that frp directory exists
-      ansible.builtin.file:
+    - name: Check frp install directory
+      ansible.builtin.stat:
         path: "{{ frp_install_dir }}"
-        state: directory
-      check_mode: true
+      register: frp_inst_dir
+      changed_when: false
+
+    - name: Assert frp install directory exists
+      ansible.builtin.assert:
+        that:
+          - frp_inst_dir.stat.exists
+          - frp_inst_dir.stat.isdir
+        fail_msg: "FRP install dir {{ frp_install_dir }} is missing or not a directory"
 
     - name: Check that frp binaries exist
       ansible.builtin.stat:
@@ -28,10 +35,17 @@
       loop: "{{ frp_binaries.results }}"
 
     - name: Check frp configuration directory
-      ansible.builtin.file:
+      ansible.builtin.stat:
         path: "{{ frp_install_config_dir }}"
-        state: directory
-      check_mode: true
+      register: frp_cfg_dir
+      changed_when: false
+
+    - name: Assert frp configuration directory exists
+      ansible.builtin.assert:
+        that:
+          - frp_cfg_dir.stat.exists
+          - frp_cfg_dir.stat.isdir
+        fail_msg: "FRP config dir {{ frp_install_config_dir }} is missing or not a directory"
 
     - name: Check that frp user exists
       ansible.builtin.getent:
