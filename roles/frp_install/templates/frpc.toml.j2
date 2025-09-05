@@ -26,7 +26,7 @@ transport = { tcpMux = true, tcpMuxKeepaliveInterval = 60 }
 # [[proxies]]
 # name = "web"
 # type = "http"
-# localAddr = "127.0.0.1"
+# localIP = "127.0.0.1"
 # localPort = 80
 # customDomains = ["your.domain.com"]
 # # Optional: custom headers
@@ -36,7 +36,7 @@ transport = { tcpMux = true, tcpMuxKeepaliveInterval = 60 }
 # [[proxies]]
 # name = "web-ssl"
 # type = "https"
-# localAddr = "127.0.0.1"
+# localIP = "127.0.0.1"
 # localPort = 443
 # customDomains = ["your.domain.com"]
 # # Optional: custom headers
@@ -46,7 +46,7 @@ transport = { tcpMux = true, tcpMuxKeepaliveInterval = 60 }
 # [[proxies]]
 # name = "ssh"
 # type = "tcp"
-# localAddr = "127.0.0.1"
+# localIP = "127.0.0.1"
 # localPort = 22
 # remotePort = 6000
 
@@ -54,7 +54,7 @@ transport = { tcpMux = true, tcpMuxKeepaliveInterval = 60 }
 # [[proxies]]
 # name = "rdp"
 # type = "tcp"
-# localAddr = "127.0.0.1"
+# localIP = "127.0.0.1"
 # localPort = 3389
 # remotePort = 7001
 
@@ -62,7 +62,7 @@ transport = { tcpMux = true, tcpMuxKeepaliveInterval = 60 }
 # [[proxies]]
 # name = "vnc"
 # type = "tcp"
-# localAddr = "127.0.0.1"
+# localIP = "127.0.0.1"
 # localPort = 5900
 # remotePort = 7002
 
@@ -70,7 +70,7 @@ transport = { tcpMux = true, tcpMuxKeepaliveInterval = 60 }
 # [[proxies]]
 # name = "mysql"
 # type = "tcp"
-# localAddr = "127.0.0.1"
+# localIP = "127.0.0.1"
 # localPort = 3306
 # remotePort = 7003
 
