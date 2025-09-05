@@ -78,6 +78,14 @@ jobs:
       run: |
         uv run python -m pytest tests/ -v --junitxml=test-results.xml --cov=roles --cov-report=xml --cov-report=html
 
+    - name: Run Molecule syntax check
+      run: |
+        cd roles/frp_install
+        uv run molecule syntax --scenario-name ci
+      env:
+        PY_COLORS: '1'
+        ANSIBLE_FORCE_COLOR: '1'
+
     - name: Upload coverage
       uses: codecov/codecov-action@v4
       if: matrix.python-version == '3.12' && matrix.ansible-version == '11.9.0'

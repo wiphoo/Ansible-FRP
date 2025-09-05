@@ -48,7 +48,7 @@ jobs:
 
     - name: Install test dependencies
       run: |
-        # Install the test dependencies first
+        # Install the test dependencies
         uv sync --extra test
         # Then install pytest-cov for coverage reporting
         uv pip install pytest-cov coverage
@@ -60,6 +60,14 @@ jobs:
           --junitxml=test-results.xml
       env:
         PY_COLORS: '1'
+
+    - name: Run Molecule syntax check
+      run: |
+        cd roles/frp_install
+        uv run molecule syntax --scenario-name ci
+      env:
+        PY_COLORS: '1'
+        ANSIBLE_FORCE_COLOR: '1'
 
     - name: Check test coverage
       run: |

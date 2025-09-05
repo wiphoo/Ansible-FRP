@@ -17,6 +17,7 @@ test = [
     "coverage>=7.0.0",
     "molecule>=6.0.0",
     "molecule-docker>=2.0.0",
+    "molecule[docker]>=25.7.0",
     "ansible-lint>=6.0.0",
 ]
 dev = [
