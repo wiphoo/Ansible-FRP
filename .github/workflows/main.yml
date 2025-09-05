@@ -35,11 +35,11 @@ jobs:
 
     - name: Run pre-commit hooks
       run: |
-        pre-commit run --all-files --show-diff-on-failure
+        uv run pre-commit run --all-files --show-diff-on-failure
 
     - name: Lint Ansible code
       run: |
-        ansible-lint roles/
+        uv run ansible-lint roles/
 
   test:
     name: Test
@@ -68,7 +68,7 @@ jobs:
 
     - name: Run tests
       run: |
-        python -m pytest tests/ -v --junitxml=test-results.xml --cov=roles --cov-report=xml --cov-report=html
+        uv run python -m pytest tests/ -v --junitxml=test-results.xml --cov=roles --cov-report=xml --cov-report=html
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4

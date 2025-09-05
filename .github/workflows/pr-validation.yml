@@ -33,8 +33,8 @@ jobs:
 
     - name: Run quick checks
       run: |
-        ansible-lint roles/
-        pre-commit run --all-files --show-diff-on-failure
+        uv run ansible-lint roles/
+        uv run pre-commit run --all-files --show-diff-on-failure
 
     - name: Build collection
       run: |
@@ -149,7 +149,7 @@ jobs:
 
     - name: Build documentation
       run: |
-        mkdocs build --clean
+        uv run mkdocs build --clean
 
     - name: Check documentation links
       run: |
