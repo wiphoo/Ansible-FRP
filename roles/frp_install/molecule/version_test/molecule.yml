@@ -16,7 +16,7 @@ provisioner:
   config_options:
     defaults:
       interpreter_python: auto_silent
-      callback_whitelist: profile_tasks, timer
+      callbacks_enabled: profile_tasks, timer
       collections_path: /home/terng/work/personal/wiphoo_ansible_frp/collections
   playbooks:
     converge: ../resources/playbook_version_test.yml
