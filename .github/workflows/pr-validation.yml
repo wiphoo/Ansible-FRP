@@ -97,10 +97,16 @@ jobs:
         head: HEAD
         extra_args: --debug --only-verified
 
-    - name: Run GitGuardian scan
-      uses: GitGuardian/ggshield-action@v1.32.0
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
       with:
-        args: --mode=local
+        languages: python
+        queries: security-and-quality
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:python"
 
   pr-size:
     runs-on: ubuntu-latest
