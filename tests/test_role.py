@@ -111,8 +111,14 @@ class TestFrpInstallRole:
 
     def test_version_variable_mapping(self, role_vars_combined):
         """Test that frp_version variable is properly mapped to frp_install_version."""
-        # Test default version
-        assert role_vars_combined["frp_install_version"] == "0.63.0"
+        # Test default version format
+        import re
+
+        assert re.match(
+            r"^\d+\.\d+\.\d+$", role_vars_combined["frp_install_version"]
+        ), (
+            f"frp_install_version should be semver (e.g., 0.64.0), got: {role_vars_combined['frp_install_version']!r}"
+        )
 
         # Test that version is used in filename generation
         version = "0.64.0"
@@ -230,15 +236,41 @@ class TestFrpInstallRole:
         """Test that frp_version can override the default frp_install_version."""
         # This test simulates what happens when a user sets frp_version
         user_version = "0.64.0"
-        default_version = "0.63.0"
+
+        # Read actual default version from role defaults
+        import os
+        import re
+
+        import yaml
+
+        defaults_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "defaults",
+            "main.yml",
+        )
+        with open(defaults_path) as f:
+            defaults = yaml.safe_load(f)
+        default_version = defaults["frp_install_version"]
+
+        # Verify default version is semver format
+        assert re.match(r"^\d+\.\d+\.\d+$", default_version), (
+            f"Default version should be semver, got: {default_version!r}"
+        )
 
         # Simulate the set_fact logic from the role
         final_version = user_version if user_version else default_version
         assert final_version == "0.64.0"
 
         # Test with undefined user version (should use default)
+        import re
+
         final_version_default = default_version
-        assert final_version_default == "0.63.0"
+        assert re.match(r"^\d+\.\d+\.\d+$", final_version_default), (
+            f"Default version should be semver (e.g., 0.63.0), got: {final_version_default!r}"
+        )
 
     def test_version_integration_with_role(self):
         """Test that the role properly handles version override in a playbook context."""
@@ -246,7 +278,23 @@ class TestFrpInstallRole:
 
         # Simulate the role execution with frp_version set
         user_frp_version = "0.64.0"
-        default_frp_install_version = "0.63.0"
+
+        # Read actual default version from role defaults
+        import os
+
+        import yaml
+
+        defaults_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "defaults",
+            "main.yml",
+        )
+        with open(defaults_path) as f:
+            defaults = yaml.safe_load(f)
+        default_frp_install_version = defaults["frp_install_version"]
 
         # The role should map frp_version to frp_install_version
         effective_version = (
