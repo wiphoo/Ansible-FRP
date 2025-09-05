@@ -1,0 +1,188 @@
+name: Pull Request Validation
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [ main, master ]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  pr-validation:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        echo "UV_CACHE_DIR=$HOME/.uv-cache" >> $GITHUB_ENV
+
+    - name: Cache uv dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.uv-cache
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml', '**/uv.lock', '**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
+
+    - name: Install Ansible and tools
+      run: |
+        uv pip install --system ansible ansible-lint ruff yamllint pre-commit mypy types-PyYAML types-setuptools
+
+    - name: Lint Ansible code
+      run: |
+        ansible-lint roles/
+
+    - name: Run pre-commit hooks
+      run: |
+        pre-commit run --all-files --show-diff-on-failure
+
+    - name: Build collection
+      run: |
+        ansible-galaxy collection build
+
+    - name: Test collection installation
+      run: |
+        ansible-galaxy collection install wiphoo-frp-*.tar.gz --force -p ~/.ansible/collections
+
+    - name: Install test dependencies
+      run: |
+        # Install pytest-cov first to ensure it's available
+        uv pip install --system pytest-cov coverage
+        # Then install the test dependencies
+        uv pip install --system --force-reinstall -e ".[test]"
+
+    - name: Run pytest tests
+      run: |
+        uv run pytest tests/ -v \
+          --cov=tests --cov-report=xml --cov-report=term-missing \
+          --junitxml=test-results.xml
+      env:
+        PY_COLORS: '1'
+
+    - name: Check test coverage
+      run: |
+        coverage report --fail-under=90
+
+    - name: Comment PR with test results
+      uses: dorny/test-reporter@v1
+      if: success() || failure()
+      with:
+        name: Pytest Results
+        path: 'test-results.xml'
+        reporter: java-junit
+        fail-on-error: true
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: pr-check
+        name: pr-coverage
+        fail_ci_if_error: false
+
+  pr-security:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Run TruffleHog OSS
+      uses: trufflesecurity/trufflehog@v3.82.9
+      with:
+        path: ./
+        base: ${{ github.event.pull_request.base.ref }}
+        head: HEAD
+        extra_args: --debug --only-verified
+
+    - name: Run GitGuardian scan
+      uses: GitGuardian/ggshield-action@v1.32.0
+      with:
+        args: --mode=local
+
+  pr-size:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Check PR size
+      uses: codacy/git-version@2.7.1
+      with:
+        release-branch: main
+        dev-branch: ${{ github.head_ref }}
+
+    - name: PR Size Label
+      uses: codelytv/pr-size-labeler@v1
+      with:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        xs_label: 'size/xs'
+        xs_max_size: 10
+        s_label: 'size/s'
+        s_max_size: 100
+        m_label: 'size/m'
+        m_max_size: 500
+        l_label: 'size/l'
+        l_max_size: 1000
+        xl_label: 'size/xl'
+        message_if_xl: |
+          This PR is very large. Consider splitting it into multiple smaller PRs for easier review.
+
+  pr-docs:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install docs dependencies
+      run: |
+        uv pip install --system -e ".[dev]"
+
+    - name: Build documentation
+      run: |
+        mkdocs build --clean
+
+    - name: Check documentation links
+      run: |
+        # Check for broken links in documentation
+        find site/ -name "*.html" -exec grep -l "href=" {} \; | head -5 | xargs -I {} sh -c 'echo "Checking {}"; curl -s -o /dev/null -w "%{http_code}" $(grep -o "href=\"[^\"]*\"" {} | head -1 | sed "s/href=\"//;s/\"//") || true'
+
+    - name: Install code quality tools
+      run: |
+        uv pip install --system ruff yamllint pre-commit
+
+    - name: Run yamllint
+      run: |
+        yamllint . --format github
+
+    - name: Run Ruff linting
+      run: |
+        ruff check . --output-format=github
+
+    - name: Check code formatting with Ruff
+      run: |
+        ruff format --check --diff .
