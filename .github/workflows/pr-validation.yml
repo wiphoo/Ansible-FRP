@@ -9,6 +9,7 @@ permissions:
   contents: read
   pull-requests: write
   checks: write
+  id-token: write
 
 jobs:
   pr-validation:
@@ -80,6 +81,7 @@ jobs:
         flags: pr-check
         name: pr-coverage
         fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}  # optional: fallback token-based auth
 
   pr-security:
     runs-on: ubuntu-latest

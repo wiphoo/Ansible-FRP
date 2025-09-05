@@ -9,6 +9,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -84,6 +85,7 @@ jobs:
         file: ./coverage.xml
         flags: tests
         fail_ci_if_error: false
+        token: ${{ secrets.CODECOV_TOKEN }}  # optional: fallback token-based auth
 
   build:
     name: Build Collection
