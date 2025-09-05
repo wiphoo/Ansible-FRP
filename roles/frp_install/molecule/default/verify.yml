@@ -33,18 +33,15 @@
         fail_msg: "File {{ item.item }} has incorrect ownership"
       loop: "{{ file_permissions.results }}"
 
-    - name: Check if required packages are installed
-      ansible.builtin.package:
-        name: "{{ item }}"
-        state: present
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: auto
+
+    - name: Verify packages are installed
+      ansible.builtin.assert:
+        that: item in ansible_facts.packages
+        fail_msg: "Package {{ item }} is not installed"
       loop:
         - curl
         - tar
         - ufw
-      register: package_check
-
-    - name: Verify packages are installed
-      ansible.builtin.assert:
-        that: not item.changed
-        fail_msg: "Package {{ item.item }} is not installed"
-      loop: "{{ package_check.results }}"

@@ -113,24 +113,27 @@
   retries: 3
   delay: 5
   until: frp_install_checksum_file_result is succeeded
+  when: frp_install_verify_checksums | bool
 
 - name: Extract the specific checksum
   ansible.builtin.shell: |
-    grep {{ frp_install_filename }} {{ frp_install_tmp_dir }}/frp_sha256_checksums.txt > \
-    {{ frp_install_tmp_dir }}/{{ frp_install_filename }}.sha256sum
+    grep -E "  {{ frp_install_filename | regex_escape }}$" "{{ frp_install_tmp_dir }}/frp_sha256_checksums.txt" > \
+    "{{ frp_install_tmp_dir }}/{{ frp_install_filename }}.sha256sum"
   args:
     chdir: "{{ frp_install_tmp_dir }}"
   register: frp_install_extract_checksum_result
   changed_when: false
   failed_when: frp_install_extract_checksum_result.rc != 0
+  when: frp_install_verify_checksums | bool
 
 - name: Verify the checksum
   ansible.builtin.command: "sha256sum -c {{ frp_install_tmp_dir }}/{{ frp_install_filename }}.sha256sum"
   args:
     chdir: "{{ frp_install_tmp_dir }}"
   register: frp_install_verify_checksum_result
-  failed_when: "'FAILED' in frp_install_verify_checksum_result.stdout"
+  failed_when: frp_install_verify_checksum_result.rc != 0
   changed_when: false
+  when: frp_install_verify_checksums | bool
 
 - name: Extract frp
   ansible.builtin.unarchive:
@@ -249,11 +252,15 @@
   failed_when: frp_install_version_check.rc != 0
   loop: "{{ frp_install_files }}"
 
+- name: Collate installed versions
+  ansible.builtin.set_fact:
+    frp_install_versions: "{{ frp_install_version_check.results | map(attribute='stdout') | map('trim') | list }}"
+
 - name: Display installation summary
   ansible.builtin.debug:
     msg: |
       FRP installation completed successfully!
-      Version: {{ frp_install_version_check.stdout | trim }}
+      Versions: {{ frp_install_versions | join(', ') }}
       Binaries installed: {{ frp_install_files | join(', ') }}
       Installation directory: {{ frp_install_dir }}
       Configuration directory: {{ frp_install_config_dir }}
