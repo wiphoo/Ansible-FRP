@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   quality:
+    name: Code Quality
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -30,7 +31,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv pip install --system ansible ansible-lint ruff yamllint pre-commit mypy types-PyYAML types-setuptools
+        uv pip install --system -e ".[dev]"
 
     - name: Run pre-commit hooks
       run: |
@@ -41,9 +42,11 @@ jobs:
         ansible-lint roles/
 
   test:
+    name: Test
     runs-on: ubuntu-latest
     needs: quality
     strategy:
+      fail-fast: false
       matrix:
         python-version: ['3.10', '3.12']
         ansible-version: ['8.7.0', '11.9.0']
@@ -65,21 +68,20 @@ jobs:
 
     - name: Run tests
       run: |
-        uv run pytest
+        python -m pytest tests/ -v --junitxml=test-results.xml --cov=roles --cov-report=xml --cov-report=html
 
     - name: Upload coverage
       uses: codecov/codecov-action@v4
-      if: matrix.python-version == '3.12' && matrix.ansible-version == '9.12.0'
+      if: matrix.python-version == '3.12' && matrix.ansible-version == '11.9.0'
       with:
         file: ./coverage.xml
         flags: tests
         fail_ci_if_error: false
 
   build:
+    name: Build Collection
     runs-on: ubuntu-latest
     needs: [quality, test]
-    outputs:
-      collection_file: ${{ steps.collection_file.outputs.collection_file }}
     steps:
     - uses: actions/checkout@v4
 
@@ -98,12 +100,6 @@ jobs:
     - name: Build collection
       run: |
         ansible-galaxy collection build
-
-    - name: Determine collection filename
-      id: collection_file
-      run: |
-        FILE=$(ls -1 wiphoo-frp-*.tar.gz | head -1)
-        echo "collection_file=$FILE" >> $GITHUB_OUTPUT
 
     - name: Test collection installation
       run: |

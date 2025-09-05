@@ -11,6 +11,7 @@ permissions:
 
 jobs:
   pr-validation:
+    name: Quick PR Check
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
@@ -19,34 +20,20 @@ jobs:
         fetch-depth: 0
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.12'
 
     - name: Install uv
+      uses: astral-sh/setup-uv@v3
+
+    - name: Install dependencies
       run: |
-        curl -LsSf https://astral.sh/uv/install.sh | sh
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-        echo "UV_CACHE_DIR=$HOME/.uv-cache" >> $GITHUB_ENV
+        uv pip install --system -e ".[dev]"
 
-    - name: Cache uv dependencies
-      uses: actions/cache@v4
-      with:
-        path: ~/.uv-cache
-        key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml', '**/uv.lock', '**/requirements*.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-uv-
-
-    - name: Install Ansible and tools
-      run: |
-        uv pip install --system ansible ansible-lint ruff yamllint pre-commit mypy types-PyYAML types-setuptools
-
-    - name: Lint Ansible code
+    - name: Run quick checks
       run: |
         ansible-lint roles/
-
-    - name: Run pre-commit hooks
-      run: |
         pre-commit run --all-files --show-diff-on-failure
 
     - name: Build collection
