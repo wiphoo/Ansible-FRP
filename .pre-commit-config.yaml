@@ -28,7 +28,7 @@ repos:
     rev: v24.7.0
     hooks:
       - id: ansible-lint
-        additional_dependencies: [ansible-core>=2.16.0]
+        additional_dependencies: [ansible>=8.0.0]
         files: \.(yaml|yml)$
         args: [--strict]
 
