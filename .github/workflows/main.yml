@@ -109,13 +109,13 @@ jobs:
 
     - name: Build collection
       run: |
-        ansible-galaxy collection build
+        uv run ansible-galaxy collection build
 
     - name: Test collection installation
       run: |
         FILE=$(ls -1 wiphoo-frp-*.tar.gz | head -1)
-        ansible-galaxy collection install "$FILE" --force -p ~/.ansible/collections
-        ansible-galaxy collection list | grep wiphoo.frp
+        uv run ansible-galaxy collection install "$FILE" --force -p ~/.ansible/collections
+        uv run ansible-galaxy collection list | grep wiphoo.frp
 
     - name: Upload collection artifact
       uses: actions/upload-artifact@v4

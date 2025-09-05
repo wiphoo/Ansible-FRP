@@ -40,11 +40,11 @@ jobs:
 
     - name: Build collection
       run: |
-        ansible-galaxy collection build
+        uv run ansible-galaxy collection build
 
     - name: Test collection installation
       run: |
-        ansible-galaxy collection install wiphoo-frp-*.tar.gz --force -p ~/.ansible/collections
+        uv run ansible-galaxy collection install wiphoo-frp-*.tar.gz --force -p ~/.ansible/collections
 
     - name: Install test dependencies
       run: |
