@@ -97,7 +97,9 @@ class TestFrpInstallRole:
     def test_install_files_list(self, role_vars):
         """Test that install files list contains expected binaries."""
         install_files = role_vars["frp_install_files"]
-        assert isinstance(install_files, list)
+        assert isinstance(install_files, list), (
+            f"frp_install_files must be list, got {type(install_files)}: {install_files!r}"
+        )
         assert "frps" in install_files
         assert "frpc" in install_files
         assert len(install_files) >= 2
@@ -275,19 +277,25 @@ class TestFrpInstallRole:
     def test_checksum_verification_variables(self, role_vars):
         """Test that checksum verification variables are properly defined."""
         assert "frp_install_verify_checksums" in role_vars
-        assert isinstance(role_vars["frp_install_verify_checksums"], bool)
+        assert isinstance(role_vars["frp_install_verify_checksums"], bool), (
+            f"frp_install_verify_checksums must be bool, got {type(role_vars['frp_install_verify_checksums'])}: {role_vars['frp_install_verify_checksums']!r}"
+        )
         assert role_vars["frp_install_verify_checksums"] is True
 
     def test_install_files_loop_compatibility(self, role_vars):
         """Test that frp_install_files is a proper list for loop operations."""
         install_files = role_vars["frp_install_files"]
-        assert isinstance(install_files, list)
+        assert isinstance(install_files, list), (
+            f"frp_install_files must be list, got {type(install_files)}: {install_files!r}"
+        )
         assert len(install_files) > 0
 
         # Test that each item is a string (not another data type)
         for item in install_files:
-            assert isinstance(item, str)
-            assert len(item.strip()) > 0
+            assert isinstance(item, str), (
+                f"Install file must be str, got {type(item)}: {item!r}"
+            )
+            assert item.strip(), f"Install file name must be non-empty: {item!r}"
 
     def test_template_reference_format(self):
         """Test that template references use correct collection format."""
