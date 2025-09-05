@@ -170,26 +170,59 @@ class TestFrpInstallRole:
             f"Expected {expected_download_url}, got {download_url_result}"
         )
 
-    def test_version_0640_integration(self):
+    def test_version_0640_integration(self, role_vars_combined):
         """Test that version 0.64.0 is properly handled in all contexts."""
         version = "0.64.0"
         system = "linux"
         architecture = "amd64"
+        import jinja2
 
-        # Test filename generation
+        env = jinja2.Environment()
+
+        # Test filename generation using actual templates
+        fn_wo_ext_t = env.from_string(
+            role_vars_combined["frp_install_filename_without_extension"]
+        )
+        filename_wo_ext = fn_wo_ext_t.render(
+            frp_install_version=version,
+            frp_install_system=system,
+            frp_install_architecture=architecture,
+        )
+        filename_t = env.from_string(role_vars_combined["frp_install_filename"])
+        filename = filename_t.render(
+            frp_install_filename_without_extension=filename_wo_ext,
+            frp_install_version=version,
+            frp_install_system=system,
+            frp_install_architecture=architecture,
+        )
         expected_filename = f"frp_{version}_{system}_{architecture}.tar.gz"
-        assert expected_filename == f"frp_{version}_{system}_{architecture}.tar.gz"
+        assert filename == expected_filename
 
-        # Test download URL generation
+        # Test download URL generation using actual templates
+        download_url_t = env.from_string(role_vars_combined["frp_install_download_url"])
+        download_url = download_url_t.render(
+            frp_install_version=version,
+            frp_install_filename=filename,
+            frp_install_download_base_url=role_vars_combined[
+                "frp_install_download_base_url"
+            ],
+        )
         base_url = "https://github.com/fatedier/frp/releases/download"
         expected_download_url = f"{base_url}/v{version}/{expected_filename}"
-        assert expected_download_url == f"{base_url}/v{version}/{expected_filename}"
+        assert download_url == expected_download_url
 
-        # Test checksum URL generation
-        expected_checksum_url = f"{base_url}/v{version}/frp_sha256_checksums.txt"
-        assert (
-            expected_checksum_url == f"{base_url}/v{version}/frp_sha256_checksums.txt"
+        # Test checksum URL generation using actual templates
+        checksum_url_t = env.from_string(
+            role_vars_combined["frp_install_checksum_download_url"]
         )
+        checksum_url = checksum_url_t.render(
+            frp_install_version=version,
+            frp_install_download_base_url=role_vars_combined[
+                "frp_install_download_base_url"
+            ],
+        )
+        expected_checksum_url = f"{base_url}/v{version}/frp_sha256_checksums.txt"
+        assert checksum_url == expected_checksum_url
 
     def test_version_variable_override(self):
         """Test that frp_version can override the default frp_install_version."""
