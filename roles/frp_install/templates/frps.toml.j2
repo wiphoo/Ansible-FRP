@@ -9,10 +9,15 @@ bindAddr = "0.0.0.0"
 bindPort = 7000
 
 # Authentication configuration
-auth = { method = "token", token = "your_secret_token_here" }
+auth = { method = "{{ frp_auth_method | default('token') }}", token = "{{ frp_auth_token | default('') }}" }
 
 # Dashboard configuration (optional)
-webServer = { addr = "127.0.0.1", port = 7500, user = "admin", password = "admin" }
+webServer = {
+  addr     = "{{ frps_dashboard_addr   | default('127.0.0.1') }}",
+  port     = {{ frps_dashboard_port   | default(7500) }},
+  user     = "{{ frps_dashboard_user   | default('admin') }}",
+  password = "{{ frps_dashboard_password | default('admin') }}"
+}
 
 # Log configuration
 log = { to = "{{ frp_install_log_dir | default('/var/log/frp') }}/frps.log", level = "info", maxDays = 3 }
