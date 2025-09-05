@@ -238,3 +238,27 @@ celerybeat-schedule
 
 # CI/CD
 .github/workflows/*.log
+
+# Build artifacts
+*.egg-info/
+build/
+dist/
+htmlcov/
+.coverage
+coverage.xml
+
+# Development artifacts  
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+__pycache__/
+
+# Collection builds
+wiphoo-frp-*.tar.gz
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
