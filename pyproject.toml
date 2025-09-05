@@ -93,7 +93,7 @@ exclude_lines = [
     "def __repr__",
     "raise AssertionError",
     "raise NotImplementedError",
-    "if __name__ == .__main__.:",
+    "if __name__ == '__main__':",
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
     # Skip debug/development code
