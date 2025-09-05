@@ -13,7 +13,10 @@ test = [
     "pytest>=7.0.0",
     "pytest-ansible>=4.0.0",
     "pytest-yaml>=1.0.0",
-    "molecule[docker]>=6.0.0",
+    "pytest-cov>=4.0.0",
+    "coverage>=7.0.0",
+    "molecule>=6.0.0",
+    "molecule-docker>=2.0.0",
     "ansible-lint>=6.0.0",
 ]
 dev = [
@@ -28,7 +31,7 @@ python_files = ["test_*.py"]
 addopts = ["-v", "--tb=short"]
 markers = [
     "unit: Unit tests",
-    "integration: Integration tests", 
+    "integration: Integration tests",
     "slow: Slow running tests"
 ]
 
@@ -37,6 +40,11 @@ exclude_paths = [
     ".venv/",
     ".github/",
 ]
+
+[tool.mypy]
+ignore_missing_imports = true
+strict_optional = false
+show_error_codes = true
 
 [tool.ruff]
 # Exclude a variety of commonly ignored directories.
@@ -105,3 +113,8 @@ include-package-data = false
 [tool.setuptools.packages.find]
 # Don't try to find packages in this Ansible collection
 exclude = ["*"]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.3.0",
+]

@@ -905,7 +905,9 @@ class TestPerformanceAndOptimization:
     def test_temporary_file_handling(self, role_vars):
         """Test temporary file handling."""
         tmp_dir = role_vars["frp_install_tmp_dir"]
-        assert tmp_dir == "/tmp", "Should use /tmp for temporary files"
+        assert (
+            tmp_dir == "/tmp"
+        ), f"Temporary directory should be /tmp for performance, got {tmp_dir}"
 
     def test_binary_permissions(self):
         """Test that binary permissions are set correctly."""

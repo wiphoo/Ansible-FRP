@@ -5,6 +5,10 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: [ main, master ]
 
+permissions:
+  contents: read
+  pull-requests: write
+
 jobs:
   pr-validation:
     runs-on: ubuntu-latest
@@ -29,17 +33,21 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.uv-cache
-        key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml', '**/uv.lock', '**/requirements*.txt') }}
         restore-keys: |
           ${{ runner.os }}-uv-
 
     - name: Install Ansible and tools
       run: |
-        uv pip install --system ansible ansible-lint
+        uv pip install --system ansible ansible-lint ruff yamllint pre-commit mypy types-PyYAML types-setuptools
 
     - name: Lint Ansible code
       run: |
         ansible-lint roles/
+
+    - name: Run pre-commit hooks
+      run: |
+        pre-commit run --all-files --show-diff-on-failure
 
     - name: Build collection
       run: |
@@ -51,11 +59,14 @@ jobs:
 
     - name: Install test dependencies
       run: |
-        uv pip install --system -e ".[test]"
+        # Install pytest-cov first to ensure it's available
+        uv pip install --system pytest-cov coverage
+        # Then install the test dependencies
+        uv pip install --system --force-reinstall -e ".[test]"
 
     - name: Run pytest tests
       run: |
-        pytest tests/ -v --cov=tests --cov-report=xml --cov-report=term-missing
+        uv run pytest tests/ -v --cov=tests --cov-report=xml --cov-report=term-missing
       env:
         PY_COLORS: '1'
 

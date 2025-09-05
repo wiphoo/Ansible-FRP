@@ -1,0 +1,147 @@
+name: Code Quality
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+# Add permissions for auto-fix to work
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  code-quality-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install code quality tools
+      run: |
+        uv pip install --system ruff yamllint pre-commit mypy types-PyYAML types-setuptools
+
+    - name: Run pre-commit hooks
+      run: |
+        pre-commit run --all-files --show-diff-on-failure
+
+    - name: Run yamllint
+      run: |
+        yamllint . --format github --strict
+
+    - name: Run Ruff linting
+      run: |
+        ruff check . --output-format=github
+
+    - name: Check code formatting with Ruff
+      run: |
+        ruff format --check --diff .
+
+    - name: Run mypy
+      run: |
+        mypy . --ignore-missing-imports
+
+  auto-fix:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        ref: ${{ github.head_ref }}
+        fetch-depth: 0
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      run: |
+        curl -LsSf https://astral.sh/uv/install.sh | sh
+        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+    - name: Install code quality tools
+      run: |
+        uv pip install --system ruff pre-commit mypy types-PyYAML types-setuptools
+
+    - name: Run auto-fixes
+      run: |
+        ruff check --fix .
+        ruff format .
+        pre-commit run --all-files || true
+
+    - name: Check for changes
+      id: verify-changed-files
+      run: |
+        if [ -n "$(git status --porcelain)" ]; then
+          echo "changed=true" >> $GITHUB_OUTPUT
+        else
+          echo "changed=false" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Commit auto-fixes
+      id: commit-auto-fixes
+      if: steps.verify-changed-files.outputs.changed == 'true'
+      run: |
+        # Check if we can push to this branch
+        if git ls-remote --heads origin ${{ github.head_ref }} | grep -q ${{ github.head_ref }}; then
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git commit -m "🤖 Auto-fix: Format code with Ruff"
+          if git push; then
+            echo "✅ Auto-fix changes pushed successfully"
+          else
+            echo "❌ Failed to push auto-fix changes"
+            echo "This might be due to branch protection rules or insufficient permissions"
+            echo "Please apply the formatting fixes manually:"
+            echo "  uv run ruff check --fix ."
+            echo "  uv run ruff format ."
+            exit 1
+          fi
+        else
+          echo "Cannot push to branch ${{ github.head_ref }} - it may be protected or not exist"
+          echo "Please apply the formatting fixes manually:"
+          echo "  uv run ruff check --fix ."
+          echo "  uv run ruff format ."
+          exit 1
+        fi
+
+    - name: Comment on PR (Success)
+      if: steps.verify-changed-files.outputs.changed == 'true' && success()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '🤖 **Code Quality Auto-fix Applied**\n\nI\'ve automatically applied code formatting and linting fixes using Ruff. The changes have been committed to your branch.\n\n**Applied fixes:**\n- Code formatting with Ruff\n- Import sorting and linting with Ruff\n- Pre-commit hook fixes\n\nPlease review the changes and ensure they look correct!'
+          })
+
+    - name: Comment on PR (Failed to Push)
+      if: steps.verify-changed-files.outputs.changed == 'true' && failure()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: '🤖 **Code Quality Issues Found**\n\nI found code quality issues that need to be fixed, but I couldn\'t automatically apply them due to permission restrictions.\n\n**Please apply these fixes manually:**\n```bash\n# Install dependencies if needed\nuv pip install ruff pre-commit\n\n# Apply fixes\nuv run ruff check --fix .\nuv run ruff format .\npre-commit run --all-files\n\n# Commit the changes\ngit add .\ngit commit -m "fix: Apply code quality fixes"\ngit push\n```\n\n**Issues to fix:**\n- Code formatting (Ruff)\n- Import sorting and linting (Ruff)\n- Pre-commit hook issues'
+          })

@@ -38,7 +38,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.uv-cache
-        key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml', '**/uv.lock') }}
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml', '**/uv.lock', '**/requirements*.txt') }}
         restore-keys: |
           ${{ runner.os }}-uv-
 
@@ -48,9 +48,21 @@ jobs:
 
     - name: Setup MkDocs
       run: |
+        # Create docs-site directory structure
+        mkdir -p docs-site/docs/roles
+
+        # Copy configuration and documentation files
         cp mkdocs.yml docs-site/
-        cp -r docs/* docs-site/docs/ 2>/dev/null || true
-        cp README.md docs-site/docs/index.md
+
+        # Copy docs directory contents if it exists
+        if [ -d "docs" ] && [ "$(ls -A docs)" ]; then
+          cp -r docs/* docs-site/docs/ 2>/dev/null || true
+        fi
+
+        # Copy README as index if it exists
+        if [ -f "README.md" ]; then
+          cp README.md docs-site/docs/index.md
+        fi
 
     - name: Create documentation pages
       run: |
@@ -291,10 +303,24 @@ jobs:
     - name: Build with MkDocs
       run: |
         cd docs-site
+
+        # Verify that we have the necessary files
+        if [ ! -f "mkdocs.yml" ]; then
+          echo "Error: mkdocs.yml not found in docs-site/"
+          exit 1
+        fi
+
+        if [ ! -d "docs" ]; then
+          echo "Error: docs directory not found in docs-site/"
+          exit 1
+        fi
+
+        # Build the documentation
         mkdocs build
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
+      if: runner.name != 'act'
       with:
         path: docs-site/site
 
