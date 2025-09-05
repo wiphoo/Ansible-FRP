@@ -442,24 +442,22 @@ class TestFrpInstallRole:
                 result == expected
             ), f"System {ansible_system} should convert to {expected}, got {result}"
 
-    def test_error_handling_variables(self):
+    def test_error_handling_variables(self, role_vars):
         """Test that error handling variables are properly configured."""
         # This test ensures that tasks have proper error handling
-        # In a real test environment, we'd check the actual task configurations
-        # For now, we'll test that the variables used in error handling exist
+        # by validating that required variables for error recovery exist
 
         error_related_vars = [
             "frp_install_tmp_dir",
-            "frp_install_filename",
-            "frp_install_download_url",
+            "frp_install_cleanup_tmp",
+            "frp_install_verify_checksums",
         ]
 
-        # These would be checked against the actual role variables
-        # This is a placeholder for more comprehensive error handling tests
+        # Check that all error-related variables are defined in defaults
         for var in error_related_vars:
-            assert var.startswith(
-                "frp_install_"
-            ), f"Error handling variable {var} should follow naming convention"
+            assert (
+                var in role_vars
+            ), f"Missing variable required for error handling: {var}"
 
     def test_idempotency_variables(self, role_vars):
         """Test that variables support idempotent operations."""
