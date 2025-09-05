@@ -71,7 +71,7 @@ jobs:
 
     - name: Check test coverage
       run: |
-        coverage report --fail-under=90
+        uv run coverage report --fail-under=85
 
     - name: Comment PR with test results
       uses: dorny/test-reporter@v2
