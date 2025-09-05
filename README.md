@@ -3,6 +3,7 @@
 [![Build & Test Collection](https://github.com/wiphoo/Ansible-FRP/actions/workflows/main.yml/badge.svg)](https://github.com/wiphoo/Ansible-FRP/actions/workflows/main.yml)
 [![PR Quality & Security](https://github.com/wiphoo/Ansible-FRP/actions/workflows/pr-validation.yml/badge.svg)](https://github.com/wiphoo/Ansible-FRP/actions/workflows/pr-validation.yml)
 [![Security Scan](https://github.com/wiphoo/Ansible-FRP/actions/workflows/security.yml/badge.svg)](https://github.com/wiphoo/Ansible-FRP/actions/workflows/security.yml)
+[![codecov](https://codecov.io/gh/wiphoo/Ansible-FRP/graph/badge.svg?token=3VSLLM8HB1)](https://codecov.io/gh/wiphoo/Ansible-FRP)
 [![Ansible Galaxy](https://img.shields.io/ansible/collection/wiphoo.frp)](https://galaxy.ansible.com/ui/repo/published/wiphoo/frp/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -19,13 +20,13 @@ Transform your network infrastructure with this production-ready Ansible collect
 - **Security First**: Configurable firewall rules and secure defaults
 
 ### 🔧 **Flexible Configuration**
-- **Dual Formats**: Support for both INI and modern TOML configuration formats
+- **TOML-first**: Modern TOML configuration (INI templates planned)
 - **Template-Based**: Jinja2 templates for dynamic configuration generation
 - **Role Separation**: Independent server (`frps`) and client (`frpc`) role deployment
 - **Version Management**: Pin specific FRP versions or use latest stable releases
 
 ### 🛡️ **Enterprise Quality**
-- **94.62% Test Coverage**: Comprehensive test suite with pytest and Molecule
+- **[![codecov](https://codecov.io/gh/wiphoo/Ansible-FRP/graph/badge.svg?token=3VSLLM8HB1)](https://codecov.io/gh/wiphoo/Ansible-FRP) Test Coverage**: Comprehensive test suite with pytest and Molecule
 - **CI/CD Pipeline**: Automated testing, security scanning, and quality gates
 - **Documentation**: Complete API docs, examples, and troubleshooting guides
 - **Maintenance**: Regular updates and security patches
@@ -273,7 +274,7 @@ molecule test
 ### Code Quality
 
 - **Pre-commit hooks**: Automatic formatting with Ruff, YAML validation, Ansible-lint
-- **Testing**: 94.62% test coverage with pytest and Molecule
+- **Testing**: [![codecov](https://codecov.io/gh/wiphoo/Ansible-FRP/graph/badge.svg?token=YOUR_CODECOV_TOKEN)](https://codecov.io/gh/wiphoo/Ansible-FRP) test coverage with pytest and Molecule
 - **CI/CD**: Comprehensive pipeline with quality gates and security scanning
 - **Documentation**: MkDocs with automatic API documentation generation
 
@@ -287,7 +288,7 @@ molecule test
 
 ## 📊 Project Statistics
 
-- 🧪 **94.62% Test Coverage**
+- 🧪 **[![codecov](https://codecov.io/gh/wiphoo/Ansible-FRP/graph/badge.svg?token=YOUR_CODECOV_TOKEN)](https://codecov.io/gh/wiphoo/Ansible-FRP) Test Coverage**
 - 🏗️ **5 GitHub Actions Workflows**
 - 🔒 **11 Pre-commit Quality Hooks**
 - 📚 **Comprehensive Documentation**
