@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -11,21 +11,23 @@ repos:
       - id: debug-statements
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.9
+    rev: v0.12.12
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
+        name: ruff-format-check
+        args: [--check, --diff]
 
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.35.1
+    rev: v1.37.1
     hooks:
       - id: yamllint
         args: [--strict]
         exclude: ^(roles/|.*/(tasks|vars|handlers|defaults|meta)/.*\.ya?ml|.*playbook.*\.ya?ml|examples\.yml)$
 
   - repo: https://github.com/ansible/ansible-lint
-    rev: v24.7.0
+    rev: v25.8.2
     hooks:
       - id: ansible-lint
         additional_dependencies: [ansible>=8.0.0]
@@ -33,7 +35,7 @@ repos:
         args: [--strict]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.11.2
+    rev: v1.17.1
     hooks:
       - id: mypy
         additional_dependencies: [types-PyYAML, types-setuptools]
