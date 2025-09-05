@@ -34,20 +34,34 @@ addopts = [
     "-v",
     "--tb=short",
     "--strict-markers",
+    "--strict-config",
     "--cov=tests",
     "--cov-report=xml",
     "--cov-report=html",
     "--cov-report=term-missing",
-    "--cov-fail-under=80",
+    "--cov-branch",
+    "--cov-fail-under=85",
 ]
 markers = [
-    "unit: Unit tests",
-    "integration: Integration tests", 
-    "slow: Slow running tests",
+    "unit: Unit tests for role functionality",
+    "integration: Integration tests with Ansible",
+    "slow: Slow running tests (molecule, etc)",
+    "template: Template rendering and validation tests",
+    "config: Configuration file validation tests",
 ]
+filterwarnings = [
+    "ignore::UserWarning",
+    "ignore::DeprecationWarning",
+    "ignore::PendingDeprecationWarning",
+]
+# Minimum version requirements
+minversion = "6.0"
+# Test discovery patterns
+norecursedirs = [".git", ".tox", "dist", "build", "*.egg", ".venv"]
 
 [tool.coverage.run]
 source = ["tests"]
+branch = true
 omit = [
     "*/venv/*",
     "*/.venv/*",
@@ -56,9 +70,18 @@ omit = [
     "*/.pytest_cache/*",
     "*/.ansible/*",
     "*/collections/*",
+    "*/htmlcov/*",
+    "*/build/*",
+    "*/dist/*",
 ]
 
 [tool.coverage.report]
+# Show missing lines in terminal output
+show_missing = true
+# Skip covered files in terminal output for cleaner display
+skip_covered = false
+# Precision for coverage percentage
+precision = 2
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
@@ -67,7 +90,20 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "class .*\\bProtocol\\):",
     "@(abc\\.)?abstractmethod",
+    # Skip debug/development code
+    "if DEBUG:",
+    "if settings.DEBUG:",
+    # Skip abstract methods and NotImplemented
+    "raise NotImplementedError",
+    "return NotImplemented",
 ]
+
+[tool.coverage.html]
+directory = "htmlcov"
+title = "Wiphoo FRP Ansible Collection Test Coverage"
+
+[tool.coverage.xml]
+output = "coverage.xml"
 
 [tool.ansible-lint]
 exclude_paths = [
