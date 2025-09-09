@@ -90,6 +90,8 @@ ansible-galaxy collection install git+https://github.com/wiphoo/Ansible-FRP.git
 | `frp_install_dir` | `/usr/local/bin/frp` | Installation directory | No |
 | `frp_install_config_dir` | `/etc/frp` | Configuration directory | No |
 | `frp_install_log_dir` | `/var/log/frp` | Log directory | No |
+| `frp_install_configure_firewall` | `false` | Manage firewall rules for FRP ports | No |
+
 
 ### Server Configuration
 
@@ -99,6 +101,7 @@ ansible-galaxy collection install git+https://github.com/wiphoo/Ansible-FRP.git
 | `frp_server_token` | `""` | Authentication token | Recommended |
 | `frp_server_log_level` | `info` | Logging level | No |
 | `frp_server_max_clients` | `0` | Maximum client connections (0=unlimited) | No |
+| `frp_server_heartbeat_timeout` | `90` | Server heartbeat timeout in seconds | No |
 
 ### Client Configuration
 
@@ -185,7 +188,7 @@ Create your own configuration templates:
 - name: Use custom FRP configuration
   template:
     src: my-custom-frpc.toml.j2
-    dest: /etc/frp/frpc.toml
+    dest: /etc/frp/frpc.conf
   notify: restart frpc
 ```
 
@@ -253,7 +256,7 @@ git clone https://github.com/wiphoo/Ansible-FRP.git
 cd Ansible-FRP
 
 # Set up development environment
-uv sync --extra dev
+uv sync --extra dev --extra test
 
 # Run pre-commit hooks
 pre-commit install
@@ -264,11 +267,10 @@ pre-commit run --all-files
 
 ```bash
 # Run the test suite
-uv run pytest tests/ -v --cov=tests --cov-report=term-missing
+uv run pytest -v --cov=roles --cov=plugins --cov-report=term-missing tests/
 
 # Run Molecule tests
-cd roles/frp_install
-molecule test
+`cd roles/frp_install; uv run molecule test --all`
 ```
 
 ### Code Quality
