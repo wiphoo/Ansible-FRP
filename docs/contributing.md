@@ -120,22 +120,22 @@ uv run mkdocs serve
 ansible-galaxy collection build --force
 
 # Install locally for testing
-ansible-galaxy collection install wiphoo-frp-1.0.0.tar.gz --force -p ~/.ansible/collections
+ansible-galaxy collection install wiphoo-frp-0.1.0.tar.gz --force -p ~/.ansible/collections
 
 # Verify installation
 ansible-galaxy collection list | grep wiphoo.frp
 
 # Test with a simple playbook
-ansible-playbook -i localhost, examples.yml --connection=local
+ansible-playbook -i localhost, docs/examples/examples.yml --connection=local
 ```
 
 **Alternative installation paths:**
 ```bash
 # Install to current directory collections/
-ansible-galaxy collection install wiphoo-frp-1.0.0.tar.gz --force -p ./collections
+ansible-galaxy collection install wiphoo-frp-0.1.0.tar.gz --force -p ./collections
 
 # Install system-wide (requires sudo)
-sudo ansible-galaxy collection install wiphoo-frp-1.0.0.tar.gz --force
+sudo ansible-galaxy collection install wiphoo-frp-0.1.0.tar.gz --force
 ```
 
 ## Dependency Management

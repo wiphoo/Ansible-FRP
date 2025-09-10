@@ -1,8 +1,8 @@
 # Installation, Usage & Examples
 
-Complete guide for installing, configuring, and deploying the wiphoo.frp Ansible collection.
+Complete guide for installing, configuring, and deploying the wiphoo.frp Ansible collection with practical examples.
 
-## Installation
+## 📦 Installation
 
 ### Requirements
 - Ansible >=11.10, Python >=3.11
@@ -20,7 +20,7 @@ ansible-galaxy collection install wiphoo.frp
 ```yaml
 collections:
   - name: wiphoo.frp
-    version: ">=1.0.0"
+    version: ">=0.1.0"
 ```
 ```bash
 ansible-galaxy collection install -r requirements.yml
@@ -112,83 +112,98 @@ frp_log_level: "warn"
 frp_log_max_days: 7
 ```
 
-## Real-World Examples
+## 🎯 Practical Examples
 
-### Home Lab Setup
+### Home Lab Example
+
+Deploy an FRP server on a VPS and a client that exposes services from your home lab:
+
 ```yaml
-- hosts: vps_servers
+- name: Home lab FRP deployment
+  hosts: all
   become: true
+  vars:
+    # Secure authentication token (use Ansible Vault in production)
+    frp_install_auth_token: "{{ vault_frp_token }}"
+  tasks:
+    - name: Install FRP server on VPS
+      include_role:
+        name: wiphoo.frp.frp_install
+      vars:
+        frp_install_files: ["frps"]
+        frp_install_configure_firewall: true
+        frp_install_server_addr: "0.0.0.0"  # Bind to all interfaces
+        frp_install_server_port: 7000
+        frp_install_dashboard_addr: "127.0.0.1"  # Dashboard only on localhost
+        frp_install_dashboard_port: 7500
+      when: inventory_hostname in groups['vps_servers']
+
+    - name: Install FRP client on home lab
+      include_role:
+        name: wiphoo.frp.frp_install
+      vars:
+        frp_install_files: ["frpc"]
+        frp_install_client_server_addr: "203.0.113.10"  # Your VPS IP
+        frp_install_client_server_port: 7000
+      when: inventory_hostname in groups['home_clients']
+```
+
+### Corporate Example (Secure)
+
+Use Vault for tokens and enable logging for audit:
+
+```yaml
+- hosts: corp_servers
+  become: true
+  vars:
+    # Use encrypted vault for sensitive data
+    frp_install_auth_token: "{{ vault_corporate_token }}"
+    frp_install_log_level: "info"
+    frp_install_log_max_days: 30
   roles:
     - role: wiphoo.frp.frp_install
       vars:
         frp_install_files: ["frps"]
         frp_install_configure_firewall: true
+        frp_install_server_addr: "0.0.0.0"
+        frp_install_server_port: 7000
+        # Enable dashboard with authentication
+        frp_install_dashboard_addr: "0.0.0.0"
+        frp_install_dashboard_port: 7500
+        frp_install_dashboard_user: "admin"
+        frp_install_dashboard_pwd: "{{ vault_dashboard_password }}"
 
-- hosts: homelab
-  become: true
-  roles:
-    - role: wiphoo.frp.frp_install
-      vars:
-        frp_install_files: ["frpc"]
-        frp_server_addr: "203.0.113.10"
-        frp_proxies:
-          - name: "ssh"
-            type: "tcp"
-            local_port: 22
-            remote_port: 2222
-          - name: "homeassistant"
-            type: "http"
-            local_port: 8123
-            custom_domains: ["home.example.com"]
-```
-
-### Corporate Environment
-```yaml
-- hosts: all
+- hosts: corp_clients
   become: true
   vars:
-    frp_auth_token: "{{ vault_corporate_token }}"
-    frp_transport_tls_enable: true
-  roles:
-    - role: wiphoo.frp.frp_install
-      vars:
-        frp_install_user: "svcfrp"
-        frp_install_dir: "/opt/frp/bin"
-        frp_install_verify_checksums: true
-        frp_install_configure_firewall: true
-```
-
-### Load Balanced Services
-```yaml
-- hosts: web_servers
-  become: true
+    frp_install_auth_token: "{{ vault_corporate_token }}"
+    frp_install_log_level: "info"
   roles:
     - role: wiphoo.frp.frp_install
       vars:
         frp_install_files: ["frpc"]
-        frp_server_addr: "lb.example.com"
-        frp_proxies:
-          - name: "web-{{ inventory_hostname }}"
-            type: "http"
-            local_port: 80
-            custom_domains: ["app.example.com"]
-            group: "web-cluster"
-            group_key: "{{ vault_lb_key }}"
-            health_check_type: "http"
-            health_check_url: "/health"
+        frp_install_client_server_addr: "corp-frp.example.com"
+        frp_install_client_server_port: 7000
 ```
 
-### Container Integration
+### Container Integration Example
+
+Deploy FRP without systemd service for container environments:
+
 ```yaml
 - hosts: container_hosts
   become: true
+  vars:
+    frp_install_auth_token: "{{ vault_frp_token }}"
   roles:
     - role: wiphoo.frp.frp_install
       vars:
-        frp_install_create_service: false
-        frp_install_dir: "/usr/local/bin/frp"
+        frp_install_files: ["frpc"]
+        frp_install_create_service: false  # No systemd service
+        frp_install_client_server_addr: "frp-server.example.com"
+        frp_install_client_server_port: 7000
   post_tasks:
-    - name: Create Docker Compose
+    - name: Create Docker Compose for FRP Client
       copy:
         content: |
           version: '3.8'
@@ -198,9 +213,81 @@ frp_log_max_days: 7
               command: /usr/local/bin/frp/frpc -c /etc/frp/frpc.toml
               volumes:
                 - /etc/frp:/etc/frp:ro
+                - /var/log/frp:/var/log/frp
               restart: unless-stopped
+              network_mode: host
         dest: /opt/frp/docker-compose.yml
 ```
 
-For detailed variable reference, see [API Documentation](api.md).
-For help with issues, see [Help & Support](help.md).
+## 📁 Ready-to-Use Example Files
+
+The `docs/examples/` directory contains consolidated, production-ready examples:
+
+### 🎯 Main Examples
+- **[examples.yml](examples/examples.yml)** - **5 comprehensive scenarios** covering minimal, production, and hybrid deployments
+- **[example_frpc_playbook.yml](examples/example_frpc_playbook.yml)** - **Production-ready client** with validation, error handling, and deployment notes
+
+### ⚡ Quick Start Examples
+- **[minimal_frps.yml](examples/minimal_frps.yml)** - **Minimal server** (3 variables only)
+- **[minimal_frpc.yml](examples/minimal_frpc.yml)** - **Minimal client** (3 variables only)
+
+### 🗄️ Configuration Template
+- **[example_inventory.ini](examples/example_inventory.ini)** - Sample inventory with proper host grouping
+
+### Quick Start with Examples
+
+**For Testing:**
+```bash
+# Copy minimal examples (fastest way to get started)
+cp docs/examples/minimal_frps.yml my-server.yml
+cp docs/examples/minimal_frpc.yml my-client.yml
+```
+
+**For Production:**
+```bash
+# Copy production-ready example with validation
+cp docs/examples/example_frpc_playbook.yml my-production-client.yml
+
+# Or choose from 5 comprehensive scenarios
+cp docs/examples/examples.yml my-deployment.yml
+```
+
+**Deploy:**
+```bash
+cp docs/examples/example_inventory.ini inventory/hosts.ini
+# Edit inventory/hosts.ini and your playbook variables
+ansible-playbook -i inventory/hosts.ini my-deployment.yml
+```
+
+## 🔧 Advanced Configuration
+
+### Security Configuration
+
+**With TLS:**
+```yaml
+frp_transport_tls_enable: true
+frp_transport_tls_cert_file: "/path/to/cert.pem"
+frp_transport_tls_key_file: "/path/to/key.pem"
+```
+
+**Using Ansible Vault:**
+```yaml
+frp_install_auth_token: "{{ vault_frp_token }}"
+```
+
+### Production Settings
+
+**Server Optimization:**
+```yaml
+frp_install_server_max_clients: 1000
+frp_install_server_max_ports_per_client: 10
+frp_install_log_level: "warn"
+frp_install_log_max_days: 7
+```
+
+## 📚 Additional Resources
+
+- **[API Reference](api.md)** - Complete variable documentation
+- **[Security Guide](SECURITY.md)** - Security best practices and supported versions
+- **[Help & Support](help.md)** - Troubleshooting and FAQ
+- **[Contributing](contributing.md)** - How to contribute to the project

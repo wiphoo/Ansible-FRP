@@ -1,0 +1,77 @@
+---
+# Configuration Variables Test Scenario - Molecule
+# This scenario validates that all configuration variables properly pass through
+
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
+
+platforms:
+  - name: config-test-instance
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    command: sleep infinity
+    pre_build_image: true
+    privileged: false
+    env:
+      DEBIAN_FRONTEND: noninteractive
+
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      callbacks_enabled: profile_tasks, timer
+      stdout_callback: yaml
+  inventory:
+    group_vars:
+      all:
+        # Test with all configuration variables set to non-default values
+        frp_install_version: "0.63.0"
+        frp_install_create_service: false  # No systemd in container
+
+        # Authentication
+        frp_install_auth_method: "token"
+        frp_install_auth_token: "test-config-validation-token-12345"
+
+        # Server configuration (non-default values)
+        frp_install_server_addr: "192.168.100.200"
+        frp_install_server_port: 7001
+        frp_install_dashboard_addr: "0.0.0.0"
+        frp_install_dashboard_port: 7501
+        frp_install_dashboard_user: "test-admin"
+        frp_install_dashboard_password: "test-dashboard-password"
+
+        # Client configuration (non-default values)
+        frp_install_client_server_addr: "config-test-server.example.com"
+        frp_install_client_server_port: 7002
+        frp_install_client_webserver_enabled: true
+        frp_install_client_webserver_addr: "127.0.0.1"
+        frp_install_client_webserver_port: 7401
+        frp_install_client_webserver_user: "test-client-admin"
+        frp_install_client_webserver_password: "test-client-password"
+        frp_install_client_webserver_pprof_enabled: true
+
+        # Logging configuration (non-default values)
+        frp_install_log_level: "debug"
+        frp_install_log_max_days: 14
+        frp_install_log_disable_print_color: true
+
+  playbooks:
+    converge: ../resources/playbook.yml
+    verify: verify_config_variables.yml
+
+verifier:
+  name: ansible
+
+scenario:
+  name: config-variables
+  test_sequence:
+    - dependency
+    - cleanup
+    - destroy
+    - create
+    - prepare
+    - converge
+    - verify
+    - destroy

@@ -36,8 +36,8 @@ The `frp_install` role provides comprehensive automation for deploying FRP in yo
     - role: wiphoo.frp.frp_install
       vars:
         frp_install_files: ["frpc"]
-        frp_server_addr: "server.example.com"
-        frp_auth_token: "{{ vault_frp_token }}"
+        frp_install_server_addr: "server.example.com"
+        frp_install_auth_token: "{{ vault_frp_token }}"
 ```
 
 ### Install Server Only
@@ -52,7 +52,7 @@ The `frp_install` role provides comprehensive automation for deploying FRP in yo
       vars:
         frp_install_files: ["frps"]
         frp_install_configure_firewall: true
-        frp_auth_token: "{{ vault_frp_token }}"
+        frp_install_auth_token: "{{ vault_frp_token }}"
 ```
 
 ### Install Both Components
@@ -91,9 +91,11 @@ The `frp_install` role provides comprehensive automation for deploying FRP in yo
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `frp_server_addr` | `"127.0.0.1"` | FRP server address |
-| `frp_server_port` | `7000` | FRP server port |
-| `frp_auth_token` | `""` | Authentication token |
+| `frp_install_server_addr` | `"0.0.0.0"` | FRP server bind address |
+| `frp_install_server_port` | `7000` | FRP server bind port |
+| `frp_install_auth_token` | `"changeme_default_token_123"` | Authentication token |
+| `frp_install_dashboard_addr` | `"127.0.0.1"` | Dashboard/webServer bind address |
+| `frp_install_dashboard_port` | `7500` | Dashboard/webServer port |
 
 ## Advanced Configuration
 

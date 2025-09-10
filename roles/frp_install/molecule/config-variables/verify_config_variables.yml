@@ -1,0 +1,258 @@
+---
+# Comprehensive Configuration Variables Verification
+# This test validates that ALL configuration variables are properly rendered in TOML files
+
+- name: Verify Configuration Variables Pass Through
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    frp_install_config_dir: "/etc/frp"
+    expected_values:
+      # Authentication
+      auth_token: "test-config-validation-token-12345"
+
+      # Server configuration
+      server_addr: "192.168.100.200"
+      server_port: "7001"
+      dashboard_addr: "0.0.0.0"
+      dashboard_port: "7501"
+      dashboard_user: "test-admin"
+      dashboard_password: "test-dashboard-password"
+
+      # Client configuration
+      client_server_addr: "config-test-server.example.com"
+      client_server_port: "7002"
+      client_webserver_addr: "127.0.0.1"
+      client_webserver_port: "7401"
+      client_webserver_user: "test-client-admin"
+      client_webserver_password: "test-client-password"
+
+      # Logging
+      log_level: "debug"
+      log_max_days: "14"
+      log_disable_color: "true"
+
+  tasks:
+    - name: Check that configuration files exist
+      ansible.builtin.stat:
+        path: "{{ frp_install_config_dir }}/{{ item }}"
+      register: config_files
+      loop:
+        - "frps.toml"
+        - "frpc.toml"
+
+    - name: Assert configuration files exist
+      ansible.builtin.assert:
+        that: item.stat.exists
+        fail_msg: "Configuration file {{ item.item }} does not exist"
+        success_msg: "✓ Configuration file {{ item.item }} exists"
+      loop: "{{ config_files.results }}"
+
+    # === SERVER CONFIGURATION VALIDATION ===
+    - name: Read server configuration file
+      ansible.builtin.slurp:
+        src: "{{ frp_install_config_dir }}/frps.toml"
+      register: frps_config_raw
+
+    - name: Set server configuration content
+      ansible.builtin.set_fact:
+        frps_config: "{{ frps_config_raw.content | b64decode }}"
+
+    - name: Display server configuration for debugging
+      ansible.builtin.debug:
+        msg: "Server configuration content:\n{{ frps_config }}"
+        verbosity: 2
+
+    - name: Verify server bind address
+      ansible.builtin.assert:
+        that: 'expected_values.server_addr in frps_config'
+        fail_msg: "Server bind address '{{ expected_values.server_addr }}' not found in frps.toml"
+        success_msg: "✓ Server bind address correctly configured"
+
+    - name: Verify server bind port
+      ansible.builtin.assert:
+        that: 'expected_values.server_port in frps_config'
+        fail_msg: "Server bind port '{{ expected_values.server_port }}' not found in frps.toml"
+        success_msg: "✓ Server bind port correctly configured"
+
+    - name: Verify server authentication token
+      ansible.builtin.assert:
+        that: 'expected_values.auth_token in frps_config'
+        fail_msg: "Authentication token not found in frps.toml"
+        success_msg: "✓ Server authentication token correctly configured"
+
+    - name: Verify dashboard bind address
+      ansible.builtin.assert:
+        that: 'expected_values.dashboard_addr in frps_config'
+        fail_msg: "Dashboard address '{{ expected_values.dashboard_addr }}' not found in frps.toml"
+        success_msg: "✓ Dashboard bind address correctly configured"
+
+    - name: Verify dashboard port
+      ansible.builtin.assert:
+        that: 'expected_values.dashboard_port in frps_config'
+        fail_msg: "Dashboard port '{{ expected_values.dashboard_port }}' not found in frps.toml"
+        success_msg: "✓ Dashboard port correctly configured"
+
+    - name: Verify dashboard user
+      ansible.builtin.assert:
+        that: 'expected_values.dashboard_user in frps_config'
+        fail_msg: "Dashboard user '{{ expected_values.dashboard_user }}' not found in frps.toml"
+        success_msg: "✓ Dashboard user correctly configured"
+
+    - name: Verify dashboard password
+      ansible.builtin.assert:
+        that: 'expected_values.dashboard_password in frps_config'
+        fail_msg: "Dashboard password not found in frps.toml"
+        success_msg: "✓ Dashboard password correctly configured"
+
+    - name: Verify server log level
+      ansible.builtin.assert:
+        that: 'expected_values.log_level in frps_config'
+        fail_msg: "Log level '{{ expected_values.log_level }}' not found in frps.toml"
+        success_msg: "✓ Server log level correctly configured"
+
+    - name: Verify server log retention
+      ansible.builtin.assert:
+        that: 'expected_values.log_max_days in frps_config'
+        fail_msg: "Log max days '{{ expected_values.log_max_days }}' not found in frps.toml"
+        success_msg: "✓ Server log retention correctly configured"
+
+    - name: Verify server log color setting
+      ansible.builtin.assert:
+        that: 'expected_values.log_disable_color in frps_config'
+        fail_msg: "Log disable color setting not found in frps.toml"
+        success_msg: "✓ Server log color setting correctly configured"
+
+    # === CLIENT CONFIGURATION VALIDATION ===
+    - name: Read client configuration file
+      ansible.builtin.slurp:
+        src: "{{ frp_install_config_dir }}/frpc.toml"
+      register: frpc_config_raw
+
+    - name: Set client configuration content
+      ansible.builtin.set_fact:
+        frpc_config: "{{ frpc_config_raw.content | b64decode }}"
+
+    - name: Display client configuration for debugging
+      ansible.builtin.debug:
+        msg: "Client configuration content:\n{{ frpc_config }}"
+        verbosity: 2
+
+    - name: Verify client server address
+      ansible.builtin.assert:
+        that: 'expected_values.client_server_addr in frpc_config'
+        fail_msg: "Client server address '{{ expected_values.client_server_addr }}' not found in frpc.toml"
+        success_msg: "✓ Client server address correctly configured"
+
+    - name: Verify client server port
+      ansible.builtin.assert:
+        that: 'expected_values.client_server_port in frpc_config'
+        fail_msg: "Client server port '{{ expected_values.client_server_port }}' not found in frpc.toml"
+        success_msg: "✓ Client server port correctly configured"
+
+    - name: Verify client authentication token
+      ansible.builtin.assert:
+        that: 'expected_values.auth_token in frpc_config'
+        fail_msg: "Authentication token not found in frpc.toml"
+        success_msg: "✓ Client authentication token correctly configured"
+
+    - name: Verify client webserver address
+      ansible.builtin.assert:
+        that: 'expected_values.client_webserver_addr in frpc_config'
+        fail_msg: "Client webserver address '{{ expected_values.client_webserver_addr }}' not found in frpc.toml"
+        success_msg: "✓ Client webserver address correctly configured"
+
+    - name: Verify client webserver port
+      ansible.builtin.assert:
+        that: 'expected_values.client_webserver_port in frpc_config'
+        fail_msg: "Client webserver port '{{ expected_values.client_webserver_port }}' not found in frpc.toml"
+        success_msg: "✓ Client webserver port correctly configured"
+
+    - name: Verify client webserver user
+      ansible.builtin.assert:
+        that: 'expected_values.client_webserver_user in frpc_config'
+        fail_msg: "Client webserver user '{{ expected_values.client_webserver_user }}' not found in frpc.toml"
+        success_msg: "✓ Client webserver user correctly configured"
+
+    - name: Verify client webserver password
+      ansible.builtin.assert:
+        that: 'expected_values.client_webserver_password in frpc_config'
+        fail_msg: "Client webserver password not found in frpc.toml"
+        success_msg: "✓ Client webserver password correctly configured"
+
+    - name: Verify webServer.pprofEnable is set correctly
+      ansible.builtin.assert:
+        that: '"webServer.pprofEnable = true" in frpc_config'
+        fail_msg: "Client webserver pprof setting not configured correctly"
+        success_msg: "✓ Client webserver pprof setting correctly configured"
+
+    - name: Verify client log level
+      ansible.builtin.assert:
+        that: 'expected_values.log_level in frpc_config'
+        fail_msg: "Log level '{{ expected_values.log_level }}' not found in frpc.toml"
+        success_msg: "✓ Client log level correctly configured"
+
+    - name: Verify client log retention
+      ansible.builtin.assert:
+        that: 'expected_values.log_max_days in frpc_config'
+        fail_msg: "Log max days '{{ expected_values.log_max_days }}' not found in frpc.toml"
+        success_msg: "✓ Client log retention correctly configured"
+
+    - name: Verify client log color setting
+      ansible.builtin.assert:
+        that: 'expected_values.log_disable_color in frpc_config'
+        fail_msg: "Log disable color setting not found in frpc.toml"
+        success_msg: "✓ Client log color setting correctly configured"
+
+    # === CONDITIONAL CONFIGURATION VALIDATION ===
+    - name: Verify webserver section is uncommented when enabled
+      ansible.builtin.assert:
+        that:
+          - '"webServer.addr" in frpc_config'
+          - '"# webServer.addr" not in frpc_config or frpc_config.count("webServer.addr") > frpc_config.count("# webServer.addr")'
+        fail_msg: "Client webserver should be enabled but appears to be commented out"
+        success_msg: "✓ Client webserver conditional configuration working correctly"
+
+    # === SUMMARY ===
+    - name: Display comprehensive validation summary
+      ansible.builtin.debug:
+        msg: |
+          ==========================================
+          🎉 CONFIGURATION VARIABLES VALIDATION SUCCESS
+          ==========================================
+
+          ALL CONFIGURATION VARIABLES VERIFIED:
+
+          ✅ SERVER CONFIGURATION (frps.toml):
+             • Bind Address: {{ expected_values.server_addr }} ✓
+             • Bind Port: {{ expected_values.server_port }} ✓
+             • Dashboard Address: {{ expected_values.dashboard_addr }} ✓
+             • Dashboard Port: {{ expected_values.dashboard_port }} ✓
+             • Dashboard User: {{ expected_values.dashboard_user }} ✓
+             • Dashboard Password: configured ✓
+             • Authentication Token: configured ✓
+             • Log Level: {{ expected_values.log_level }} ✓
+             • Log Retention: {{ expected_values.log_max_days }} days ✓
+             • Log Color: disabled ✓
+
+          ✅ CLIENT CONFIGURATION (frpc.toml):
+             • Server Address: {{ expected_values.client_server_addr }} ✓
+             • Server Port: {{ expected_values.client_server_port }} ✓
+             • WebServer Address: {{ expected_values.client_webserver_addr }} ✓
+             • WebServer Port: {{ expected_values.client_webserver_port }} ✓
+             • WebServer User: {{ expected_values.client_webserver_user }} ✓
+             • WebServer Password: configured ✓
+             • WebServer Pprof: enabled ✓
+             • Authentication Token: configured ✓
+             • Log Level: {{ expected_values.log_level }} ✓
+             • Log Retention: {{ expected_values.log_max_days }} days ✓
+             • Log Color: disabled ✓
+
+          ✅ CONDITIONAL LOGIC:
+             • Client webserver properly enabled when requested ✓
+             • All variables correctly rendered into TOML format ✓
+             • Template conditional sections working properly ✓
+
+          🏆 RESULT: All configuration variables are successfully
+                     passed through from Ansible to TOML files!

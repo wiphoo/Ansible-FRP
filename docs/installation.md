@@ -29,7 +29,7 @@ Using a requirements file:
 ```yaml
 collections:
 	- name: wiphoo.frp
-		version: ">=1.0.0"
+		version: ">=0.1.0"
 ```
 
 ```bash
@@ -77,4 +77,4 @@ Minimal playbook examples to install server and client components.
 - Use `frp_install_verify_checksums: true` to validate downloaded binaries.
 - For automated CI installs, pin `frp_install_version` to a tested release.
 
-For usage patterns and examples, see `usage.md` and `examples.md`.
+For usage patterns and examples, see `usage.md` and `guide.md`.

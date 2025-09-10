@@ -5,26 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-# Changelog
-
-All notable changes to this project will be documented in this file.
-
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 ## [Unreleased]
 
-## [1.0.0] - 2025-09-05
+## [0.1.0] - 2025-09-11
 
 ### Added
-- Initial release of wiphoo.frp Ansible collection
-- FRP (Fast Reverse Proxy) installation and configuration role
-- Support for both FRP server (frps) and client (frpc) configurations
-- Automatic architecture detection for Linux systems (x86_64, aarch64, armv7l, armv6l, riscv64, mips)
-- Template-based configuration management for INI and TOML formats
-- Service management with systemd integration
-- Comprehensive test suite with pytest, molecule, and 94.62% test coverage
-- GitHub Actions CI/CD pipeline with quality gates and security scanning
+- **Initial Release**: First version of wiphoo.frp Ansible collection for FRP (Fast Reverse Proxy) deployment
+- **Multi-Architecture Support**: Automatic detection and support for Linux systems (x86_64, aarch64, armv7l, armv6l, riscv64, mips)
+- **Dual Component Installation**: Support for both FRP server (frps) and client (frpc) configurations
+- **Full Template Configurability**: Made both server (frps.toml.j2) and client (frpc.toml.j2) templates fully configurable via Ansible variables
+- **Comprehensive Configuration Variables**:
+  - Authentication: `frp_install_auth_method` and `frp_install_auth_token` for secure connections
+  - Server configuration: `frp_install_server_addr`, `frp_install_server_port` for binding
+  - Dashboard: `frp_install_dashboard_*` variables for web management interface
+  - Client connection: `frp_install_client_server_addr`, `frp_install_client_server_port` for server connection
+  - Client webserver: `frp_install_client_webserver_*` variables with conditional rendering
+  - Logging: `frp_install_log_level`, `frp_install_log_max_days`, `frp_install_log_disable_print_color`
+- **Service Management**: Native systemd integration with automatic service creation and management
+- **Template-Based Configuration**: Modern TOML configuration format with Jinja2 templates
+- **Security Features**: Configurable firewall rules, secure defaults, and production-ready configurations
+- **Comprehensive Testing**:
+  - pytest unit tests with 94.62% test coverage
+  - molecule integration testing with multiple scenarios (dev, ci, default, resources)
+  - Invalid configuration validation tests
+  - GitHub Actions CI/CD pipeline with quality gates and security scanning
+- **Development Tooling**:
+  - Pre-commit hooks for code quality and consistency
+  - Modern Python tooling integration (uv, ruff, mypy, ansible-lint)
+  - Automated documentation with MkDocs and GitHub Pages deployment
+- **Documentation**: Complete documentation suite including API reference, installation guide, examples, and troubleshooting
+
+### Features
+- **Variable Naming Consistency**: Standardized all configuration variables to use `frp_install_*` prefix
+- **Conditional Configuration**: Smart template rendering based on enabled features (e.g., client webserver)
+- **Cross-Platform Compatibility**: Tested on Ubuntu 20.04+, Debian 11+, CentOS/RHEL 8+, Fedora 36+
+- **FRP Version Support**: Compatible with FRP versions 0.61.x - 0.63.x
+- **Flexible Deployment**: Install server only, client only, or both components on same system
 - Pre-commit hooks for code quality and consistency
 - Modern Python tooling integration (uv, ruff, mypy, ansible-lint)
 - Documentation with MkDocs and GitHub Pages deployment
@@ -77,5 +93,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Test strengthening with comprehensive coverage and integration testing
 - Security improvements with official GitHub Actions and dependency management
 
-[Unreleased]: https://github.com/wiphoo/Ansible-FRP/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/wiphoo/Ansible-FRP/releases/tag/v1.0.0
+[Unreleased]: https://github.com/wiphoo/Ansible-FRP/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/wiphoo/Ansible-FRP/releases/tag/v0.1.0

@@ -1,0 +1,31 @@
+---
+# =============================================================================
+# MINIMAL FRP CLIENT DEPLOYMENT
+# =============================================================================
+# This is the absolute minimal configuration needed to deploy an FRP client.
+# Copy this structure and modify only the essential variables below.
+
+- name: Deploy FRP Client (Minimal)
+  hosts: all  # Change to your target hosts/group
+  become: true
+
+  vars:
+    # ===================
+    # REQUIRED VARIABLES - CHANGE THESE!
+    # ===================
+    frp_install_auth_token: "your-token-here"        # Must match server token
+    frp_install_client_server_addr: "your-server.com" # Your FRP server address
+    frp_install_client_server_port: 7000              # Your FRP server port
+
+  roles:
+    - role: wiphoo.frp.frp_install
+      vars:
+        frp_install_files: ['frpc']  # Client only
+
+# =============================================================================
+# QUICK START:
+# =============================================================================
+# 1. Change the 3 required variables above
+# 2. Update 'hosts: all' to your target group
+# 3. Run: ansible-playbook -i inventory minimal_frpc.yml
+# =============================================================================

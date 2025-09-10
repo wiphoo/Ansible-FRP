@@ -4,139 +4,94 @@
 # This configuration is based on frpc_full_example.toml from official FRP repository
 # Please customize according to your needs
 
-# your proxy name will be changed to {user}.{proxy}
-user = "your_name"
+# Basic server connection configuration
+serverAddr = "{{ frp_install_client_server_addr | default('your-server-address.example.com') }}"
+serverPort = {{ frp_install_client_server_port | default(7000) }}
 
-# A literal address or host name for IPv6 must be enclosed
-# in square brackets, as in "[::1]:80", "[ipv6-host]:http" or
-# "[ipv6-host%zone]:80"
-# For single serverAddr field, no need square brackets, like serverAddr = "::".
-serverAddr = "0.0.0.0"
-serverPort = 7000
+# Authentication configuration (REQUIRED - MUST match server)
+auth.method = "{{ frp_install_auth_method | default('token') }}"
+auth.token = "{{ frp_install_auth_token | default('changeme_default_token_123') }}"
 
-# STUN server to help penetrate NAT hole.
-# natHoleStunServer = "stun.easyvoip.com:3478"
-
-# Decide if exit program when first login failed, otherwise continuous relogin to frps
-# default is true
-loginFailExit = true
-
-# console or real logFile path like ./frpc.log
+# Log configuration
 log.to = "{{ frp_install_log_dir | default('/var/log/frp') }}/frpc.log"
-# trace, debug, info, warn, error
-log.level = "info"
-log.maxDays = 3
-# disable log colors when log.to is console, default is false
-log.disablePrintColor = false
+log.level = "{{ frp_install_log_level | default('info') }}"
+log.maxDays = {{ frp_install_log_max_days | default(3) }}
+log.disablePrintColor = {{ frp_install_log_disable_print_color | default(false) | lower }}
 
-auth.method = "token"
-# auth.additionalScopes specifies additional scopes to include authentication information.
-# Optional values are HeartBeats, NewWorkConns.
-# auth.additionalScopes = ["HeartBeats", "NewWorkConns"]
-
-# auth token
-auth.token = "12345678"
-
-# alternatively, you can use tokenSource to load the token from a file
-# this is mutually exclusive with auth.token
-# auth.tokenSource.type = "file"
-# auth.tokenSource.file.path = "/etc/frp/token"
-
-# Set admin address for control frpc's action by http api such as reload
-webServer.addr = "127.0.0.1"
-webServer.port = 7400
-webServer.user = "admin"
-webServer.password = "admin"
-
-# Admin assets directory. By default, these assets are bundled with frpc.
-# webServer.assetsDir = "./static"
-
-# Enable golang pprof handlers in admin listener.
-webServer.pprofEnable = false
-
-# The maximum amount of time a dial to server will wait for a connect to complete. Default value is 10 seconds.
-# transport.dialServerTimeout = 10
-
-# dialServerKeepalive specifies the interval between keep-alive probes for an active network connection between frpc and frps.
-# If negative, keep-alive probes are disabled.
-# transport.dialServerKeepalive = 7200
-
-# connections will be established in advance, default value is zero
+# Connection settings
+loginFailExit = true
+transport.tcpMux = true
 transport.poolCount = 5
 
-# If tcp stream multiplexing is used, default is true, it must be same with frps
-transport.tcpMux = true
+# ==========================================
+# Optional Configurations (commented out)
+# ==========================================
+# Uncomment and configure these as needed
 
-# Specify keep alive interval for tcp mux.
-# only valid if tcpMux is enabled.
-transport.tcpMuxKeepaliveInterval = 30
+# User prefix for proxy names (optional)
+# user = "your_name"
 
-# Communication protocol used to connect to server
-# supports tcp, kcp, quic, websocket and wss now, default is tcp
-transport.protocol = "tcp"
+# Transport protocol options (optional)
+# transport.protocol = "tcp"  # tcp, kcp, quic, websocket, wss
+# transport.connectServerLocalIP = "0.0.0.0"
+# transport.tcpMuxKeepaliveInterval = 30
 
-# set client binding ip when connect server, default is empty.
-# only when protocol = tcp or websocket, the value will be used.
-transport.connectServerLocalIP = "0.0.0.0"
-
-# If tls.enable is true, frpc will connect frps by tls.
-# Since v0.50.0, the default value has been changed to true, and tls is enabled by default.
-transport.tls.enable = true
-
-# If the disableCustomTLSFirstByte is set to false, frpc will establish a connection with frps using the
-# first custom byte when tls is enabled.
-# Since v0.50.0, the default value has been changed to true, and the first custom byte is disabled by default.
+# TLS configuration (optional)
+# transport.tls.enable = true
 # transport.tls.disableCustomTLSFirstByte = true
 
-# Heartbeat configure, it's not recommended to modify the default value.
-# The default value of heartbeatInterval is 10 and heartbeatTimeout is 90. Set negative value
-# to disable it.
+# Admin web server for control (optional)
+{% if frp_install_client_webserver_enabled | default(false) %}
+webServer.addr = "{{ frp_install_client_webserver_addr | default('127.0.0.1') }}"
+webServer.port = {{ frp_install_client_webserver_port | default(7400) }}
+webServer.user = "{{ frp_install_client_webserver_user | default('admin') }}"
+webServer.password = "{{ frp_install_client_webserver_password | default('admin') }}"
+webServer.pprofEnable = {{ frp_install_client_webserver_pprof_enabled | default(false) | lower }}
+{% else %}
+# webServer.addr = "127.0.0.1"
+# webServer.port = 7400
+# webServer.user = "admin"
+# webServer.password = "admin"
+# webServer.pprofEnable = false
+{% endif %}
+
+# Advanced connection settings (optional)
+# transport.dialServerTimeout = 10
+# transport.dialServerKeepalive = 7200
 # transport.heartbeatInterval = 30
 # transport.heartbeatTimeout = 90
 
-# Specify a dns server, so frpc will use this instead of default one
+# NAT hole punching (optional)
+# natHoleStunServer = "stun.easyvoip.com:3478"
+
+# DNS server (optional)
+# DNS server (optional)
 # dnsServer = "8.8.8.8"
 
-# Proxy names you want to start.
-# Default is empty, means all proxies.
-# start = ["ssh", "dns"]
+# UDP packet size (optional)
+# udpPacketSize = 1500
 
-# Specify udp packet size, unit is byte. If not set, the default value is 1500.
-# This parameter should be same between client and server.
-# It affects the udp and sudp proxy.
-udpPacketSize = 1500
+# Proxy filtering (optional)
+# start = ["ssh", "web"]  # Only start specific proxies
 
-# Additional metadatas for client.
-metadatas.var1 = "abc"
-metadatas.var2 = "123"
+# Metadata (optional)
+# metadatas.var1 = "abc"
+# metadatas.var2 = "123"
 
-# Include other config files for proxies.
+# Alternative token loading from file (optional)
+# auth.tokenSource.type = "file"
+# auth.tokenSource.file.path = "/etc/frp/token"
+
+# Additional authentication scopes (optional)
+# auth.additionalScopes = ["HeartBeats", "NewWorkConns"]
+
+# Include external config files (optional)
 # includes = ["./confd/*.ini"]
 
 # ==========================================
-# Proxy Configurations
+# Example Proxy Configurations
 # ==========================================
-# Uncomment and modify the proxy configurations below as needed
-
-# Example HTTP tunnel configuration
-# [[proxies]]
-# name = "web"
-# type = "http"
-# localIP = "127.0.0.1"
-# localPort = 80
-# customDomains = ["your.domain.com"]
-# # Optional: custom headers
-# # customHeaders = { "X-Forwarded-For" = "$remote_addr" }
-
-# Example HTTPS tunnel configuration
-# [[proxies]]
-# name = "web-ssl"
-# type = "https"
-# localIP = "127.0.0.1"
-# localPort = 443
-# customDomains = ["your.domain.com"]
-# # Optional: custom headers
-# # customHeaders = { "X-Forwarded-For" = "$remote_addr" }
+# Uncomment and modify these examples as needed for your specific services
 
 # Example SSH tunnel configuration
 # [[proxies]]
@@ -146,21 +101,21 @@ metadatas.var2 = "123"
 # localPort = 22
 # remotePort = 6000
 
-# Example RDP tunnel configuration
+# Example HTTP web service configuration
 # [[proxies]]
-# name = "rdp"
-# type = "tcp"
+# name = "web"
+# type = "http"
 # localIP = "127.0.0.1"
-# localPort = 3389
-# remotePort = 7001
+# localPort = 80
+# customDomains = ["your.domain.com"]
 
-# Example VNC tunnel configuration
+# Example HTTPS web service configuration
 # [[proxies]]
-# name = "vnc"
-# type = "tcp"
+# name = "web-ssl"
+# type = "https"
 # localIP = "127.0.0.1"
-# localPort = 5900
-# remotePort = 7002
+# localPort = 443
+# customDomains = ["your.domain.com"]
 
 # Example database tunnel configuration
 # [[proxies]]
@@ -169,25 +124,3 @@ metadatas.var2 = "123"
 # localIP = "127.0.0.1"
 # localPort = 3306
 # remotePort = 7003
-
-# ==========================================
-# Advanced Configuration (Optional)
-# ==========================================
-
-# Health check configuration
-# healthCheck = { type = "tcp", timeoutSeconds = 3, maxFailed = 3 }
-
-# Bandwidth limit configuration
-# transport = { bandwidthLimit = "1MB", bandwidthLimitMode = "client" }
-
-# Connection pool configuration
-# transport = { poolCount = 5 }
-
-# TLS configuration for client
-# transport = { tls = { enable = true, disableCustomTLSFirstByte = false } }
-
-# Login fail exit configuration
-# auth = { additionalScopes = ["HeartBeats"], loginFailExit = true }
-
-# Detailed logging
-# log = { to = "{{ frp_install_log_dir | default('/var/log/frp') }}/frpc.log", level = "debug", maxDays = 7, disablePrintColor = false }

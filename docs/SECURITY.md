@@ -2,11 +2,16 @@
 
 ## Supported Versions
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 1.0.x   | ✅ Active Support  |
-| 0.9.x   | ⚠️ Limited Support |
-| < 0.9   | ❌ End of Life     |
+| Version | Supported          | Notes |
+| ------- | ------------------ | ----- |
+| 0.1.x   | ✅ Active Support  | Current stable release |
+| < 0.1   | ❌ End of Life     | Pre-release versions not supported |
+
+**Support Policy:**
+- **Active Support**: Security updates, bug fixes, and feature updates
+- **End of Life**: No updates or support provided
+
+**Current Stable Version**: `0.1.0` (Initial Release)
 
 ## Security Best Practices
 
@@ -15,10 +20,10 @@
 **Use Strong Tokens**:
 ```yaml
 # ❌ Weak
-frp_auth_token: "123456"
+frp_install_auth_token: "123456"
 
 # ✅ Strong with Vault
-frp_auth_token: "{{ vault_frp_token }}"
+frp_install_auth_token: "{{ vault_frp_token }}"
 ```
 
 **Generate Secure Tokens**:
@@ -29,10 +34,12 @@ openssl rand -base64 32
 ### Network Security
 
 **Enable TLS**:
-```yaml
-frp_transport_tls_enable: true
-frp_transport_tls_cert_file: "/etc/frp/tls/server.crt"
-frp_transport_tls_key_file: "/etc/frp/tls/server.key"
+Configure TLS in your custom templates or directly in the generated TOML files:
+```toml
+# In frps.toml or frpc.toml
+transport.tls.enable = true
+transport.tls.certFile = "/etc/frp/tls/server.crt"
+transport.tls.keyFile = "/etc/frp/tls/server.key"
 ```
 
 **Firewall Configuration**:

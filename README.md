@@ -33,8 +33,9 @@ ansible-galaxy collection install wiphoo.frp
     - role: wiphoo.frp.frp_install
       vars:
         frp_install_files: ['frps']
-        frp_server_bind_port: 7000
-        frp_server_token: "your-secure-token"
+        frp_install_server_addr: "0.0.0.0"  # Bind to all interfaces
+        frp_install_server_port: 7000
+        frp_install_auth_token: "your-secure-token"  # CHANGE THIS
         frp_install_configure_firewall: true
 ```
 
@@ -46,10 +47,20 @@ ansible-galaxy collection install wiphoo.frp
     - role: wiphoo.frp.frp_install
       vars:
         frp_install_files: ['frpc']
-        frp_server_addr: "your-server.example.com"
-        frp_server_port: 7000
-        frp_server_token: "your-secure-token"
+        frp_install_client_server_addr: "your-server.example.com"
+        frp_install_client_server_port: 7000
+        frp_install_auth_token: "your-secure-token"  # Must match server
 ```
+
+## ✨ Features
+
+- **Full Configuration Control**: Both FRP server and client templates are fully configurable via Ansible variables
+- **Secure Defaults**: Security-focused default configurations with clear upgrade paths
+- **Flexible Deployment**: Install server only, client only, or both components
+- **Service Management**: Automatic systemd service creation and management
+- **Template Customization**: Override default TOML templates for advanced use cases
+- **Firewall Integration**: Optional automatic firewall rule management
+- **Comprehensive Logging**: Configurable logging levels and retention policies
 
 ## 📖 Configuration
 
@@ -62,9 +73,25 @@ ansible-galaxy collection install wiphoo.frp
 | `frp_install_user` | `frp` | System user |
 | `frp_install_dir` | `/usr/local/bin/frp` | Installation directory |
 | `frp_install_configure_firewall` | `false` | Manage firewall rules |
-| `frp_server_bind_port` | `7000` | Server port |
-| `frp_server_token` | `""` | Authentication token |
-| `frp_server_addr` | `127.0.0.1` | Server address (client) |
+| `frp_install_auth_method` | `token` | Authentication method |
+| `frp_install_auth_token` | `changeme_default_token_123` | Authentication token |
+| **Server Configuration** | | |
+| `frp_install_server_addr` | `0.0.0.0` | Server bind address (bindAddr) |
+| `frp_install_server_port` | `7000` | Server bind port (bindPort) |
+| `frp_install_dashboard_addr` | `127.0.0.1` | Dashboard bind address |
+| `frp_install_dashboard_port` | `7500` | Dashboard port |
+| **Client Configuration** | | |
+| `frp_install_client_server_addr` | `your-server-address.example.com` | FRP server address to connect to |
+| `frp_install_client_server_port` | `7000` | FRP server port to connect to |
+| `frp_install_client_webserver_enabled` | `false` | Enable client admin webServer interface |
+| `frp_install_client_webserver_addr` | `127.0.0.1` | Client admin webServer bind address |
+| `frp_install_client_webserver_port` | `7400` | Client admin webServer port |
+| `frp_install_client_webserver_user` | `admin` | Client admin webServer username |
+| `frp_install_client_webserver_password` | `admin` | Client admin webServer password |
+| **Logging Configuration** | | |
+| `frp_install_log_level` | `info` | Log level (trace, debug, info, warn, error) |
+| `frp_install_log_max_days` | `3` | Log file retention days |
+| `frp_install_log_disable_print_color` | `false` | Disable log colors |
 
 **Advanced Example:**
 ```yaml
@@ -72,12 +99,36 @@ ansible-galaxy collection install wiphoo.frp
   become: true
   vars:
     frp_install_version: "0.64.0"
-    frp_server_token: "{{ vault_frp_token }}"
+    frp_install_auth_token: "{{ vault_frp_token }}"
+    frp_install_server_addr: "0.0.0.0"  # Bind to all interfaces
+    frp_install_server_port: 7000       # Custom server port
+    frp_install_log_level: "debug"
+    frp_install_log_max_days: 7
+    frp_install_dashboard_addr: "0.0.0.0"  # Make dashboard accessible from all interfaces
+    frp_install_dashboard_port: 7500
   roles:
     - role: wiphoo.frp.frp_install
       vars:
         frp_install_configure_firewall: true
         frp_server_max_clients: 100
+```
+
+**Client Configuration Example:**
+```yaml
+- hosts: clients
+  become: true
+  vars:
+    frp_install_files: ['frpc']  # Install only client
+    frp_install_client_server_addr: "your-frp-server.example.com"
+    frp_install_client_server_port: 7000
+    frp_install_client_webserver_enabled: true  # Enable client admin interface
+    frp_install_client_webserver_addr: "127.0.0.1"
+    frp_install_client_webserver_port: 7400
+    frp_install_client_webserver_user: "admin"
+    frp_install_client_webserver_password: "{{ vault_frpc_admin_password }}"
+    frp_install_auth_token: "{{ vault_frp_token }}"
+  roles:
+    - role: wiphoo.frp.frp_install
 ```
 
 ## 🐛 Troubleshooting
@@ -96,8 +147,9 @@ netstat -tlnp | grep 7000
 **Debug mode:**
 ```yaml
 vars:
-  frp_server_log_level: "debug"
-  frp_client_log_level: "debug"
+  frp_install_log_level: "debug"
+  frp_install_log_max_days: 7
+  frp_install_log_disable_print_color: false
 ```
 
 ## 🤝 Contributing
@@ -121,7 +173,7 @@ cd roles/frp_install && uv run molecule test --scenario-name default # Full test
 **Local build and testing:**
 ```bash
 # Build and install collection locally
-ansible-galaxy collection build --force && ansible-galaxy collection install wiphoo-frp-1.0.0.tar.gz --force -p ~/.ansible/collections
+ansible-galaxy collection build --force && ansible-galaxy collection install wiphoo-frp-0.1.0.tar.gz --force -p ~/.ansible/collections
 
 # Test installation
 ansible-galaxy collection list | grep wiphoo.frp

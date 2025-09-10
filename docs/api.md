@@ -2,118 +2,230 @@
 
 Complete variable reference for the wiphoo.frp collection.
 
-## Installation Variables
+## Core Installation Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `frp_install_version` | `"latest"` | FRP version |
-| `frp_install_files` | `["frpc"]` | Components: frpc, frps, or both |
-| `frp_install_verify_checksums` | `true` | Verify checksums |
-| `frp_install_dir` | `"/usr/local/bin"` | Binary directory |
-| `frp_install_config_dir` | `"/etc/frp"` | Config directory |
-| `frp_install_user` | `"frp"` | Service user |
+| `frp_install_version` | `"0.63.0"` | FRP version |
+| `frp_install_files` | `["frps", "frpc"]` | Components to install |
+| `frp_install_user` | `"frp"` | System user |
+| `frp_install_group` | `"frp"` | System group |
+| `frp_install_dir` | `"/usr/local/bin/frp"` | Installation directory |
 | `frp_install_create_service` | `true` | Create systemd services |
-| `frp_install_configure_firewall` | `false` | Auto firewall config |
+| `frp_install_configure_firewall` | `false` | Auto firewall configuration |
 
-## Connection Variables
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `frp_server_addr` | `"127.0.0.1"` | Server address |
-| `frp_server_port` | `7000` | Server port |
-| `frp_auth_token` | `""` | Authentication token |
-| `frp_bind_addr` | `"0.0.0.0"` | Server bind address |
-| `frp_bind_port` | `7000` | Server bind port |
-
-## Transport & Security
+## Authentication Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `frp_transport_protocol` | `"tcp"` | Transport protocol |
-| `frp_transport_tls_enable` | `false` | Enable TLS |
-| `frp_transport_heartbeat_interval` | `30` | Heartbeat interval |
-| `frp_log_level` | `"info"` | Log level (trace/debug/info/warn/error) |
-| `frp_log_file` | `"/var/log/frp/frp.log"` | Log file path |
-| `frp_log_max_days` | `3` | Log retention days |
+| `frp_install_auth_method` | `"token"` | Authentication method |
+| `frp_install_auth_token` | `"changeme_default_token_123"` | Authentication token (CHANGE IN PRODUCTION) |
 
-## Proxy Configuration
+## Server Configuration Variables
 
-Define proxies as a list:
-
-```yaml
-frp_proxies:
-  - name: "service-name"        # Required: unique identifier
-    type: "tcp|udp|http|https"  # Required: proxy type
-    local_port: 80              # Required: local port
-    local_ip: "127.0.0.1"       # Optional: local IP
-    remote_port: 8080           # For tcp/udp: remote port
-    custom_domains:             # For http/https: domains
-      - "example.com"
-    use_encryption: false       # Optional: encryption
-    use_compression: false      # Optional: compression
-    bandwidth_limit: "1MB"      # Optional: bandwidth limit
-```
-
-### Advanced Proxy Options
-
-```yaml
-frp_proxies:
-  - name: "load-balanced-web"
-    type: "http"
-    local_port: 80
-    custom_domains: ["app.example.com"]
-    group: "web-servers"        # Load balancer group
-    group_key: "secret-key"     # Group authentication
-    health_check_type: "http"   # Health check method
-    health_check_url: "/health" # Health check endpoint
-    headers:                    # Custom HTTP headers
-      Host: "internal.local"
-```
-
-## Server Optimization
+Configure FRP server binding and dashboard settings.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `frp_server_max_clients` | `0` | Max concurrent clients (0=unlimited) |
-| `frp_server_max_ports_per_client` | `0` | Max ports per client |
-| `frp_transport_pool_count` | `1` | Connection pool size |
+| `frp_install_server_addr` | `"0.0.0.0"` | Server bind address (bindAddr) |
+| `frp_install_server_port` | `7000` | Server bind port (bindPort) |
+| `frp_install_dashboard_addr` | `"127.0.0.1"` | Dashboard web interface bind address |
+| `frp_install_dashboard_port` | `7500` | Dashboard web interface port |
+| `frp_install_dashboard_user` | `"admin"` | Dashboard username |
+| `frp_install_dashboard_password` | `"admin"` | Dashboard password (CHANGE IN PRODUCTION) |
 
-## Template Overrides
+## Client Configuration Variables
+
+Configure FRP client connection and admin interface.
+
+### Server Connection Variables
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `frp_install_client_server_addr` | `"your-server-address.example.com"` | FRP server address to connect to |
+| `frp_install_client_server_port` | `7000` | FRP server port to connect to |
+
+### Client Admin WebServer Variables
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `frp_install_client_webserver_enabled` | `false` | Enable client admin webServer interface |
+| `frp_install_client_webserver_addr` | `"127.0.0.1"` | Client admin webServer bind address |
+| `frp_install_client_webserver_port` | `7400` | Client admin webServer port |
+| `frp_install_client_webserver_user` | `"admin"` | Client admin webServer username |
+| `frp_install_client_webserver_password` | `"admin"` | Client admin webServer password (CHANGE IN PRODUCTION) |
+| `frp_install_client_webserver_pprof_enabled` | `false` | Enable pprof endpoint for debugging |
+
+## Logging Configuration Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `frp_install_config_template_frpc` | `"frpc.toml.j2"` | Client template |
-| `frp_install_config_template_frps` | `"frps.toml.j2"` | Server template |
+| `frp_install_log_level` | `"info"` | Log level (trace, debug, info, warn, error) |
+| `frp_install_log_max_days` | `3` | Log file retention days |
+| `frp_install_log_disable_print_color` | `false` | Disable colored log output |
 
-Place custom templates in your playbook's `templates/` directory.
+## Advanced Configuration Examples
 
-## Common Examples
-
-**Basic Client:**
+### Server Configuration Example
 ```yaml
-frp_install_files: ["frpc"]
-frp_server_addr: "server.example.com"
-frp_auth_token: "{{ vault_frp_token }}"
-frp_proxies:
-  - name: "ssh"
-    type: "tcp"
-    local_port: 22
-    remote_port: 2222
+- hosts: servers
+  become: true
+  vars:
+    # Core installation
+    frp_install_files: ['frps']
+    frp_install_version: "0.63.0"
+
+    # Authentication (use vault in production)
+    frp_install_auth_token: "{{ vault_frp_token }}"
+
+    # Server binding
+    frp_install_server_addr: "0.0.0.0"  # Bind to all interfaces
+    frp_install_server_port: 7000
+
+    # Dashboard configuration
+    frp_install_dashboard_addr: "0.0.0.0"  # Make accessible from network
+    frp_install_dashboard_port: 7500
+    frp_install_dashboard_user: "admin"
+    frp_install_dashboard_password: "{{ vault_dashboard_password }}"
+
+    # Logging
+    frp_install_log_level: "info"
+    frp_install_log_max_days: 7
+  roles:
+    - role: wiphoo.frp.frp_install
 ```
 
-**Secure Server:**
+### Client Configuration Example
 ```yaml
-frp_install_files: ["frps"]
-frp_install_configure_firewall: true
-frp_auth_token: "{{ vault_frp_token }}"
-frp_transport_tls_enable: true
-frp_log_level: "warn"
+- hosts: clients
+  become: true
+  vars:
+    # Core installation - client only
+    frp_install_files: ['frpc']
+
+    # Server connection
+    frp_install_client_server_addr: "your-frp-server.example.com"
+    frp_install_client_server_port: 7000
+
+    # Authentication (must match server)
+    frp_install_auth_token: "{{ vault_frp_token }}"
+
+    # Client admin interface (optional)
+    frp_install_client_webserver_enabled: true
+    frp_install_client_webserver_addr: "127.0.0.1"
+    frp_install_client_webserver_port: 7400
+    frp_install_client_webserver_user: "admin"
+    frp_install_client_webserver_password: "{{ vault_client_admin_password }}"
+
+    # Logging
+    frp_install_log_level: "info"
+  roles:
+    - role: wiphoo.frp.frp_install
 ```
+
+### Combined Server + Client Example
+```yaml
+- hosts: all
+  become: true
+  vars:
+    # Install both components
+    frp_install_files: ['frps', 'frpc']
+    frp_install_version: "0.63.0"
+
+    # Authentication
+    frp_install_auth_token: "{{ vault_frp_token }}"
+
+    # Server configuration
+    frp_install_server_addr: "0.0.0.0"
+    frp_install_server_port: 7000
+    frp_install_dashboard_addr: "127.0.0.1"
+    frp_install_dashboard_port: 7500
+
+    # Client configuration
+    frp_install_client_server_addr: "localhost"  # Connect to local server
+    frp_install_client_server_port: 7000
+    frp_install_client_webserver_enabled: true
+    frp_install_client_webserver_port: 7400
+
+    # Security
+    frp_install_configure_firewall: true
+
+    # Logging
+    frp_install_log_level: "debug"
+    frp_install_log_max_days: 14
+  roles:
+    - role: wiphoo.frp.frp_install
+```
+
+## Configuration Files Generated
+
+The role generates TOML configuration files:
+
+- **Server**: `/etc/frp/frps.toml` - FRP server configuration
+- **Client**: `/etc/frp/frpc.toml` - FRP client configuration
+
+Both templates are fully configurable via the variables listed above. The templates include:
+
+- Comprehensive commenting for all options
+- Example proxy configurations (commented out)
+- Security best practices and warnings
+- Conditional sections based on variable settings
+
+## Template Customization
+
+You can override the default templates by placing custom templates in your playbook:
+
+```
+playbooks/
+  templates/
+    frps.toml.j2    # Custom server template
+    frpc.toml.j2    # Custom client template
+```
+
+## Service Management
+
+When `frp_install_create_service: true` (default), systemd services are created:
+
+- `frps.service` - FRP server service
+- `frpc.service` - FRP client service
+
+Services can be managed with standard systemd commands:
+
+```bash
+# Server management
+sudo systemctl start frps
+sudo systemctl enable frps
+sudo systemctl status frps
+
+# Client management
+sudo systemctl start frpc
+sudo systemctl enable frpc
+sudo systemctl status frpc
+```
+
+## Security Recommendations
+
+1. **Change default tokens**: Always use secure, unique `frp_install_auth_token`
+2. **Use Ansible Vault**: Store sensitive variables in encrypted vault files
+3. **Dashboard access**: Keep `frp_install_dashboard_addr` as `127.0.0.1` unless network access needed
+4. **Client webserver**: Only enable `frp_install_client_webserver_enabled` when needed for debugging
+5. **Firewall**: Enable `frp_install_configure_firewall` on production systems
+6. **Logging**: Use `info` or `warn` log levels in production
 
 ## Supported Platforms
 
-- Ubuntu 20.04+, Debian 11+, CentOS/RHEL 8+, Fedora 36+
-- FRP versions 0.61.x - 0.63.x
-- Architectures: amd64, arm64, arm
+- **OS**: Ubuntu 20.04+, Debian 11+, CentOS/RHEL 8+, Fedora 36+
+- **FRP**: Versions 0.61.x - 0.63.x
+- **Architectures**: amd64, arm64, armv7
 
-See [Guide](guide.md) for practical examples and [Examples](guide.md) for real-world scenarios.
+## Variable Migration
+
+If migrating from older versions, update variable names:
+
+| Old Variable | New Variable |
+|--------------|--------------|
+| `frp_server_addr` | `frp_install_client_server_addr` |
+| `frp_server_port` | `frp_install_client_server_port` |
+| `frp_bind_addr` | `frp_install_server_addr` |
+| `frp_bind_port` | `frp_install_server_port` |
+| `frp_auth_token` | `frp_install_auth_token` |
+
+See [Guide](guide.md) for step-by-step tutorials and practical examples.

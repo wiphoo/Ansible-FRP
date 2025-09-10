@@ -28,11 +28,11 @@ A: Yes. Set `frp_install_files: ["frps", "frpc"]`.
 
 Q: How should I store tokens and secrets?
 
-A: Use Ansible Vault and reference the variables (e.g., `frp_auth_token: "{{ vault_frp_token }}"`).
+A: Use Ansible Vault and reference the variables (e.g., `frp_install_auth_token: "{{ vault_frp_token }}"`).
 
 Q: Is TLS supported?
 
-A: Yes. Enable `frp_transport_tls_enable: true` and provide certificate and key paths.
+A: Yes. Configure TLS settings in your custom templates or modify the default TOML configuration files.
 
 ## Operations
 

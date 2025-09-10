@@ -1,0 +1,92 @@
+---
+# =============================================================================
+# FRP Client Deployment - Complete Example with Error Handling
+# =============================================================================
+# This playbook demonstrates a complete FRP client deployment with proper
+# syntax, validation, error handling, and production-ready configurations.
+
+- name: Deploy FRP Client with Full Configuration
+  hosts: frp_clients  # Define this group in your inventory
+  become: true
+  gather_facts: true
+
+  vars:
+    # ===================
+    # REQUIRED VARIABLES
+    # ===================
+    # Authentication - MUST match your FRP server token
+    frp_install_auth_token: "{{ vault_frp_token }}"  # Store in Ansible Vault!
+
+    # Server Connection - Where to connect
+    frp_install_client_server_addr: "your-frp-server.example.com"
+    frp_install_client_server_port: 7000
+
+    # ===================
+    # OPTIONAL VARIABLES
+    # ===================
+    # Client Admin Interface (recommended for troubleshooting)
+    frp_install_client_webserver_enabled: true
+    frp_install_client_webserver_addr: "127.0.0.1"  # Local access only
+    frp_install_client_webserver_port: 7400
+    frp_install_client_webserver_user: "{{ vault_client_admin_user }}"
+    frp_install_client_webserver_password: "{{ vault_client_admin_password }}"
+
+    # Logging Configuration
+    frp_install_log_level: "info"  # trace, debug, info, warn, error
+    frp_install_log_max_days: 7
+    frp_install_log_disable_print_color: false
+
+    # Security
+    frp_install_configure_firewall: false  # Set to true for automatic firewall rules
+
+  pre_tasks:
+    - name: Validate required variables
+      assert:
+        that:
+          - frp_install_auth_token is defined
+          - frp_install_auth_token != "your-token-here"
+          - frp_install_client_server_addr is defined
+          - frp_install_client_server_addr != "your-frp-server.example.com"
+        fail_msg: "Please set the required variables: frp_install_auth_token and frp_install_client_server_addr"
+
+    - name: Test connectivity to FRP server
+      wait_for:
+        host: "{{ frp_install_client_server_addr }}"
+        port: "{{ frp_install_client_server_port }}"
+        timeout: 10
+      delegate_to: localhost
+      run_once: true
+
+  roles:
+    - role: wiphoo.frp.frp_install
+      vars:
+        frp_install_files: ['frpc']  # Install only client component
+
+  post_tasks:
+    - name: Verify FRP client service is running
+      systemd:
+        name: frpc
+        state: started
+        enabled: true
+      register: frpc_service
+
+    - name: Display service status
+      debug:
+        msg: |
+          FRP Client Status: {{ frpc_service.status.ActiveState }}
+          To check logs: sudo journalctl -u frpc -f
+          {% if frp_install_client_webserver_enabled %}
+          Admin interface: http://127.0.0.1:{{ frp_install_client_webserver_port }}
+          {% endif %}
+
+# =============================================================================
+# DEPLOYMENT NOTES:
+# =============================================================================
+# 1. Create inventory file with [frp_clients] group
+# 2. Store sensitive values in Ansible Vault:
+#    ansible-vault encrypt_string 'your-token' --name 'vault_frp_token'
+# 3. Deploy with:
+#    ansible-playbook -i inventory example_frpc_playbook.yml --ask-vault-pass
+# 4. Check status:
+#    ansible frp_clients -i inventory -m systemd -a "name=frpc state=started"
+# =============================================================================

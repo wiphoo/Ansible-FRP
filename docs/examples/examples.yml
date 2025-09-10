@@ -1,0 +1,119 @@
+---
+# =============================================================================
+# FRP Deployment Examples - Comprehensive Playbook
+# =============================================================================
+# This file contains various deployment scenarios for FRP using wiphoo.frp
+# Choose the appropriate example based on your use case and modify as needed.
+
+# ================================
+# 1. MINIMAL FRP SERVER DEPLOYMENT
+# ================================
+- name: Deploy FRP Server (Minimal)
+  hosts: frp_servers
+  become: true
+  vars:
+    frp_install_auth_token: "{{ vault_frp_token }}"  # Use Ansible Vault!
+    frp_install_server_addr: "0.0.0.0"
+    frp_install_server_port: 7000
+  roles:
+    - role: wiphoo.frp.frp_install
+      vars:
+        frp_install_files: ['frps']
+
+# =================================
+# 2. MINIMAL FRP CLIENT DEPLOYMENT
+# =================================
+- name: Deploy FRP Client (Minimal)
+  hosts: frp_clients
+  become: true
+  vars:
+    frp_install_auth_token: "{{ vault_frp_token }}"  # Must match server
+    frp_install_client_server_addr: "your-frp-server.example.com"
+    frp_install_client_server_port: 7000
+  roles:
+    - role: wiphoo.frp.frp_install
+      vars:
+        frp_install_files: ['frpc']
+
+# ===================================
+# 3. PRODUCTION FRP SERVER DEPLOYMENT
+# ===================================
+- name: Deploy FRP Server (Production)
+  hosts: frp_servers
+  become: true
+  vars:
+    # Security
+    frp_install_auth_token: "{{ vault_frp_production_token }}"
+    frp_install_configure_firewall: true
+
+    # Server Configuration
+    frp_install_server_addr: "0.0.0.0"
+    frp_install_server_port: 7000
+
+    # Dashboard (Admin Interface)
+    frp_install_dashboard_addr: "127.0.0.1"  # Local access only
+    frp_install_dashboard_port: 7500
+    frp_install_dashboard_user: "{{ vault_dashboard_user }}"
+    frp_install_dashboard_password: "{{ vault_dashboard_password }}"
+
+    # Logging
+    frp_install_log_level: "info"
+    frp_install_log_max_days: 30
+    frp_install_log_disable_print_color: false
+
+  roles:
+    - role: wiphoo.frp.frp_install
+      vars:
+        frp_install_files: ['frps']
+
+# ===================================
+# 4. PRODUCTION FRP CLIENT DEPLOYMENT
+# ===================================
+- name: Deploy FRP Client (Production)
+  hosts: frp_clients
+  become: true
+  vars:
+    # Security
+    frp_install_auth_token: "{{ vault_frp_production_token }}"
+
+    # Client Connection
+    frp_install_client_server_addr: "{{ frp_server_hostname }}"
+    frp_install_client_server_port: 7000
+
+    # Client Admin Interface (Optional)
+    frp_install_client_webserver_enabled: true
+    frp_install_client_webserver_addr: "127.0.0.1"
+    frp_install_client_webserver_port: 7400
+    frp_install_client_webserver_user: "{{ vault_client_admin_user }}"
+    frp_install_client_webserver_password: "{{ vault_client_admin_password }}"
+
+    # Logging
+    frp_install_log_level: "info"
+    frp_install_log_max_days: 7
+
+  roles:
+    - role: wiphoo.frp.frp_install
+      vars:
+        frp_install_files: ['frpc']
+
+# ================================
+# 5. COMBINED SERVER + CLIENT SETUP
+# ================================
+- name: Deploy Both FRP Server and Client
+  hosts: frp_hybrid
+  become: true
+  vars:
+    frp_install_auth_token: "{{ vault_frp_token }}"
+
+    # Server settings (when acting as server)
+    frp_install_server_addr: "0.0.0.0"
+    frp_install_server_port: 7000
+
+    # Client settings (when acting as client to another server)
+    frp_install_client_server_addr: "upstream-frp.example.com"
+    frp_install_client_server_port: 7000
+
+  roles:
+    - role: wiphoo.frp.frp_install
+      vars:
+        frp_install_files: ['frps', 'frpc']  # Install both components
