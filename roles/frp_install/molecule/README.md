@@ -31,10 +31,10 @@ molecule test --scenario-name ci
 ```
 
 ### 3. **`default` - Complete Production Testing**
-- **Purpose**: Comprehensive testing with idempotence validation and full verification
+- **Purpose**: Comprehensive testing with full verification (no idempotence)
 - **Use for**: Release testing, production readiness, comprehensive validation
-- **Benefits**: Full test suite including idempotence, most thorough validation
-- **Test sequence**: Complete sequence with idempotence testing
+- **Benefits**: Full test suite with thorough validation, production-ready testing
+- **Test sequence**: Complete sequence without idempotence (role downloads by design)
 - **Duration**: ~3-5 minutes
 - **FRP Version**: 0.63.0 (default)
 
@@ -42,13 +42,24 @@ molecule test --scenario-name ci
 molecule test --scenario-name default
 ```
 
+## 🔍 **Why No Idempotence Testing?**
+
+This role **downloads and installs** FRP binaries, making it **non-idempotent by design**:
+- Always downloads the latest archive from GitHub
+- Always extracts and copies binaries
+- Always performs cleanup operations
+
+Idempotence testing would fail and doesn't provide meaningful validation for this installation role.
+
 ## 📋 **Scenario Comparison**
 
 | Scenario | Speed | Coverage | Idempotence | Version Test | Use Case |
 |----------|--------|----------|-------------|---------------|----------|
-| `dev`    | ⚡ Fast | Basic    | ❌ No       | ❌ No        | Development |
-| `ci`     | 🚀 Fast | Full     | ❌ No       | ✅ Yes       | CI/CD Pipeline |
-| `default`| 🐌 Slow | Full     | ✅ Yes      | ❌ No        | Release Testing |
+| `dev`    | ⚡ Fast | Basic    | ❌ N/A      | ❌ No        | Development |
+| `ci`     | 🚀 Fast | Full     | ❌ N/A      | ✅ Yes       | CI/CD Pipeline |
+| `default`| 🐌 Slow | Full     | ❌ N/A      | ❌ No        | Release Testing |
+
+> **Note**: Idempotence testing is not applicable to this role as it downloads/installs by design.
 
 ## 🚀 **Quick Commands**
 
