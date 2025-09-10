@@ -50,16 +50,6 @@
       Checksum URL: {{ frp_install_checksum_download_url }}
       Target file: {{ frp_install_filename }}
 
-# Create required directories (idempotent)
-- name: Create frp directories
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: directory
-    owner: "{{ frp_install_user if ansible_facts.user_id == 'root' else omit }}"
-    group: "{{ frp_install_group if ansible_facts.user_id == 'root' else omit }}"
-    mode: '0755'
-  loop: "{{ frp_install_dirs }}"
-
 # Ensure required packages are installed
 - name: Ensure required packages are installed
   ansible.builtin.apt:
@@ -68,13 +58,22 @@
       - tar
       - ufw
     state: present
+    update_cache: true
+    cache_valid_time: 86400
   register: frp_install_package_install
   retries: 3
   delay: 5
   until: frp_install_package_install is succeeded
   when: not (frp_install_skip_packages | default(false) | bool)
 
-# Create frp user and group
+# Create frp user and group (must be before directory creation)
+- name: Create frp group
+  ansible.builtin.group:
+    name: "{{ frp_install_group }}"
+    system: true
+    state: present
+  when: ansible_facts.user_id == 'root'
+
 - name: Create frp user
   ansible.builtin.user:
     name: "{{ frp_install_user }}"
@@ -84,12 +83,15 @@
     create_home: false
   when: ansible_facts.user_id == 'root'
 
-- name: Create frp group
-  ansible.builtin.group:
-    name: "{{ frp_install_group }}"
-    system: true
-    state: present
-  when: ansible_facts.user_id == 'root'
+# Create required directories (idempotent)
+- name: Create frp directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ frp_install_user if ansible_facts.user_id == 'root' else omit }}"
+    group: "{{ frp_install_group if ansible_facts.user_id == 'root' else omit }}"
+    mode: '0755'
+  loop: "{{ frp_install_dirs }}"
 
 # Download and verify frp with proper error handling
 - name: Download frp

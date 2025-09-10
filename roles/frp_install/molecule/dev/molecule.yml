@@ -1,10 +1,10 @@
 ---
 # =============================================================================
-# CI SCENARIO - Continuous Integration & Version Testing
+# DEV SCENARIO - Fast Development Testing
 # =============================================================================
-# Purpose: Automated CI/CD testing with version compatibility validation
-# Use for: GitHub Actions, GitLab CI, version upgrades, automated builds
-# Benefits: Fast CI execution, version override testing, no idempotence overhead
+# Purpose: Rapid development iteration with instant feedback
+# Use for: Feature development, bug fixes, template changes, quick validation
+# Benefits: Minimal test sequence for speed, complete basic testing
 
 dependency:
   name: galaxy
@@ -13,7 +13,7 @@ driver:
   name: docker
 
 platforms:
-  - name: ci-instance
+  - name: dev-instance
     image: geerlingguy/docker-ubuntu2204-ansible:latest
     command: sleep infinity
     pre_build_image: true
@@ -27,33 +27,26 @@ provisioner:
     defaults:
       callbacks_enabled: profile_tasks, timer
       host_key_checking: false
-  env:
-    ANSIBLE_REMOTE_TMP: /tmp/.ansible/tmp
   playbooks:
     create: ../resources/create_simple.yml
-    converge: ../resources/playbook_version_test.yml
-    verify: ../resources/verify_version_test.yml
+    converge: ../resources/playbook.yml
+    verify: ../resources/verify.yml
     destroy: ../resources/destroy.yml
   inventory:
     group_vars:
       all:
-        # Test version override functionality (0.64.0 vs default 0.63.0)
-        frp_version: "0.64.0"
+        frp_install_version: "0.63.0"
         frp_install_create_service: false
 
 verifier:
   name: ansible
 
 scenario:
-  name: ci
-  # CI-optimized sequence: fast execution without idempotence testing
+  name: dev
+  # Fast sequence: syntax, create, converge, verify, destroy (no idempotence)
   test_sequence:
-    - dependency
-    - cleanup
-    - destroy
     - syntax
     - create
     - converge
     - verify
-    - cleanup
     - destroy

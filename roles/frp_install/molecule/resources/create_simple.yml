@@ -1,0 +1,41 @@
+---
+- name: Create
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  no_log: "{{ molecule_no_log }}"
+  tasks:
+    - name: Set async_dir for HOME env
+      ansible.builtin.set_fact:
+        ansible_async_dir: "{{ lookup('env', 'HOME') }}/.ansible_async/"
+      when: lookup('env', 'HOME') | length > 0
+
+    - name: Create molecule instance(s)
+      community.docker.docker_container:
+        name: "{{ item.name }}"
+        image: "{{ item.image }}"
+        state: started
+        recreate: false
+        log_driver: none
+        command: "{{ item.command | default('sleep infinity') }}"
+        privileged: "{{ item.privileged | default(false) }}"
+        volumes: "{{ item.volumes | default(omit) }}"
+        ports: "{{ item.published_ports | default(omit) }}"
+        env: "{{ item.env | default({}) }}"
+        networks: "{{ item.networks | default(omit) }}"
+        tmpfs: "{{ item.tmpfs | default(omit) }}"
+        etc_hosts: "{{ item.etc_hosts | default(omit) }}"
+        capabilities: "{{ item.capabilities | default(omit) }}"
+        sysctls: "{{ item.sysctls | default(omit) }}"
+        ulimits: "{{ item.ulimits | default(omit) }}"
+        hostname: "{{ item.hostname | default(item.name) }}"
+        working_dir: "{{ item.working_dir | default(omit) }}"
+        user: "{{ item.user | default(omit) }}"
+      register: server
+      loop: "{{ molecule_yml.platforms }}"
+      ignore_errors: true
+
+    - name: Fail if Docker is not running
+      ansible.builtin.fail:
+        msg: "Docker is not available. Make sure Docker is running and you have permissions to access it."
+      when: server.failed is defined and server.failed

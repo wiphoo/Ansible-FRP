@@ -1,43 +1,49 @@
 ---
+# =============================================================================
+# DEFAULT SCENARIO - Complete Production Testing
+# =============================================================================
+# Purpose: Comprehensive testing with idempotence validation and full verification
+# Use for: Release testing, production readiness, comprehensive validation
+# Benefits: Full test suite including idempotence, most thorough validation
+
 dependency:
   name: galaxy
+
 driver:
   name: docker
+
 platforms:
   - name: instance
+    # Pre-built image for production-like testing without systemd complexity
     image: geerlingguy/docker-ubuntu2204-ansible:latest
-    command: /lib/systemd/systemd
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-    privileged: true
+    command: sleep infinity
     pre_build_image: true
-    tmpfs:
-      - /run
-      - /tmp
-      - /run/lock
+    privileged: false
+    env:
+      DEBIAN_FRONTEND: noninteractive
+
 provisioner:
   name: ansible
   config_options:
     defaults:
-      interpreter_python: auto_silent
       callbacks_enabled: profile_tasks, timer
-      collections_path: /home/terng/work/personal/wiphoo_ansible_frp/collections
   playbooks:
+    create: ../resources/create_simple.yml
     converge: ../resources/playbook.yml
+    verify: ../resources/verify.yml
+    destroy: ../resources/destroy.yml
   inventory:
     group_vars:
       all:
         frp_install_version: "0.63.0"
-        frp_install_user: "frp"
-        frp_install_group: "frp"
-        frp_install_dir: "/usr/local/bin/frp"
-        frp_install_config_dir: "/etc/frp"
-        frp_install_log_dir: "/var/log/frp"
-        frp_install_create_service: true
-        frp_install_configure_firewall: false
-        frp_install_cleanup_tmp: true
+        frp_install_create_service: false  # Disable systemd service for non-systemd container
+
+verifier:
+  name: ansible
+
 scenario:
   name: default
+  # Full test sequence including idempotence check
   test_sequence:
     - dependency
     - cleanup
@@ -45,9 +51,7 @@ scenario:
     - syntax
     - create
     - converge
-    - idempotence
+    - idempotence  # Ensures playbook can run multiple times
     - verify
     - cleanup
     - destroy
-verifier:
-  name: ansible

@@ -142,8 +142,8 @@ inventory/*/group_vars/all/vault.yml
 inventory/*/host_vars/*/vault.yml
 
 # Local ansible config
-.ansible.cfg
-ansible.cfg
+# .ansible.cfg
+# ansible.cfg
 
 # ==========================================
 # Documentation

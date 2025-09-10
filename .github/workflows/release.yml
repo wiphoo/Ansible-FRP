@@ -37,6 +37,12 @@ jobs:
         uv run ansible-galaxy collection install "$FILE" --force -p ~/.ansible/collections
         uv run ansible-galaxy collection list | grep wiphoo.frp
 
+    - name: Run final tests
+      run: |
+        uv sync --extra test
+        uv run python -m pytest tests/ -v --tb=short
+        uv run ansible-lint roles/
+
     - name: Publish to Ansible Galaxy
       run: |
         FILE=$(ls -1 wiphoo-frp-*.tar.gz | head -1)

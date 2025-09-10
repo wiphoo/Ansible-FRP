@@ -6,6 +6,9 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "ansible[dev]>=11.10",
+    "docker==7.1.0",
+    "molecule-docker>=2.1.0",
+    "molecule[docker]>=25.7.0",
 ]
 
 [project.optional-dependencies]
