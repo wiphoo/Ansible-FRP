@@ -140,7 +140,7 @@ jobs:
     - name: Setup and run molecule tests
       working-directory: roles/frp_install
       run: |
-        uv sync --extra dev
+        uv sync --extra test --extra dev
 
         # Install collection dependencies directly using molecule requirements
         uv run ansible-galaxy collection install -r molecule/dev/requirements.yml --force -p ${{ github.workspace }}/collections
