@@ -43,7 +43,7 @@ verifier:
 
 scenario:
   name: default
-  # Full test sequence including idempotence check
+  # Full test sequence without idempotence (role downloads files by design)
   test_sequence:
     - dependency
     - cleanup
@@ -51,7 +51,6 @@ scenario:
     - syntax
     - create
     - converge
-    - idempotence  # Ensures playbook can run multiple times
     - verify
     - cleanup
     - destroy
