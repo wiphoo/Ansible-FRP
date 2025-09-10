@@ -40,7 +40,11 @@ jobs:
 
     - name: Run quick checks
       run: |
-        uv run ansible-lint roles/ playbooks/ || uv run ansible-lint roles/
+        if [ -d playbooks ]; then
+          uv run ansible-lint roles/ playbooks/
+        else
+          uv run ansible-lint roles/
+        fi
         uv run pre-commit run --all-files --show-diff-on-failure
 
     - name: Build collection
