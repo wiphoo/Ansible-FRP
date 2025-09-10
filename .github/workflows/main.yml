@@ -32,7 +32,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv sync --extra dev
+        uv sync --extra dev --extra test
 
     - name: Run pre-commit hooks
       run: |
@@ -73,8 +73,8 @@ jobs:
       run: |
         uv sync --extra test
         uv add ansible==${{ matrix.ansible-version }}
-        # Install collection dependencies
-        uv run ansible-galaxy collection install -r requirements.yml --force -p ./collections
+        # Install collection dependencies from galaxy.yml
+        uv run ansible-galaxy collection install "community.general>=7.0.0" "ansible.posix>=1.0.0" --force -p ./collections
 
     - name: Run tests
       run: |
@@ -130,7 +130,7 @@ jobs:
 
     - name: Install Ansible
       run: |
-        uv sync --extra dev
+        uv sync --extra dev --extra test
 
     - name: Build collection
       run: |

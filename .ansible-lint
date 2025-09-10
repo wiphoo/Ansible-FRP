@@ -2,7 +2,6 @@
 exclude_paths:
   - .github/
   - docs/
-  - requirements.yml  # Collection requirements, not Ansible playbook content
 
 # Skip certain rules that might be too strict for this project
 skip_list:

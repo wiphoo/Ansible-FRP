@@ -23,10 +23,6 @@ test = [
     "molecule-docker>=2.1.0",
     "molecule[docker]>=25.7.0",
     "docker==7.1.0",
-
-    # Linting and validation for testing
-    "ansible-lint>=6.0.0",
-    "yamllint>=1.35.0",
 ]
 dev = [
     # Development tools
@@ -39,6 +35,10 @@ dev = [
     # Documentation
     "mkdocs>=1.5.0",
     "mkdocs-material>=9.0.0",
+
+    # Linting and validation for testing
+    "ansible-lint>=6.0.0",
+    "yamllint>=1.35.0",
 ]
 
 [tool.pytest.ini_options]

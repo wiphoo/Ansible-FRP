@@ -36,11 +36,12 @@ jobs:
 
     - name: Install dependencies
       run: |
-        uv sync --extra dev
+        uv sync --extra dev --extra test
 
     - name: Install required Ansible collections for role
       run: |
-        uv run ansible-galaxy collection install -r requirements.yml --force -p ./collections
+        # Install collection dependencies from galaxy.yml
+        uv run ansible-galaxy collection install "community.general>=7.0.0" "ansible.posix>=1.0.0" --force -p ./collections
       env:
         ANSIBLE_COLLECTIONS_PATH: ./collections
 
@@ -306,7 +307,7 @@ jobs:
 
     - name: Install docs dependencies
       run: |
-        uv sync --extra dev
+        uv sync --extra dev --extra test
 
     - name: Build documentation
       run: |
