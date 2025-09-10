@@ -82,6 +82,7 @@ jobs:
     - name: Run Molecule syntax check
       run: |
         cd roles/frp_install
+        ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1 uv run molecule syntax --scenario-name dev
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1 uv run molecule syntax --scenario-name ci
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1 uv run molecule syntax --scenario-name default
       env:

@@ -113,7 +113,9 @@ pre-commit install
 **Testing:**
 ```bash
 uv run pytest -v --cov
-cd roles/frp_install; uv run molecule test
+cd roles/frp_install && uv run molecule test --scenario-name dev  # Fast development testing
+cd roles/frp_install && uv run molecule test --scenario-name ci   # CI testing  
+cd roles/frp_install && uv run molecule test --scenario-name default # Full testing
 ```
 
 ## 📊 Documentation & Links

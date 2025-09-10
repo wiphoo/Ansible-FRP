@@ -69,6 +69,7 @@ jobs:
     - name: Run Molecule syntax check
       run: |
         cd roles/frp_install
+        ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1 uv run molecule syntax --scenario-name dev
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1 uv run molecule syntax --scenario-name ci
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1 uv run molecule syntax --scenario-name default
       env:
@@ -114,11 +115,14 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install uv
-        uv sync --extra test
+        uv sync --extra dev
         uv pip install ansible>=11.10
 
         cd roles/frp_install
         export ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1
+
+        echo "🧪 Running dev scenario (fast)..."
+        uv run molecule test --scenario-name dev || echo "❌ Dev scenario failed"
 
         echo "🧪 Running CI scenario..."
         uv run molecule test --scenario-name ci || echo "❌ CI scenario failed"
@@ -176,6 +180,7 @@ jobs:
         echo "" >> summary.md
         echo "| Scenario | Status |" >> summary.md
         echo "|----------|--------|" >> summary.md
+        echo "| Dev | $([ '${{ needs.molecule-test.result }}' == 'success' ] && echo '✅ PASSED' || echo '❌ FAILED') |" >> summary.md
         echo "| CI | $([ '${{ needs.molecule-test.result }}' == 'success' ] && echo '✅ PASSED' || echo '❌ FAILED') |" >> summary.md
         echo "| Default | $([ '${{ needs.molecule-test.result }}' == 'success' ] && echo '✅ PASSED' || echo '❌ FAILED') |" >> summary.md
         echo "" >> summary.md
