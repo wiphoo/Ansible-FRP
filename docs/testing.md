@@ -2,40 +2,52 @@
 
 This document provides a comprehensive guide for testing the FRP installation role using Molecule.
 
-## Overview
+## Ov1. **Quick Development Loop**:
+   ```bash
+   cd roles/frp_install && uv run molecule syntax --scenario-name dev  # Check syntax
+   cd roles/frp_install && uv run molecule test --scenario-name dev    # Quick test
+   ```
 
-The FRP installation role includes multiple Molecule scenarios for different testing needs:
+2. **Full Validation**:
+   ```bash
+   cd roles/frp_install && uv run molecule test --scenario-name default # Complete test
+   cd roles/frp_install && uv run molecule test --scenario-name ci      # Version override test
+   ```
+
+3. **CI Preparation**:
+   ```bash
+   cd roles/frp_install && uv run molecule test --scenario-name ci      # CI-optimized test
+   ```installation role includes three Molecule scenarios for different testing needs:
 
 - **`default`** - Complete testing with systemd services and idempotence checks
-- **`ci`** - CI/CD optimized testing with full systemd support  
-- **`quick`** - Fast testing without systemd services (great for development)
-- **`version_test`** - Tests version override functionality
+- **`ci`** - CI/CD optimized testing with full systemd support and version override functionality  
+- **`dev`** - Fast development testing without systemd services (great for rapid iteration)
 
 ## Prerequisites
 
 - Docker installed and running
-- Python environment with uv package manager
-- Project dependencies installed (`uv sync`)
+- Python 3.11+ environment with uv package manager
+- Project dependencies installed: `uv sync --extra dev`
 
 ## Quick Start
 
-### Using the Test Wrapper Script
+### Using Direct Molecule Commands
 
-The easiest way to run tests is using the provided wrapper script:
+The recommended way to run tests is using molecule directly:
 
 ```bash
 # Run default scenario (full test)
-./test-molecule.sh
+cd roles/frp_install && uv run molecule test --scenario-name default
 
-# Run quick scenario (fast, no systemd)
-./test-molecule.sh -s quick
+# Run dev scenario (fast, no systemd)
+cd roles/frp_install && uv run molecule test --scenario-name dev
 
 # Run CI scenario
-./test-molecule.sh -s ci
+cd roles/frp_install && uv run molecule test --scenario-name ci
 
 # Run specific commands
-./test-molecule.sh -s quick -c syntax     # Just syntax check
-./test-molecule.sh -s default -c converge # Just run the role
+cd roles/frp_install && uv run molecule syntax --scenario-name dev     # Just syntax check
+cd roles/frp_install && uv run molecule converge --scenario-name default # Just run the role
 ```
 
 ### Manual Testing
@@ -50,7 +62,7 @@ export MOLECULE_COLLECTIONS_PATH="/path/to/project/collections"
 export MOLECULE_ROLES_PATH="/path/to/project/roles"
 
 # Run tests
-uv run molecule test --scenario-name quick
+uv run molecule test --scenario-name dev
 ```
 
 ## Test Scenarios Explained
@@ -65,35 +77,26 @@ uv run molecule test --scenario-name quick
 ### CI Scenario  
 - **Purpose**: Optimized for CI/CD pipelines
 - **Container**: Ubuntu 22.04 with systemd
-- **Features**: Full testing but streamlined sequence
+- **Features**: Full testing with version override functionality, streamlined sequence
 - **Runtime**: ~2 minutes
 - **Use case**: Automated testing in GitHub Actions
 
-### Quick Scenario
+### Dev Scenario
 - **Purpose**: Fast development testing
 - **Container**: Basic Ubuntu 22.04 (no systemd)
 - **Features**: Binary installation, basic verification
 - **Runtime**: ~30 seconds
 - **Use case**: Rapid development feedback
 
-### Version Test Scenario
-- **Purpose**: Test version override functionality
-- **Container**: Ubuntu 22.04 with systemd
-- **Features**: Tests `frp_version` variable override
-- **Runtime**: ~2 minutes
-- **Use case**: Version-specific feature testing
-
 ## Test Structure
 
 ### Playbooks
-- `playbook.yml` - Standard converge playbook for default/ci
-- `playbook_quick.yml` - Fast converge without systemd setup
-- `playbook_version_test.yml` - Version testing playbook
+- `playbook.yml` - Standard converge playbook for default scenario
+- `playbook_version_test.yml` - Version testing playbook for ci scenario
 
 ### Verification
-- `verify.yml` - Comprehensive verification (services, files, versions)
-- `verify_quick.yml` - Basic verification (binaries, directories)
-- `verify_version_test.yml` - Version-specific verification
+- `verify.yml` - Comprehensive verification (services, files, versions) for default
+- `verify_version_test.yml` - Version-specific verification for ci scenario
 
 ## Environment Configuration
 
@@ -110,19 +113,19 @@ These are automatically set by the wrapper script or can be set manually.
 
 ```bash
 # Syntax check only
-./test-molecule.sh -s quick -c syntax
+cd roles/frp_install && uv run molecule syntax --scenario-name dev
 
 # Create and converge only (skip verification)
-./test-molecule.sh -s quick -c converge
+cd roles/frp_install && uv run molecule converge --scenario-name dev
 
 # Run verification on existing container
-./test-molecule.sh -s quick -c verify
+cd roles/frp_install && uv run molecule verify --scenario-name dev
 
 # Clean up containers
-./test-molecule.sh -s quick -c destroy
+cd roles/frp_install && uv run molecule destroy --scenario-name dev
 
 # Full test cycle
-./test-molecule.sh -s quick -c test
+cd roles/frp_install && uv run molecule test --scenario-name dev
 ```
 
 ## Troubleshooting
@@ -135,19 +138,19 @@ If you encounter container creation issues:
 docker container prune -f
 
 # Clean up molecule state
-./test-molecule.sh -s <scenario> -c destroy
+cd roles/frp_install && uv run molecule destroy --scenario-name <scenario>
 ```
 
 ### Permission Issues
 If you see temporary directory permission errors:
-- Use the `quick` scenario which doesn't require systemd
+- Use the `dev` scenario which doesn't require systemd
 - Check Docker daemon permissions
 - Ensure proper container privileges
 
 ### Path Issues
 If roles/collections aren't found:
 - Verify `MOLECULE_COLLECTIONS_PATH` and `MOLECULE_ROLES_PATH` are set
-- Use the wrapper script which handles paths automatically
+- Run commands from the roles/frp_install directory
 - Check that you're running from the project root
 
 ## Integration with CI/CD
@@ -157,8 +160,8 @@ If roles/collections aren't found:
 ```yaml
 - name: Test with Molecule
   run: |
-    cd ${{ github.workspace }}
-    ./test-molecule.sh -s ci
+    cd ${{ github.workspace }}/roles/frp_install
+    uv run molecule test --scenario-name ci
 ```
 
 The `ci` scenario is optimized for automated testing environments.
@@ -167,19 +170,19 @@ The `ci` scenario is optimized for automated testing environments.
 
 1. **Quick Development Loop**:
    ```bash
-   ./test-molecule.sh -s quick -c syntax  # Check syntax
-   ./test-molecule.sh -s quick -c test    # Quick test
+   cd roles/frp_install && uv run molecule syntax --scenario-name dev  # Check syntax
+   cd roles/frp_install && uv run molecule test --scenario-name dev    # Quick test
    ```
 
 2. **Full Validation**:
    ```bash
-   ./test-molecule.sh -s default          # Complete test
-   ./test-molecule.sh -s version_test     # Version override test
+   cd roles/frp_install && uv run molecule test --scenario-name default # Complete test
+   cd roles/frp_install && uv run molecule test --scenario-name ci      # Version override test
    ```
 
 3. **CI Preparation**:
    ```bash
-   ./test-molecule.sh -s ci               # CI-optimized test
+   cd roles/frp_install && uv run molecule test --scenario-name ci      # CI-optimized test
    ```
 
 ## Test Coverage
@@ -201,15 +204,14 @@ The molecule tests cover:
 
 | Scenario | Typical Runtime | Use Case |
 |----------|----------------|----------|
-| quick    | ~30 seconds    | Development |
-| ci       | ~2 minutes     | CI/CD |
+| dev      | ~30 seconds    | Development |
+| ci       | ~2 minutes     | CI/CD & Version testing |
 | default  | ~3 minutes     | Full validation |
-| version_test | ~2 minutes  | Version testing |
 
 ## Best Practices
 
-1. **Use `quick` for development** - Fast feedback loop
-2. **Use `ci` for automation** - Balanced testing for CI/CD
+1. **Use `dev` for development** - Fast feedback loop
+2. **Use `ci` for automation** - Balanced testing for CI/CD with version override
 3. **Use `default` for releases** - Comprehensive validation
 4. **Clean up between tests** - Use destroy to avoid conflicts
 5. **Check syntax first** - Quick validation before longer tests
@@ -234,12 +236,12 @@ To add new scenarios:
 1. Create new directory: `molecule/my_scenario/`
 2. Add `molecule.yml` configuration
 3. Create corresponding playbooks in `resources/`
-4. Update the wrapper script help text
+4. Test with `uv run molecule test --scenario-name my_scenario`
 
 ## Support
 
 For issues with molecule testing:
 1. Check the troubleshooting section above
 2. Review molecule logs for detailed error information
-3. Test with the `quick` scenario first for faster debugging
+3. Test with the `dev` scenario first for faster debugging
 4. Ensure Docker is running and accessible

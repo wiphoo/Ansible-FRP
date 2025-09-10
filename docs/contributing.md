@@ -10,7 +10,8 @@ Thank you for contributing to the wiphoo.frp collection!
 - Testing and examples
 
 **Requirements:**
-- Git, Python 3.11+, Ansible >=11.10, Docker
+- Git, Python 3.11+, Docker
+- Ansible Core >=2.15.0 (automatically installed)
 
 ## Development Setup
 
@@ -19,8 +20,8 @@ Thank you for contributing to the wiphoo.frp collection!
 git clone https://github.com/YOUR_USERNAME/Ansible-FRP.git
 cd Ansible-FRP
 
-# Setup environment with uv
-uv sync --extra dev --extra test
+# Setup environment with uv (includes dev and test dependencies)
+uv sync --extra dev
 source .venv/bin/activate
 
 # Install pre-commit hooks
@@ -53,17 +54,28 @@ uv run ruff format --check
 
 ## Testing
 
+**Available test approaches:**
+
 ```bash
-# Run all tests
+# Unit tests with pytest
 uv run pytest
 
-# Linting and formatting
+# Code quality checks
 uv run ruff check .
 uv run ruff format --check
+uv run yamllint .
 
-# Integration tests
-uv run molecule test
+# Molecule integration testing
+cd roles/frp_install
+uv run molecule test --scenario-name dev     # Fast development testing
+uv run molecule test --scenario-name ci      # CI-optimized testing
+uv run molecule test --scenario-name default # Full comprehensive testing
 ```
+
+**Test scenarios explained:**
+- **`dev`** - Fast development testing without systemd (30 seconds)
+- **`ci`** - CI/CD optimized with full systemd support (2 minutes)  
+- **`default`** - Complete testing with idempotence checks (3 minutes)
 
 **Write tests for new features:**
 ```python
@@ -96,6 +108,26 @@ def test_frp_installation():
 # Build and test docs
 uv run mkdocs build
 uv run mkdocs serve
+```
+
+## Dependency Management
+
+**The project uses a streamlined dependency structure:**
+
+- **Core dependencies**: Only `ansible-core>=2.15.0` for minimal runtime
+- **Test dependencies**: All testing and molecule dependencies (`uv sync --extra test`)
+- **Dev dependencies**: Includes test + development tools (`uv sync --extra dev`)
+
+**Installation options:**
+```bash
+# For development (recommended)
+uv sync --extra dev
+
+# For testing only
+uv sync --extra test
+
+# Minimal runtime
+uv sync
 ```
 
 ## Getting Help
