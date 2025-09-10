@@ -43,6 +43,7 @@ tags: [frp, proxy, reverseproxy, networking, installation, security, hardening, 
 # range specifiers can be set and are separated by ','
 dependencies:
   community.general: ">=7.0.0"
+  community.docker: ">=3.0.0"
 
 # The URL of the originating SCM repository
 repository: https://github.com/wiphoo/Ansible-FRP

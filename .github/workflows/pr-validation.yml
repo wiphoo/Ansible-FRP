@@ -38,6 +38,13 @@ jobs:
       run: |
         uv sync --extra dev
 
+    - name: Install required Ansible collections
+      run: |
+        uv run ansible-galaxy collection install community.general --force -p ./collections
+        uv run ansible-galaxy collection install community.docker --force -p ./collections
+      env:
+        ANSIBLE_COLLECTIONS_PATH: ./collections
+
     - name: Run quick checks
       run: |
         if [ -d playbooks ]; then
@@ -46,6 +53,8 @@ jobs:
           uv run ansible-lint roles/
         fi
         uv run pre-commit run --all-files --show-diff-on-failure
+      env:
+        ANSIBLE_COLLECTIONS_PATH: ./collections
 
     - name: Build collection
       run: |
@@ -73,13 +82,6 @@ jobs:
           --junitxml=test-results.xml
       env:
         PY_COLORS: '1'
-
-    - name: Install required Ansible collections
-      run: |
-        uv run ansible-galaxy collection install community.general --force -p ./collections
-        uv run ansible-galaxy collection install community.docker --force -p ./collections
-      env:
-        ANSIBLE_COLLECTIONS_PATH: ./collections
 
     - name: Run Molecule syntax check
       working-directory: roles/frp_install
