@@ -48,6 +48,8 @@ scenario:
     - syntax
     - create
     - converge
+    - idempotence
+    - verify
     - cleanup
     - destroy
 verifier:

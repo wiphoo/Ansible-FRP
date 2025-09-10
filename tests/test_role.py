@@ -378,13 +378,27 @@ class TestFrpInstallRole:
         import tempfile
 
         # Test that collection builds successfully
-        with tempfile.TemporaryDirectory():
-            build_cmd = ["ansible-galaxy", "collection", "build", "--force"]
+        with tempfile.TemporaryDirectory() as outdir:
+            build_cmd = [
+                "uv",
+                "run",
+                "ansible-galaxy",
+                "collection",
+                "build",
+                "--force",
+                "--output-path",
+                outdir,
+            ]
+            import shutil
+
+            if shutil.which("ansible-galaxy") is None:
+                pytest.skip("ansible-galaxy not available")
             result = subprocess.run(
                 build_cmd,
                 cwd=os.path.join(os.path.dirname(__file__), ".."),
                 capture_output=True,
                 text=True,
+                timeout=600,
             )
 
             assert result.returncode == 0, f"Collection build failed: {result.stderr}"
@@ -392,9 +406,7 @@ class TestFrpInstallRole:
             # Check that tar.gz file was created
             import glob
 
-            tar_files = glob.glob(
-                os.path.join(os.path.dirname(__file__), "..", "wiphoo-frp-*.tar.gz")
-            )
+            tar_files = glob.glob(os.path.join(outdir, "wiphoo-frp-*.tar.gz"))
             assert len(tar_files) > 0, "No collection tar.gz file found"
 
             # Test collection size is reasonable (< 10MB)
@@ -1026,6 +1038,7 @@ class TestAnsibleIntegration:
                 ["molecule", "--version"],
                 capture_output=True,
                 text=True,
+                timeout=600,
                 cwd=os.path.join(os.path.dirname(__file__), ".."),
             )
             molecule_available = result.returncode == 0
@@ -1044,8 +1057,8 @@ class TestAnsibleIntegration:
                 ["molecule", "syntax", "-s", "default"],
                 capture_output=True,
                 text=True,
-                cwd=role_dir,
                 timeout=300,  # 5 minute timeout
+                cwd=role_dir,
             )
 
             # Check if the syntax check passed

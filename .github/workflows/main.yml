@@ -81,7 +81,7 @@ jobs:
     - name: Run Molecule syntax check
       run: |
         cd roles/frp_install
-        uv run molecule syntax --scenario-name ci
+        uv run molecule test --all
       env:
         PY_COLORS: '1'
         ANSIBLE_FORCE_COLOR: '1'

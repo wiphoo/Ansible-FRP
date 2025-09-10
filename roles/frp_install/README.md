@@ -3,7 +3,7 @@
 Installs frp (Fast Reverse Proxy) on Linux systems.
 
 ## Requirements
-- Ansible 2.9+
+- Ansible >=11.10
 - Ubuntu/Debian-based systems
 - Internet access for downloads
 

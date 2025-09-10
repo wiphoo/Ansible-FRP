@@ -184,7 +184,9 @@
     owner: "{{ frp_install_user if ansible_facts.user_id == 'root' else omit }}"
     group: "{{ frp_install_group if ansible_facts.user_id == 'root' else omit }}"
     mode: '0600'
-  when: frp_install_create_service | bool
+  when:
+    - frp_install_create_service | bool
+    - "'frps' in frp_install_files"
 
 - name: Create basic frpc configuration file
   ansible.builtin.template:
@@ -193,14 +195,18 @@
     owner: "{{ frp_install_user if ansible_facts.user_id == 'root' else omit }}"
     group: "{{ frp_install_group if ansible_facts.user_id == 'root' else omit }}"
     mode: '0600'
-  when: frp_install_create_service | bool
+  when:
+    - frp_install_create_service | bool
+    - "'frpc' in frp_install_files"
 
 - name: Create systemd service file for frps
   ansible.builtin.template:
     src: frps.service.j2
     dest: /etc/systemd/system/frps.service
     mode: '0644'
-  when: frp_install_create_service | bool
+  when:
+    - frp_install_create_service | bool
+    - "'frps' in frp_install_files"
   notify: Reload systemd
 
 - name: Create systemd service file for frpc
@@ -208,7 +214,9 @@
     src: frpc.service.j2
     dest: /etc/systemd/system/frpc.service
     mode: '0644'
-  when: frp_install_create_service | bool
+  when:
+    - frp_install_create_service | bool
+    - "'frpc' in frp_install_files"
   notify: Reload systemd
 
 # Firewall configuration (optional)

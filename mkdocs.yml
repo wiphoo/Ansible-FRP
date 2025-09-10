@@ -20,12 +20,12 @@ plugins:
 
 nav:
   - Home: README.md
-  - Installation: docs/installation.md
-  - Usage: docs/usage.md
+  - Guide: guide.md
   - Roles:
-      - frp_install: docs/roles/frp_install.md
-  - API Reference: docs/api.md
-  - Contributing: docs/contributing.md
+      - frp_install: roles/frp_install.md
+  - API Reference: api.md
+  - Help: help.md
+  - Contributing: contributing.md
   - Security: SECURITY.md
 
 markdown_extensions:

@@ -25,6 +25,12 @@
       loop: "{{ frp_install_files }}"
       register: file_permissions
 
+    - name: Verify files exist
+      ansible.builtin.assert:
+        that: item.stat.exists | default(false)
+        fail_msg: "File {{ item.item }} is missing"
+      loop: "{{ file_permissions.results }}"
+
     - name: Verify file ownership
       ansible.builtin.assert:
         that:
@@ -32,6 +38,7 @@
           - item.stat.gr_name == frp_install_group
         fail_msg: "File {{ item.item }} has incorrect ownership"
       loop: "{{ file_permissions.results }}"
+      when: item.stat.exists | default(false)
 
     - name: Gather package facts
       ansible.builtin.package_facts:
@@ -39,8 +46,9 @@
 
     - name: Verify packages are installed
       ansible.builtin.assert:
-        that:
-          - "'curl' in ansible_facts.packages"
-          - "'tar' in ansible_facts.packages"
-          - "'ufw' in ansible_facts.packages"
-        fail_msg: "Required packages (curl, tar, ufw) are not all installed"
+        that: item in ansible_facts.packages
+        fail_msg: "Package {{ item }} is not installed"
+      loop:
+        - curl
+        - tar
+        - ufw

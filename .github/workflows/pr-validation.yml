@@ -5,14 +5,19 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: [ main, master ]
 
-permissions:
-  contents: read
-  pull-requests: write
-  checks: write
-  id-token: write
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.head.ref || github.ref }}
+  cancel-in-progress: true
+
+permissions: {} # use job-level permissions below
 
 jobs:
   pr-validation:
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
+      id-token: write
     name: Quick PR Check
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
@@ -35,7 +40,7 @@ jobs:
 
     - name: Run quick checks
       run: |
-        uv run ansible-lint roles/
+        uv run ansible-lint roles/ playbooks/ || uv run ansible-lint roles/
         uv run pre-commit run --all-files --show-diff-on-failure
 
     - name: Build collection
@@ -45,13 +50,13 @@ jobs:
     - name: Test collection installation
       run: |
         uv run ansible-galaxy collection install wiphoo-frp-*.tar.gz --force -p ~/.ansible/collections
+        uv run ansible-galaxy collection list | grep -q '^wiphoo\.frp\s'
+        echo "wiphoo.frp collection is installed"
 
     - name: Install test dependencies
       run: |
-        # Install the test dependencies
+        # Install test dependencies (ensure pytest, pytest-cov, coverage are in [project.optional-dependencies].test)
         uv sync --extra test
-        # Then install pytest-cov for coverage reporting
-        uv pip install pytest-cov coverage
 
     - name: Run pytest tests
       run: |
@@ -83,15 +88,19 @@ jobs:
         fail-on-error: true
 
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v4
+      uses: codecov/codecov-action@v5
       with:
-        file: ./coverage.xml
+        files: ./coverage.xml
         flags: pr-check
         name: pr-coverage
         fail_ci_if_error: false
         token: ${{ secrets.CODECOV_TOKEN }}  # optional: fallback token-based auth
 
   pr-security:
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
@@ -119,6 +128,9 @@ jobs:
         category: "/language:python"
 
   pr-size:
+    permissions:
+      contents: read
+      pull-requests: write
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
@@ -140,6 +152,8 @@ jobs:
           }
 
   pr-docs:
+    permissions:
+      contents: read
     runs-on: ubuntu-latest
     if: github.event.pull_request.draft == false
     steps:
@@ -159,12 +173,12 @@ jobs:
 
     - name: Build documentation
       run: |
-        uv run mkdocs build --clean
+        uv run mkdocs build --clean --strict
 
     - name: Check documentation links
-      run: |
-        # Check for broken links in documentation
-        find site/ -name "*.html" -exec grep -l "href=" {} \; | head -5 | xargs -I {} sh -c 'echo "Checking {}"; curl -s -o /dev/null -w "%{http_code}" $(grep -o "href=\"[^\"]*\"" {} | head -1 | sed "s/href=\"//;s/\"//") || true'
+      uses: lycheeverse/lychee-action@v1
+      with:
+        args: --no-progress --verbose --accept 200,206 --max-concurrency 10 "site/**/*.html"
 
     - name: Run yamllint
       run: |
