@@ -73,6 +73,8 @@ jobs:
       run: |
         uv sync --extra test
         uv add ansible==${{ matrix.ansible-version }}
+        # Install collection dependencies
+        uv run ansible-galaxy collection install community.general --force -p ./collections
 
     - name: Run tests
       run: |
@@ -88,6 +90,7 @@ jobs:
       env:
         PY_COLORS: '1'
         ANSIBLE_FORCE_COLOR: '1'
+        ANSIBLE_COLLECTIONS_PATH: ./collections
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS: 1
       continue-on-error: true  # Don't fail CI if molecule has issues
 

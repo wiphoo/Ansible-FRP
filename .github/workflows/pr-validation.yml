@@ -120,6 +120,9 @@ jobs:
         uv sync --extra dev
         uv add ansible>=11.10
 
+        # Install collection dependencies directly
+        uv run ansible-galaxy collection install community.general --force -p ./collections
+
         cd roles/frp_install
         export ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1
 
@@ -133,6 +136,7 @@ jobs:
         uv run molecule test --scenario-name default
       env:
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS: 1
+        ANSIBLE_COLLECTIONS_PATH: ./collections
         PY_COLORS: '1'
         ANSIBLE_FORCE_COLOR: '1'
 
