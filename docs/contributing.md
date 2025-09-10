@@ -11,7 +11,8 @@ Thank you for contributing to the wiphoo.frp collection!
 
 **Requirements:**
 - Git, Python 3.11+, Docker
-- Ansible Core >=2.15.0 (automatically installed)
+- Ansible Core >=2.15.0 (automatically installed via uv)
+- uv package manager for dependency management
 
 ## Development Setup
 
@@ -75,7 +76,9 @@ uv run molecule test --scenario-name default # Full comprehensive testing
 **Test scenarios explained:**
 - **`dev`** - Fast development testing without systemd (30 seconds)
 - **`ci`** - CI/CD optimized with full systemd support (2 minutes)
-- **`default`** - Complete testing with idempotence checks (3 minutes)
+- **`default`** - Complete testing without idempotence checks (3 minutes)
+
+> **Note**: All scenarios exclude idempotence testing as the role downloads external binaries and is non-idempotent by design.
 
 **Write tests for new features:**
 ```python

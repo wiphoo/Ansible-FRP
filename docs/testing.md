@@ -1,4 +1,10 @@
-# Molecule Testing Guide for FRP Installation Role
+# Molecule Testing The FRP installation role includes three Molecule scenarios for different testing needs:
+
+- **`default`** - Complete testing with systemd services (no idempotence testing)
+- **`ci`** - CI/CD optimized testing with full systemd support and version override functionality
+- **`dev`** - Fast development testing without systemd services (great for rapid iteration)
+
+> **Important**: This role is designed to download and install external binaries, making it non-idempotent by nature. Therefore, idempotence testing has been intentionally removed from all scenarios. for FRP Installation Role
 
 This document provides a comprehensive guide for testing the FRP installation role using Molecule.
 
@@ -70,7 +76,7 @@ uv run molecule test --scenario-name dev
 ### Default Scenario
 - **Purpose**: Complete role testing with all features
 - **Container**: Ubuntu 22.04 with systemd
-- **Features**: Full systemd service testing, idempotence checks
+- **Features**: Full systemd service testing (idempotence testing removed as role downloads by design)
 - **Runtime**: ~2-3 minutes
 - **Use case**: Final validation before release
 
@@ -87,6 +93,8 @@ uv run molecule test --scenario-name dev
 - **Features**: Binary installation, basic verification
 - **Runtime**: ~30 seconds
 - **Use case**: Rapid development feedback
+
+> **Note**: Idempotence testing has been removed from all scenarios because this role downloads external binaries and is inherently non-idempotent by design.
 
 ## Test Structure
 
@@ -159,12 +167,14 @@ If roles/collections aren't found:
 
 ```yaml
 - name: Test with Molecule
+  working-directory: roles/frp_install
   run: |
-    cd ${{ github.workspace }}/roles/frp_install
     uv run molecule test --scenario-name ci
+  env:
+    ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 ```
 
-The `ci` scenario is optimized for automated testing environments.
+The `ci` scenario is optimized for automated testing environments. Note the use of `working-directory` and absolute path for collections to ensure proper path resolution in CI/CD pipelines.
 
 ## Development Workflow
 
@@ -191,7 +201,6 @@ The molecule tests cover:
 
 - ✅ Ansible syntax validation
 - ✅ Role execution (converge)
-- ✅ Idempotence testing (default scenario)
 - ✅ Binary installation verification
 - ✅ File and directory creation
 - ✅ User and group creation
@@ -199,6 +208,8 @@ The molecule tests cover:
 - ✅ Service file creation (systemd scenarios)
 - ✅ Executable permissions
 - ✅ Configuration file templating
+
+> **Note**: Idempotence testing is intentionally excluded as this role downloads external binaries and creates new resources by design, making it non-idempotent.
 
 ## Performance
 

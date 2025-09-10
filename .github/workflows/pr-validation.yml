@@ -129,7 +129,6 @@ jobs:
       working-directory: roles/frp_install
       run: |
         uv sync --extra dev
-        uv add ansible>=11.10
 
         # Install collection dependencies directly
         uv run ansible-galaxy collection install community.general --force -p ${{ github.workspace }}/collections

@@ -4,11 +4,14 @@ This page documents practical installation steps for the wiphoo.frp Ansible coll
 
 ## Requirements
 
-- Ansible Core 2.12+ (or newer)
-- Python 3.6+
-- Linux target hosts (Ubuntu, Debian, CentOS/RHEL, Fedora)
-- Internet access to download FRP binaries (or provide a local mirror)
-- `become: true` for tasks that install system files or manage services
+- **Ansible Core**: 2.15+ (automatically handled by uv/pip)
+- **Python**: 3.11+ for development, 3.8+ for runtime
+- **Target Systems**: Linux (Ubuntu 20.04+, Debian 10+, CentOS 8+/RHEL 8+, Fedora 35+)
+- **Network Access**: Internet connection to download FRP binaries (or provide local mirror)
+- **Privileges**: Root access required (`become: true`) for system installation
+- **Dependencies**:
+  - `systemd` and `systemd-sysv` for service management (Ubuntu/Debian)
+  - `systemd` package for other distributions
 
 ## Install the Collection
 

@@ -5,7 +5,7 @@ Complete guide for installing, configuring, and deploying the wiphoo.frp Ansible
 ## 📦 Installation
 
 ### Requirements
-- Ansible >=11.10, Python >=3.11
+- Ansible Core >=2.15.0, Python >=3.11
 - Linux (Ubuntu, Debian, CentOS/RHEL, Fedora)
 - Internet access and admin privileges
 

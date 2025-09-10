@@ -5,7 +5,6 @@ description = "Ansible collection for Fast Reverse Proxy (frp) installation and 
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "ansible>=12.0.0",
     # Core Ansible runtime dependency
     "ansible-core>=2.15.0",
 ]
@@ -44,7 +43,6 @@ dev = [
     "yamllint>=1.35.0",
 
     # Development tools
-    "ansible[dev]>=11.10",
     "ruff>=0.6.0",
     "pre-commit>=4.3.0",
     "mypy>=1.0.0",
