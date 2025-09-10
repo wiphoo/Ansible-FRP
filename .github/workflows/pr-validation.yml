@@ -38,10 +38,15 @@ jobs:
       run: |
         uv sync --extra dev
 
-    - name: Install required Ansible collections
+    - name: Install required Ansible collections for role
       run: |
-        uv run ansible-galaxy collection install community.general --force -p ./collections
-        uv run ansible-galaxy collection install community.docker --force -p ./collections
+        uv run ansible-galaxy collection install -r requirements.yml --force -p ./collections
+      env:
+        ANSIBLE_COLLECTIONS_PATH: ./collections
+
+    - name: Install additional Molecule dependencies
+      run: |
+        uv run ansible-galaxy collection install -r roles/frp_install/molecule/dev/requirements.yml --force -p ./collections
       env:
         ANSIBLE_COLLECTIONS_PATH: ./collections
 
@@ -137,9 +142,8 @@ jobs:
       run: |
         uv sync --extra dev
 
-        # Install collection dependencies directly
-        uv run ansible-galaxy collection install community.general --force -p ${{ github.workspace }}/collections
-        uv run ansible-galaxy collection install community.docker --force -p ${{ github.workspace }}/collections
+        # Install collection dependencies directly using molecule requirements
+        uv run ansible-galaxy collection install -r roles/frp_install/molecule/dev/requirements.yml --force -p ${{ github.workspace }}/collections
 
         export ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1
 

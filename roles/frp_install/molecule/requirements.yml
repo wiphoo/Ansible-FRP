@@ -1,0 +1,21 @@
+---
+# Molecule testing requirements for frp_install role
+# These are additional collections needed specifically for molecule testing
+collections:
+  # Core role dependencies (inherited from main requirements.yml)
+  - name: community.general
+    version: ">=7.0.0"
+
+  - name: ansible.posix
+    version: ">=1.0.0"
+
+  # Molecule-specific dependencies
+  - name: community.docker
+    version: ">=3.0.0"
+    # Required for Docker-based molecule testing scenarios
+    # Used in: create_simple.yml, destroy.yml
+
+  # Optional: Include the collection being tested
+  - name: wiphoo.frp
+    version: ">=0.1.0"
+    # Local collection being tested (will be installed from build artifact)

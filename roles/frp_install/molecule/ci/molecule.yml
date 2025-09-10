@@ -25,8 +25,9 @@ provisioner:
   name: ansible
   config_options:
     defaults:
-      callbacks_enabled: profile_tasks, timer
+      # callbacks_enabled: profile_tasks, timer  # These plugins are not available
       host_key_checking: false
+      roles_path: ${MOLECULE_PROJECT_DIRECTORY}/../../
   env:
     ANSIBLE_REMOTE_TMP: /tmp/.ansible/tmp
   playbooks:

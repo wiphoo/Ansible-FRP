@@ -1,0 +1,18 @@
+---
+# Role-specific requirements for frp_install role
+# These collections are required for the role to function properly
+collections:
+  - name: community.general
+    version: ">=7.0.0"
+    # Used for:
+    #   - File and directory management
+    #   - Archive extraction
+    #   - System package management
+
+  - name: ansible.posix
+    version: ">=1.0.0"
+    # Used for:
+    #   - File permissions and ownership
+    #   - Service management (systemctl)
+    #   - User and group management
+    #   - POSIX file operations

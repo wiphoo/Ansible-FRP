@@ -26,7 +26,8 @@ provisioner:
   name: ansible
   config_options:
     defaults:
-      callbacks_enabled: profile_tasks, timer
+      # callbacks_enabled: profile_tasks, timer  # These plugins are not available
+      roles_path: ${MOLECULE_PROJECT_DIRECTORY}/../../
   playbooks:
     create: ../resources/create_simple.yml
     converge: ../resources/playbook.yml

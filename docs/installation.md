@@ -31,8 +31,8 @@ Using a requirements file:
 
 ```yaml
 collections:
-	- name: wiphoo.frp
-		version: ">=0.1.0"
+  - name: wiphoo.frp
+    version: ">=0.1.0"
 ```
 
 ```bash
@@ -51,23 +51,23 @@ Minimal playbook examples to install server and client components.
 
 ```yaml
 - name: Install FRP Server
-	hosts: frp_servers
-	become: true
-	roles:
-		- role: wiphoo.frp.frp_install
-			vars:
-				frp_install_files: ["frps"]
-				frp_install_configure_firewall: true
+  hosts: frp_servers
+  become: true
+  roles:
+    - role: wiphoo.frp.frp_install
+      vars:
+        frp_install_files: ["frps"]
+        frp_install_configure_firewall: true
 
 - name: Install FRP Client
-	hosts: frp_clients
-	become: true
-	roles:
-		- role: wiphoo.frp.frp_install
-			vars:
-				frp_install_files: ["frpc"]
-				frp_install_client_server_addr: "203.0.113.10"
-				frp_install_auth_token: "{{ vault_frp_token }}"
+  hosts: frp_clients
+  become: true
+  roles:
+    - role: wiphoo.frp.frp_install
+      vars:
+        frp_install_files: ["frpc"]
+        frp_install_client_server_addr: "203.0.113.10"
+        frp_install_auth_token: "{{ vault_frp_token }}"
 ```
 
 ## Advanced Installation Notes
