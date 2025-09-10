@@ -77,8 +77,8 @@ jobs:
         ANSIBLE_COLLECTIONS_PATH: ./collections
 
     - name: Run Molecule syntax check
+      working-directory: roles/frp_install
       run: |
-        cd roles/frp_install
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1 uv run molecule syntax --scenario-name dev
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1 uv run molecule syntax --scenario-name ci
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1 uv run molecule syntax --scenario-name default
@@ -86,7 +86,7 @@ jobs:
         PY_COLORS: '1'
         ANSIBLE_FORCE_COLOR: '1'
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS: 1
-        ANSIBLE_COLLECTIONS_PATH: ./collections
+        ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
     - name: Check test coverage
       run: |
@@ -126,14 +126,14 @@ jobs:
       uses: astral-sh/setup-uv@v6
 
     - name: Setup and run molecule tests
+      working-directory: roles/frp_install
       run: |
         uv sync --extra dev
         uv add ansible>=11.10
 
         # Install collection dependencies directly
-        uv run ansible-galaxy collection install community.general --force -p ./collections
+        uv run ansible-galaxy collection install community.general --force -p ../../collections
 
-        cd roles/frp_install
         export ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1
 
         echo "🧪 Running dev scenario (fast)..."
@@ -146,7 +146,7 @@ jobs:
         uv run molecule test --scenario-name default
       env:
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS: 1
-        ANSIBLE_COLLECTIONS_PATH: ./collections
+        ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
         PY_COLORS: '1'
         ANSIBLE_FORCE_COLOR: '1'
 
