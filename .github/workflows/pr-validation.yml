@@ -49,9 +49,13 @@ jobs:
 
     - name: Test collection installation
       run: |
-        uv run ansible-galaxy collection install wiphoo-frp-*.tar.gz --force -p ~/.ansible/collections
-        uv run ansible-galaxy collection list | grep -q '^wiphoo\.frp\s'
-        echo "wiphoo.frp collection is installed"
+        # Install to project collections directory to match Ansible's expectations
+        uv run ansible-galaxy collection install wiphoo-frp-*.tar.gz --force -p ./collections
+        # Verify installation in the project collections path
+        uv run ansible-galaxy collection list -p ./collections | grep -q '^wiphoo\.frp\s'
+        echo "wiphoo.frp collection is installed successfully"
+      env:
+        ANSIBLE_COLLECTIONS_PATHS: ./collections
 
     - name: Install test dependencies
       run: |
