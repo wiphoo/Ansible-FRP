@@ -118,6 +118,15 @@ cd roles/frp_install && uv run molecule test --scenario-name ci   # CI testing
 cd roles/frp_install && uv run molecule test --scenario-name default # Full testing
 ```
 
+**Local build and testing:**
+```bash
+# Build and install collection locally
+ansible-galaxy collection build --force && ansible-galaxy collection install wiphoo-frp-1.0.0.tar.gz --force -p ~/.ansible/collections
+
+# Test installation
+ansible-galaxy collection list | grep wiphoo.frp
+```
+
 ## 📊 Documentation & Links
 
 - **📖 [Complete Documentation](docs/)** - Installation, usage, examples, API reference

@@ -90,7 +90,8 @@ def test_frp_installation():
 1. Create issue to discuss changes
 2. Write tests and update docs
 3. Run full test suite
-4. Update CHANGELOG.md
+4. Test local collection build and installation
+5. Update CHANGELOG.md
 
 **PR Format:**
 - Descriptive title referencing issue
@@ -108,6 +109,33 @@ def test_frp_installation():
 # Build and test docs
 uv run mkdocs build
 uv run mkdocs serve
+```
+
+## Local Collection Testing
+
+**Build and install collection locally:**
+
+```bash
+# Build the collection
+ansible-galaxy collection build --force
+
+# Install locally for testing
+ansible-galaxy collection install wiphoo-frp-1.0.0.tar.gz --force -p ~/.ansible/collections
+
+# Verify installation
+ansible-galaxy collection list | grep wiphoo.frp
+
+# Test with a simple playbook
+ansible-playbook -i localhost, examples.yml --connection=local
+```
+
+**Alternative installation paths:**
+```bash
+# Install to current directory collections/
+ansible-galaxy collection install wiphoo-frp-1.0.0.tar.gz --force -p ./collections
+
+# Install system-wide (requires sudo)
+sudo ansible-galaxy collection install wiphoo-frp-1.0.0.tar.gz --force
 ```
 
 ## Dependency Management
