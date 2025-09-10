@@ -1,7 +1,17 @@
 ---
+# Use production profile for comprehensive linting
+profile: production
+
+# Exclude paths that shouldn't be linted
 exclude_paths:
+  - .venv/
+  - .git/
   - .github/
   - docs/
+  - collections/
+  - htmlcov/
+  - build/
+  - dist/
 
 # Skip certain rules that might be too strict for this project
 skip_list:

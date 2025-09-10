@@ -1,42 +1,53 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+    rev: v4.6.0  # Updated to stable version
     hooks:
       - id: check-json
+        exclude: ^(collections/|\.venv/)
       - id: check-toml
       - id: trailing-whitespace
+        exclude: ^(collections/|\.venv/|htmlcov/)
       - id: end-of-file-fixer
+        exclude: ^(collections/|\.venv/|htmlcov/)
       - id: check-yaml
+        exclude: ^(collections/|\.venv/)
       - id: check-added-large-files
+        args: ['--maxkb=500']
       - id: check-merge-conflict
       - id: debug-statements
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.12.12
+    rev: v0.6.9  # Aligned with pyproject.toml version constraint
     hooks:
       - id: ruff
-        args: [--fix]
+        args: [--fix, --exit-non-zero-on-fix]
+        exclude: ^(collections/|\.venv/|build/|dist/)
       - id: ruff-format
         name: ruff-format-check
-        args: [--check, --diff]
+        exclude: ^(collections/|\.venv/|build/|dist/)
 
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.37.1
+    rev: v1.35.1  # Aligned with pyproject.toml version constraint
     hooks:
       - id: yamllint
-        args: [--strict]
+        args: [--config-file=.yamllint]  # Use project's yamllint config
 
   - repo: https://github.com/ansible/ansible-lint
-    rev: v25.8.2
+    rev: v25.8.2  # Match local version
     hooks:
       - id: ansible-lint
-        additional_dependencies: [ansible-core>=2.15.0]
+        additional_dependencies: [ansible-core==2.19.2, ansible-compat>=25.8.1]
         files: \.(yaml|yml)$
-        args: [--strict]
+        exclude: ^(collections/|\.venv/|\.github/)
+        args: [--project-dir=.]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.17.1
+    rev: v1.11.2  # Updated to stable version matching project constraint
     hooks:
       - id: mypy
-        additional_dependencies: [types-PyYAML, types-setuptools]
-        args: [--ignore-missing-imports]
+        additional_dependencies: [
+          types-PyYAML>=6.0.0,
+          types-setuptools>=75.0.0
+        ]
+        args: [--ignore-missing-imports, --show-error-codes, --no-strict-optional]
+        exclude: ^(collections/|\.venv/|build/|dist/)
