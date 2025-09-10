@@ -5,34 +5,54 @@ description = "Ansible collection for Fast Reverse Proxy (frp) installation and 
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "ansible[dev]>=11.10",
-    "docker==7.1.0",
-    "molecule-docker>=2.1.0",
-    "molecule[docker]>=25.7.0",
+    # Core Ansible runtime dependency
+    "ansible-core>=2.15.0",
 ]
 
 [project.optional-dependencies]
 test = [
+    # Testing frameworks
+    "pytest>=7.0.0",
+    "pytest-ansible>=4.0.0",
+    "pytest-yaml>=1.0.0",
+    "pytest-cov>=4.0.0",
+    "coverage>=7.0.0",
+    
+    # Molecule testing dependencies
+    "molecule>=6.0.0",
+    "molecule-docker>=2.1.0",
+    "molecule[docker]>=25.7.0",
+    "docker==7.1.0",
+    
+    # Linting and validation for testing
+    "ansible-lint>=6.0.0",
+    "yamllint>=1.35.0",
+]
+dev = [
+    # Include all test dependencies
     "pytest>=7.0.0",
     "pytest-ansible>=4.0.0",
     "pytest-yaml>=1.0.0",
     "pytest-cov>=4.0.0",
     "coverage>=7.0.0",
     "molecule>=6.0.0",
-    "molecule-docker>=2.0.0",
+    "molecule-docker>=2.1.0",
     "molecule[docker]>=25.7.0",
+    "docker==7.1.0",
     "ansible-lint>=6.0.0",
-]
-dev = [
-    "mkdocs>=1.5.0",
-    "mkdocs-material>=9.0.0",
+    "yamllint>=1.35.0",
+    
+    # Development tools
+    "ansible[dev]>=11.10",
     "ruff>=0.6.0",
     "pre-commit>=4.3.0",
-    "yamllint>=1.35.0",
     "mypy>=1.0.0",
     "types-PyYAML>=6.0.0",
     "types-setuptools>=75.0.0",
-    "ansible-lint>=6.0.0",
+    
+    # Documentation
+    "mkdocs>=1.5.0",
+    "mkdocs-material>=9.0.0",
 ]
 
 [tool.pytest.ini_options]
