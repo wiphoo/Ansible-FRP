@@ -143,7 +143,7 @@ jobs:
         uv sync --extra dev
 
         # Install collection dependencies directly using molecule requirements
-        uv run ansible-galaxy collection install -r roles/frp_install/molecule/dev/requirements.yml --force -p ${{ github.workspace }}/collections
+        uv run ansible-galaxy collection install -r molecule/dev/requirements.yml --force -p ${{ github.workspace }}/collections
 
         export ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1
 
