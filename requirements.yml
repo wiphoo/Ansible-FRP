@@ -1,0 +1,9 @@
+---
+# Core collection requirements for wiphoo.frp collection
+# These are the minimum collections needed to use this collection
+collections:
+  - name: community.general
+    version: ">=7.0.0"
+
+  - name: ansible.posix
+    version: ">=1.0.0"
