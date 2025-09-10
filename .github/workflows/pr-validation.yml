@@ -115,6 +115,9 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+
     - name: Setup and run molecule tests
       run: |
         uv sync --extra dev
