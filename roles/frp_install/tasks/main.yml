@@ -230,7 +230,13 @@
   loop:
     - "7000"  # Default frps port
     - "7500"  # Alternative port
-  when: frp_install_configure_firewall | bool
+  when:
+    - frp_install_configure_firewall | bool
+    - ansible_facts['os_family'] == "Debian"
+  failed_when: false  # Allow graceful failure if community.general collection is not available
+  tags:
+    - firewall
+    - molecule-notest  # Skip in molecule tests where community.general may not be available
 
 # Cleanup temporary files
 - name: Clean up temporary files

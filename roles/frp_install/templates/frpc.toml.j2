@@ -16,7 +16,7 @@ auth.token = "{{ frp_install_auth_token | default('changeme_default_token_123') 
 log.to = "{{ frp_install_log_dir | default('/var/log/frp') }}/frpc.log"
 log.level = "{{ frp_install_log_level | default('info') }}"
 log.maxDays = {{ frp_install_log_max_days | default(3) }}
-log.disablePrintColor = {{ frp_install_log_disable_print_color | default(false) | lower }}
+log.disablePrintColor = {{ (frp_install_log_disable_print_color | default(false)) | bool | tojson }}
 
 # Connection settings
 loginFailExit = true

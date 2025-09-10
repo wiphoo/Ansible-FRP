@@ -126,13 +126,13 @@ jobs:
         export ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1
 
         echo "🧪 Running dev scenario (fast)..."
-        uv run molecule test --scenario-name dev || echo "❌ Dev scenario failed"
+        uv run molecule test --scenario-name dev
 
         echo "🧪 Running CI scenario..."
-        uv run molecule test --scenario-name ci || echo "❌ CI scenario failed"
+        uv run molecule test --scenario-name ci
 
         echo "🧪 Running default scenario..."
-        uv run molecule test --scenario-name default || echo "❌ Default scenario failed"
+        uv run molecule test --scenario-name default
       env:
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS: 1
         PY_COLORS: '1'
@@ -143,7 +143,7 @@ jobs:
       run: |
         echo "## 🔬 Molecule Test Results" > molecule-report.md
         echo "" >> molecule-report.md
-        echo "**Status:** $([ $? -eq 0 ] && echo '✅ All tests passed' || echo '❌ Some tests failed')" >> molecule-report.md
+        echo "**Status:** ${{ job.status }}" >> molecule-report.md
         echo "**Workflow:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> molecule-report.md
         echo "**Timestamp:** $(date)" >> molecule-report.md
 

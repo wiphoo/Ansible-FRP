@@ -46,7 +46,7 @@ verifier:
 
 scenario:
   name: ci
-  # CI-optimized sequence: fast execution without idempotence testing
+  # CI-optimized sequence: comprehensive testing with idempotence validation
   test_sequence:
     - dependency
     - cleanup
@@ -54,6 +54,7 @@ scenario:
     - syntax
     - create
     - converge
+    - idempotence  # Ensures playbook can run multiple times safely
     - verify
     - cleanup
     - destroy
