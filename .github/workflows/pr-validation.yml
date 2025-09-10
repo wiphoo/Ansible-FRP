@@ -55,7 +55,7 @@ jobs:
         uv run ansible-galaxy collection list -p ./collections | grep -q '^wiphoo\.frp\s'
         echo "wiphoo.frp collection is installed successfully"
       env:
-        ANSIBLE_COLLECTIONS_PATHS: ./collections
+        ANSIBLE_COLLECTIONS_PATH: ./collections
 
     - name: Install test dependencies
       run: |
@@ -70,6 +70,12 @@ jobs:
       env:
         PY_COLORS: '1'
 
+    - name: Install required Ansible collections
+      run: |
+        uv run ansible-galaxy collection install community.general --force -p ./collections
+      env:
+        ANSIBLE_COLLECTIONS_PATH: ./collections
+
     - name: Run Molecule syntax check
       run: |
         cd roles/frp_install
@@ -80,6 +86,7 @@ jobs:
         PY_COLORS: '1'
         ANSIBLE_FORCE_COLOR: '1'
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS: 1
+        ANSIBLE_COLLECTIONS_PATH: ./collections
 
     - name: Check test coverage
       run: |

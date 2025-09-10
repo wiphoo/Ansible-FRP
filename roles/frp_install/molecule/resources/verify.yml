@@ -51,15 +51,19 @@
         fail_msg: "Directory {{ item.item }} was not created"
       loop: "{{ frp_directories.results }}"
 
-    - name: Check if frp binaries are executable
-      ansible.builtin.command: "ls -la {{ frp_install_dir }}"
-      register: ls_output
-      changed_when: false
+    - name: Stat frp binaries for mode
+      ansible.builtin.stat:
+        path: "{{ frp_install_dir }}/{{ item }}"
+      loop: "{{ frp_install_files }}"
+      register: frp_exec_stats
 
-    - name: Assert binaries are executable
+    - name: Assert binaries are executable by owner
       ansible.builtin.assert:
-        that: "'-rwxr-xr-x' in ls_output.stdout"
-        fail_msg: "frp binaries are not executable"
+        that:
+          - item.stat.exists
+          - item.stat.xusr
+        fail_msg: "frp binary {{ item.item }} is not executable by owner"
+      loop: "{{ frp_exec_stats.results }}"
 
     - name: Verify frp service files exist
       ansible.builtin.stat:

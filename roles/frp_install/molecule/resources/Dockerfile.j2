@@ -23,7 +23,8 @@ RUN apt-get update && \
 
 # Create a non-root user for testing
 RUN useradd -m -s /bin/bash ansible && \
-    echo 'ansible ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ansible
+    echo 'ansible ALL=(ALL) NOPASSWD:ALL' > /etc/sudoers.d/ansible && \
+    chmod 0440 /etc/sudoers.d/ansible
 
 # Set working directory
 WORKDIR /opt
