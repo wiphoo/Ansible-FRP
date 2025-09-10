@@ -66,12 +66,8 @@ Minimal playbook examples to install server and client components.
 		- role: wiphoo.frp.frp_install
 			vars:
 				frp_install_files: ["frpc"]
-				frp_server_addr: "203.0.113.10"
-				frp_proxies:
-					- name: "ssh"
-						type: "tcp"
-						local_port: 22
-						remote_port: 2222
+				frp_install_client_server_addr: "203.0.113.10"
+				frp_install_auth_token: "{{ vault_frp_token }}"
 ```
 
 ## Advanced Installation Notes

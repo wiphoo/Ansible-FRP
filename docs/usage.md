@@ -12,13 +12,8 @@ This page shows practical usage patterns for the `wiphoo.frp` collection. Use th
 		- role: wiphoo.frp.frp_install
 			vars:
 				frp_install_files: ["frpc"]
-				frp_server_addr: "your-server.example.com"
-				frp_auth_token: "{{ vault_frp_token }}"
-				frp_proxies:
-					- name: "ssh"
-						type: "tcp"
-						local_port: 22
-						remote_port: 2222
+				frp_install_client_server_addr: "your-server.example.com"
+				frp_install_auth_token: "{{ vault_frp_token }}"
 ```
 
 ## Basic Server

@@ -37,7 +37,7 @@ A: Use Ansible Vault:
 ansible-vault encrypt_string 'token' --name 'vault_frp_token'
 ```
 ```yaml
-frp_auth_token: "{{ vault_frp_token }}"
+frp_install_auth_token: "{{ vault_frp_token }}"
 ```
 
 **Q: Firewall configuration?**
@@ -126,7 +126,7 @@ netstat -tlnp | grep 7000
 
 **Enable Verbose Logging:**
 ```yaml
-frp_log_level: "debug"
+frp_install_log_level: "debug"
 ```
 
 **Test Commands:**

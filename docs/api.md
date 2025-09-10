@@ -12,7 +12,7 @@ Complete variable reference for the wiphoo.frp collection.
 | `frp_install_group` | `"frp"` | System group |
 | `frp_install_dir` | `"/usr/local/bin/frp"` | Installation directory |
 | `frp_install_create_service` | `true` | Create systemd services |
-| `frp_install_configure_firewall` | `false` | Auto firewall configuration |
+| `frp_install_configure_firewall` | `true` | Auto firewall configuration |
 
 ## Authentication Variables
 
