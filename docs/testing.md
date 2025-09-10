@@ -20,7 +20,7 @@ This document provides a comprehensive guide for testing the FRP installation ro
    ```installation role includes three Molecule scenarios for different testing needs:
 
 - **`default`** - Complete testing with systemd services and idempotence checks
-- **`ci`** - CI/CD optimized testing with full systemd support and version override functionality  
+- **`ci`** - CI/CD optimized testing with full systemd support and version override functionality
 - **`dev`** - Fast development testing without systemd services (great for rapid iteration)
 
 ## Prerequisites
@@ -74,7 +74,7 @@ uv run molecule test --scenario-name dev
 - **Runtime**: ~2-3 minutes
 - **Use case**: Final validation before release
 
-### CI Scenario  
+### CI Scenario
 - **Purpose**: Optimized for CI/CD pipelines
 - **Container**: Ubuntu 22.04 with systemd
 - **Features**: Full testing with version override functionality, streamlined sequence

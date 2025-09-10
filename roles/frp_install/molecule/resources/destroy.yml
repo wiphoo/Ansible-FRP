@@ -16,4 +16,4 @@
         state: absent
         force_kill: true
       with_items: "{{ molecule_yml.platforms }}"
-      ignore_errors: true
+      failed_when: false

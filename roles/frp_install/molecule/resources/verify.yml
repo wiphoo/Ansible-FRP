@@ -13,7 +13,7 @@
     frp_install_log_dir: "/var/log/frp"
     frp_install_dirs:
       - "/usr/local/bin/frp"
-      - "/var/log/frp" 
+      - "/var/log/frp"
       - "/etc/frp"
 
   tasks:
@@ -101,6 +101,6 @@
     - name: Display service status for debugging
       ansible.builtin.debug:
         msg: "Service status: {{ service_status }}"
-      when: 
+      when:
         - frp_install_create_service | default(true) | bool
         - service_status is defined

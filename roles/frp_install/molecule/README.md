@@ -8,7 +8,7 @@ We've simplified from 5 scenarios to 3 focused scenarios with clear objectives:
 
 ### 1. **`dev` - Development Testing**
 - **Purpose**: Fast development iteration with instant feedback
-- **Use for**: Feature development, bug fixes, template changes, quick validation  
+- **Use for**: Feature development, bug fixes, template changes, quick validation
 - **Benefits**: Minimal test sequence for speed, complete basic testing
 - **Test sequence**: `syntax → create → converge → verify → destroy`
 - **Duration**: ~1-2 minutes
@@ -22,7 +22,7 @@ molecule test --scenario-name dev
 - **Purpose**: Automated CI/CD testing with version compatibility validation
 - **Use for**: GitHub Actions, GitLab CI, version upgrades, automated builds
 - **Benefits**: Fast CI execution, version override testing, no idempotence overhead
-- **Test sequence**: Full CI sequence without idempotence 
+- **Test sequence**: Full CI sequence without idempotence
 - **Duration**: ~2-3 minutes
 - **FRP Version**: 0.64.0 (tests version override)
 

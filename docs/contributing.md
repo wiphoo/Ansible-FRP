@@ -74,7 +74,7 @@ uv run molecule test --scenario-name default # Full comprehensive testing
 
 **Test scenarios explained:**
 - **`dev`** - Fast development testing without systemd (30 seconds)
-- **`ci`** - CI/CD optimized with full systemd support (2 minutes)  
+- **`ci`** - CI/CD optimized with full systemd support (2 minutes)
 - **`default`** - Complete testing with idempotence checks (3 minutes)
 
 **Write tests for new features:**

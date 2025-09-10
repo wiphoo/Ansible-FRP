@@ -42,7 +42,7 @@
 
     - name: Debug version variables
       ansible.builtin.debug:
-        msg: 
+        msg:
           - "frp_version (user variable): {{ frp_version | default('not set') }}"
           - "frp_install_version (computed): {{ frp_install_version | default('not set') }}"
           - "version output: {{ version_output.stdout }}"

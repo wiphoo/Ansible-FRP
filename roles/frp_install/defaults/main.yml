@@ -34,3 +34,13 @@ frp_install_files:
 
 # Version (can be overridden)
 frp_install_version: "0.63.0"  # Specify the version of frp to install
+
+# FRP Configuration defaults
+frp_install_auth_method: "token"
+frp_install_auth_token: "changeme_default_token_123"  # CHANGE THIS IN PRODUCTION
+
+# FRP Server dashboard configuration
+frp_install_dashboard_addr: "127.0.0.1"
+frp_install_dashboard_port: 7500
+frp_install_dashboard_user: "admin"
+frp_install_dashboard_password: "admin"  # CHANGE THIS IN PRODUCTION
