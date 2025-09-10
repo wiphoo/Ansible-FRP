@@ -107,7 +107,7 @@ netstat -tlnp | grep 7000
 
 ## Debugging & Logs
 
-- Increase logging: `frp_log_level: "debug"`
+- Increase logging: `frp_install_log_level: "debug"`
 - Use `journalctl -u frpc -f` while reproducing the issue
 - For SSH debug: `ssh -vvv -p 2222 user@server-ip`
 

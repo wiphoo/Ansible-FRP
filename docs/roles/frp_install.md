@@ -110,11 +110,7 @@ frp_install_group: "svcfrp"
 
 ### TLS Security
 
-```yaml
-frp_transport_tls_enable: true
-frp_transport_tls_cert_file: "/etc/ssl/certs/frp.crt"
-frp_transport_tls_key_file: "/etc/ssl/private/frp.key"
-```
+TLS configuration is handled in the configuration templates. To enable TLS, you would need to customize the frp configuration files manually or extend the role templates.
 
 ### Proxy Configuration
 

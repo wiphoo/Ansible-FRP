@@ -63,7 +63,7 @@ ansible-galaxy collection list wiphoo.frp
     - role: wiphoo.frp.frp_install
       vars:
         frp_install_files: ["frps"]
-        frp_auth_token: "your-secure-token"
+        frp_install_auth_token: "your-secure-token"
         frp_install_configure_firewall: true
 ```
 
@@ -75,8 +75,8 @@ ansible-galaxy collection list wiphoo.frp
     - role: wiphoo.frp.frp_install
       vars:
         frp_install_files: ["frpc"]
-        frp_server_addr: "your-server.com"
-        frp_auth_token: "your-secure-token"
+        frp_install_client_server_addr: "your-server.com"
+        frp_install_auth_token: "your-secure-token"
         frp_proxies:
           - name: "ssh"
             type: "tcp"
@@ -86,26 +86,22 @@ ansible-galaxy collection list wiphoo.frp
 
 ### Security Configuration
 
-**With TLS:**
-```yaml
-frp_transport_tls_enable: true
-frp_transport_tls_cert_file: "/path/to/cert.pem"
-frp_transport_tls_key_file: "/path/to/key.pem"
-```
+**TLS Configuration:**
+TLS settings are configured in the frp templates. To enable TLS, customize the configuration templates or modify them after installation.
 
 **Using Ansible Vault:**
 ```yaml
-frp_auth_token: "{{ vault_frp_token }}"
+frp_install_auth_token: "{{ vault_frp_token }}"
 ```
 
 ### Production Settings
 
 **Server Optimization:**
 ```yaml
-frp_server_max_clients: 1000
-frp_server_max_ports_per_client: 10
-frp_log_level: "warn"
-frp_log_max_days: 7
+frp_install_server_max_clients: 1000
+frp_install_server_max_ports_per_client: 10
+frp_install_log_level: "warn"
+frp_install_log_max_days: 7
 ```
 
 ## 🎯 Practical Examples
@@ -259,12 +255,8 @@ ansible-playbook -i inventory/hosts.ini my-deployment.yml
 
 ### Security Configuration
 
-**With TLS:**
-```yaml
-frp_transport_tls_enable: true
-frp_transport_tls_cert_file: "/path/to/cert.pem"
-frp_transport_tls_key_file: "/path/to/key.pem"
-```
+**TLS Configuration:**
+TLS settings are configured in the frp templates. To enable TLS, customize the configuration templates or modify them after installation.
 
 **Using Ansible Vault:**
 ```yaml

@@ -60,7 +60,7 @@ A: `systemctl status frpc` or `journalctl -u frpc`
 A: 100-500 (small), 1000-5000 (medium), 10000+ (large, requires tuning).
 
 **Q: Optimize performance?**
-A: Set `frp_transport_pool_count: 5`, `frp_use_compression: true`, `frp_transport_protocol: "kcp"`.
+A: Edit frp configuration manually or create custom templates. Transport settings are hardcoded in templates (poolCount: 5, tcpMux: true).
 
 ## Troubleshooting
 

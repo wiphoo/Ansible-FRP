@@ -45,8 +45,8 @@ This page shows practical usage patterns for the `wiphoo.frp` collection. Use th
 ## Production Tips
 
 - Pin `frp_install_version` for predictable upgrades.
-- Use Ansible Vault for secrets (`frp_auth_token`, dashboard passwords).
-- Enable `frp_transport_tls_enable: true` and provide TLS certs for encrypted connections.
+- Use Ansible Vault for secrets (`frp_install_auth_token`, dashboard passwords).
+- Configure TLS manually in frp configuration templates for encrypted connections.
 - Use `frp_install_configure_firewall: true` to automatically allow required ports.
 
 For templates and full variable list, see `api.md`.

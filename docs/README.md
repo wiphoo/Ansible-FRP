@@ -83,8 +83,8 @@ ansible-galaxy collection install git+https://github.com/wiphoo/Ansible-FRP.git
     - role: wiphoo.frp.frp_install
       vars:
         frp_install_files: ["frpc"]
-        frp_server_addr: "your-server.com"
-        frp_auth_token: "{{ vault_frp_token }}"
+        frp_install_client_server_addr: "your-server.com"
+        frp_install_auth_token: "{{ vault_frp_token }}"
         frp_proxies:
           - name: "ssh"
             type: "tcp"

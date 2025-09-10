@@ -1,5 +1,6 @@
-# Molecule Testing The FRP installation role includes three Molecule scenarios for different testing needs:
+# Molecule Testing
 
+The FRP installation role includes three Molecule scenarios for different testing needs:
 - **`default`** - Complete testing with systemd services (no idempotence testing)
 - **`ci`** - CI/CD optimized testing with full systemd support and version override functionality
 - **`dev`** - Fast development testing without systemd services (great for rapid iteration)
@@ -8,7 +9,7 @@
 
 This document provides a comprehensive guide for testing the FRP installation role using Molecule.
 
-## Ov1. **Quick Development Loop**:
+## 1. **Quick Development Loop**:
    ```bash
    cd roles/frp_install && uv run molecule syntax --scenario-name dev  # Check syntax
    cd roles/frp_install && uv run molecule test --scenario-name dev    # Quick test
