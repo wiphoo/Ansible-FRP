@@ -132,7 +132,7 @@ jobs:
         uv add ansible>=11.10
 
         # Install collection dependencies directly
-        uv run ansible-galaxy collection install community.general --force -p ../../collections
+        uv run ansible-galaxy collection install community.general --force -p ${{ github.workspace }}/collections
 
         export ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1
 
