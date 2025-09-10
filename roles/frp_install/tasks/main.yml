@@ -72,7 +72,7 @@
     name: "{{ frp_install_group }}"
     system: true
     state: present
-  when: ansible_facts.user_id == 'root'
+  when: ansible_user_id == 'root'
 
 - name: Create frp user
   ansible.builtin.user:
@@ -81,15 +81,15 @@
     system: true
     state: present
     create_home: false
-  when: ansible_facts.user_id == 'root'
+  when: ansible_user_id == 'root'
 
 # Create required directories (idempotent)
 - name: Create frp directories
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
-    owner: "{{ frp_install_user if ansible_facts.user_id == 'root' else omit }}"
-    group: "{{ frp_install_group if ansible_facts.user_id == 'root' else omit }}"
+    owner: "{{ frp_install_user if ansible_user_id == 'root' else omit }}"
+    group: "{{ frp_install_group if ansible_user_id == 'root' else omit }}"
     mode: '0755'
   loop: "{{ frp_install_dirs }}"
 
@@ -148,8 +148,8 @@
   ansible.builtin.copy:
     src: "{{ frp_install_tmp_dir }}/{{ frp_install_filename_without_extension }}/{{ item }}"
     dest: "{{ frp_install_dir }}/{{ item }}"
-    owner: "{{ frp_install_user if ansible_facts.user_id == 'root' else omit }}"
-    group: "{{ frp_install_group if ansible_facts.user_id == 'root' else omit }}"
+    owner: "{{ frp_install_user if ansible_user_id == 'root' else omit }}"
+    group: "{{ frp_install_group if ansible_user_id == 'root' else omit }}"
     mode: '0755'
     remote_src: true
   loop: "{{ frp_install_files }}"
@@ -158,8 +158,8 @@
   ansible.builtin.file:
     path: "{{ frp_install_dir }}/{{ item }}"
     mode: '0755'
-    owner: "{{ frp_install_user if ansible_facts.user_id == 'root' else omit }}"
-    group: "{{ frp_install_group if ansible_facts.user_id == 'root' else omit }}"
+    owner: "{{ frp_install_user if ansible_user_id == 'root' else omit }}"
+    group: "{{ frp_install_group if ansible_user_id == 'root' else omit }}"
   loop: "{{ frp_install_files }}"
 
 # Verify installed binaries checksums
@@ -174,8 +174,8 @@
   ansible.builtin.file:
     path: "{{ frp_install_config_dir }}"
     state: directory
-    owner: "{{ frp_install_user if ansible_facts.user_id == 'root' else omit }}"
-    group: "{{ frp_install_group if ansible_facts.user_id == 'root' else omit }}"
+    owner: "{{ frp_install_user if ansible_user_id == 'root' else omit }}"
+    group: "{{ frp_install_group if ansible_user_id == 'root' else omit }}"
     mode: '0750'
   when: frp_install_create_service | bool
 
@@ -183,8 +183,8 @@
   ansible.builtin.template:
     src: frps.toml.j2
     dest: "{{ frp_install_config_dir }}/frps.toml"
-    owner: "{{ frp_install_user if ansible_facts.user_id == 'root' else omit }}"
-    group: "{{ frp_install_group if ansible_facts.user_id == 'root' else omit }}"
+    owner: "{{ frp_install_user if ansible_user_id == 'root' else omit }}"
+    group: "{{ frp_install_group if ansible_user_id == 'root' else omit }}"
     mode: '0600'
   when:
     - frp_install_create_service | bool
@@ -194,8 +194,8 @@
   ansible.builtin.template:
     src: frpc.toml.j2
     dest: "{{ frp_install_config_dir }}/frpc.toml"
-    owner: "{{ frp_install_user if ansible_facts.user_id == 'root' else omit }}"
-    group: "{{ frp_install_group if ansible_facts.user_id == 'root' else omit }}"
+    owner: "{{ frp_install_user if ansible_user_id == 'root' else omit }}"
+    group: "{{ frp_install_group if ansible_user_id == 'root' else omit }}"
     mode: '0600'
   when:
     - frp_install_create_service | bool
