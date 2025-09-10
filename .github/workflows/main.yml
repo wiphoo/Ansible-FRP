@@ -72,7 +72,7 @@ jobs:
     - name: Install Ansible and test dependencies
       run: |
         uv sync --extra test
-        uv pip install ansible==${{ matrix.ansible-version }}
+        uv add ansible==${{ matrix.ansible-version }}
 
     - name: Run tests
       run: |
