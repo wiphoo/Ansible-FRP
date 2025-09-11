@@ -17,14 +17,15 @@ repos:
       - id: debug-statements
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.9  # Aligned with pyproject.toml version constraint
+    # Ruff version.
+    rev: v0.13.0
     hooks:
+      # Run the linter.
       - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
-        exclude: ^(collections/|\.venv/|build/|dist/)
+        args: [ --fix ]
+      # Run the formatter.
       - id: ruff-format
         name: ruff-format-check
-        exclude: ^(collections/|\.venv/|build/|dist/)
 
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.35.1  # Aligned with pyproject.toml version constraint
