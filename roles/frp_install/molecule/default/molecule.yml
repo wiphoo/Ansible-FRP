@@ -38,6 +38,10 @@ provisioner:
       all:
         frp_install_version: "0.63.0"
         frp_install_create_service: false  # Disable systemd service for non-systemd container
+        # Test credentials for molecule testing
+        frp_install_auth_token: "test_molecule_token_12345"
+        frp_install_dashboard_password: "test_molecule_dashboard_pass"
+        frp_install_client_webserver_password: "test_molecule_client_pass"
 
 verifier:
   name: ansible

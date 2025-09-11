@@ -16,7 +16,7 @@
     fail_msg: |
       SECURITY ERROR: frp_install_auth_token is required and must not be empty or use default value.
       Set a secure token via vars or Ansible Vault:
-        frp_install_auth_token: "{{ vault_frp_token }}"
+        frp_install_auth_token: "YOUR_SECURE_TOKEN_HERE"
     success_msg: "Authentication token is properly configured"
 
 - name: Assert that dashboard password is set when dashboard is enabled
@@ -27,7 +27,7 @@
     fail_msg: |
       SECURITY ERROR: frp_install_dashboard_password is required and must not be empty or use default value.
       Set a strong password via vars or Ansible Vault:
-        frp_install_dashboard_password: "{{ vault_dashboard_password }}"
+        frp_install_dashboard_password: "YOUR_SECURE_PASSWORD_HERE"
     success_msg: "Dashboard password is properly configured"
   when:
     - "'frps' in frp_install_files"
@@ -41,7 +41,7 @@
     fail_msg: |
       SECURITY ERROR: frp_install_client_webserver_password is required when client webserver is enabled.
       Set a strong password via vars or Ansible Vault:
-        frp_install_client_webserver_password: "{{ vault_client_password }}"
+        frp_install_client_webserver_password: "YOUR_SECURE_PASSWORD_HERE"
     success_msg: "Client webserver password is properly configured"
   when:
     - "'frpc' in frp_install_files"
