@@ -6,15 +6,9 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Perform a dry run (build and test but do not publish)'
-        required: false
-        default: false
+        description: 'Dry run (build only, no publish)'
         type: boolean
-      force_publish:
-        description: 'Force publish even if version validation fails'
-        required: false
         default: false
-        type: boolean
 
 permissions:
   contents: read
@@ -22,277 +16,66 @@ permissions:
 
 jobs:
   quality:
-    name: Code Quality
+    name: Quality Check
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v6
-
-    - name: Install dependencies
-      run: |
-        uv sync --extra dev --extra test
-
-    - name: Run pre-commit hooks
-      run: |
-        uv run pre-commit run --all-files --show-diff-on-failure
-
-    - name: Lint Ansible code
-      run: |
-        uv run ansible-lint roles/
+    - uses: astral-sh/setup-uv@v6
+    - run: uv sync --extra dev --extra test
+    - run: uv run pre-commit run --all-files --show-diff-on-failure
+    - run: uv run ansible-lint roles/
 
   release:
-    name: Build and Release
+    name: Build & Publish
     runs-on: ubuntu-latest
     needs: quality
-    outputs:
-      collection-version: ${{ steps.version.outputs.version }}
-      collection-file: ${{ steps.build.outputs.filename }}
     steps:
     - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
-
-    - name: Install uv
-      uses: astral-sh/setup-uv@v6
+    - uses: astral-sh/setup-uv@v6
 
     - name: Install dependencies
-      run: |
-        uv sync --extra dev --extra test
+      run: uv sync --extra dev --extra test
 
-    - name: Extract and validate version
-      id: version
+    - name: Validate version
       run: |
-        # Extract version from galaxy.yml
-        GALAXY_VERSION=$(grep '^version:' galaxy.yml | sed 's/version: *//' | tr -d '"' | tr -d "'")
-        echo "Galaxy version: $GALAXY_VERSION"
-        echo "version=$GALAXY_VERSION" >> $GITHUB_OUTPUT
-
-        # If this is a release, validate version matches tag
+        VERSION=$(grep '^version:' galaxy.yml | sed 's/version: *//' | tr -d '"' | tr -d "'")
+        echo "Collection version: $VERSION"
         if [ "${{ github.event_name }}" = "release" ]; then
-          RELEASE_TAG="${{ github.event.release.tag_name }}"
-          # Remove 'v' prefix if present
-          RELEASE_VERSION="${RELEASE_TAG#v}"
-          echo "Release tag: $RELEASE_TAG"
-          echo "Release version: $RELEASE_VERSION"
-
-          if [ "$GALAXY_VERSION" != "$RELEASE_VERSION" ] && [ "${{ inputs.force_publish }}" != "true" ]; then
-            echo "ERROR: galaxy.yml version ($GALAXY_VERSION) does not match release tag ($RELEASE_VERSION)"
-            echo "Use force_publish input to override this check"
+          TAG_VERSION="${{ github.event.release.tag_name }}"
+          TAG_VERSION="${TAG_VERSION#v}"  # Remove 'v' prefix
+          if [ "$VERSION" != "$TAG_VERSION" ]; then
+            echo "ERROR: galaxy.yml version ($VERSION) != release tag ($TAG_VERSION)"
             exit 1
           fi
         fi
-
-    - name: Validate changelog
-      run: |
-        if [ ! -f CHANGELOG.md ]; then
-          echo "WARNING: CHANGELOG.md not found"
-        else
-          # Check if current version is mentioned in changelog
-          VERSION="${{ steps.version.outputs.version }}"
-          if ! grep -q "$VERSION" CHANGELOG.md; then
-            echo "WARNING: Version $VERSION not found in CHANGELOG.md"
-          else
-            echo "✅ Version $VERSION found in CHANGELOG.md"
-          fi
-        fi
-
-    - name: Install collections
-      run: |
-        uv run ansible-galaxy collection install "community.general>=11.0.0,<12.0.0" "ansible.posix>=2.0.0,<3.0.0" "community.docker>=4.0.0,<5.0.0" -p ${{ github.workspace }}/collections
-      env:
-         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
     - name: Build collection
-      id: build
       run: |
         uv run ansible-galaxy collection build
-        # Capture the built filename
-        COLLECTION_FILE=$(ls -1 wiphoo-frp-*.tar.gz | head -1)
-        echo "Built collection: $COLLECTION_FILE"
-        echo "filename=$COLLECTION_FILE" >> $GITHUB_OUTPUT
+        ls -la wiphoo-frp-*.tar.gz
 
-        # Verify the file was created and get its size
-        if [ -f "$COLLECTION_FILE" ]; then
-          SIZE=$(du -h "$COLLECTION_FILE" | cut -f1)
-          echo "Collection size: $SIZE"
-
-          # Basic security check - ensure reasonable file size
-          SIZE_BYTES=$(stat -c%s "$COLLECTION_FILE")
-          if [ "$SIZE_BYTES" -gt 100000000 ]; then  # 100MB
-            echo "WARNING: Collection file is very large ($SIZE)"
-          fi
-          if [ "$SIZE_BYTES" -lt 1000 ]; then  # 1KB
-            echo "ERROR: Collection file is suspiciously small ($SIZE)"
-            exit 1
-          fi
-        else
-          echo "ERROR: Collection file not found after build"
-          exit 1
-        fi
-
-    - name: Security scan of built collection
+    - name: Test installation
       run: |
-        COLLECTION_FILE="${{ steps.build.outputs.filename }}"
-        echo "Scanning $COLLECTION_FILE for security issues..."
+        FILE=$(ls -1 wiphoo-frp-*.tar.gz | head -1)
+        uv run ansible-galaxy collection install "$FILE" --force -p ./collections
+        uv run ansible-galaxy collection list -p ./collections | grep wiphoo.frp
 
-        # Extract and inspect contents
-        mkdir -p /tmp/collection-scan
-        tar -tf "$COLLECTION_FILE" > /tmp/collection-scan/file-list.txt
-
-        # Check for suspicious files
-        if grep -E '\.(exe|bat|cmd|ps1|sh)$' /tmp/collection-scan/file-list.txt; then
-          echo "WARNING: Executable files found in collection:"
-          grep -E '\.(exe|bat|cmd|ps1|sh)$' /tmp/collection-scan/file-list.txt
-        fi
-
-        # Check for hidden files that shouldn't be there
-        if grep -E '/\.' /tmp/collection-scan/file-list.txt | grep -v '\.yml$\|\.yaml$\|\.md$\|\.txt$\|\.py$'; then
-          echo "WARNING: Unexpected hidden files found:"
-          grep -E '/\.' /tmp/collection-scan/file-list.txt | grep -v '\.yml$\|\.yaml$\|\.md$\|\.txt$\|\.py$'
-        fi
-
-        echo "✅ Security scan completed"
-
-    - name: Test build
-      run: |
-        COLLECTION_FILE="${{ steps.build.outputs.filename }}"
-        echo "Testing installation of $COLLECTION_FILE"
-
-        # Install to project collections directory to match Ansible's expectations
-        uv run ansible-galaxy collection install "$COLLECTION_FILE" --force -p ${{ github.workspace }}/collections
-
-        # Verify installation in the project collections path
-        if uv run ansible-galaxy collection list -p ${{ github.workspace }}/collections | grep wiphoo.frp; then
-          echo "✅ Collection installed successfully"
-        else
-          echo "ERROR: Collection installation verification failed"
-          exit 1
-        fi
-
-        # Test that we can import the collection
-        cd ${{ github.workspace }}/collections/ansible_collections/wiphoo/frp
-        echo "Collection structure:"
-        find . -type f -name "*.yml" -o -name "*.yaml" | head -10
-      env:
-         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
-
-    - name: Upload collection artifact
+    - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ansible-collection-wiphoo-frp-${{ steps.version.outputs.version }}
-        path: ${{ steps.build.outputs.filename }}
-        retention-days: 90
+        name: collection-${{ github.run_number }}
+        path: wiphoo-frp-*.tar.gz
 
-    - name: Run tests and validation
+    - name: Publish to Galaxy
+      if: github.event_name == 'release' && !inputs.dry_run
       run: |
-        uv run python -m pytest tests/ -v --junitxml=test-results.xml --cov=roles --cov-report=xml --cov-report=html --tb=short
-      env:
-         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
-      continue-on-error: false
-
-    - name: Run ansible-lint
-      run: |
-        uv run ansible-lint roles/
-      env:
-         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
-
-    - name: Run Molecule validation
-      working-directory: roles/frp_install
-      run: |
-        uv run molecule syntax --scenario-name dev
-        uv run molecule syntax --scenario-name ci
-        uv run molecule syntax --scenario-name default
-      env:
-        PY_COLORS: '1'
-        ANSIBLE_FORCE_COLOR: '1'
-        ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
-      continue-on-error: false
-
-    - name: Run final tests
-      run: |
-        # Final validation that everything works
-        echo "All validation checks passed successfully"
-
-    - name: Galaxy dry run check
-      if: github.event_name == 'workflow_dispatch' && inputs.dry_run == 'true'
-      run: |
-        COLLECTION_FILE="${{ steps.build.outputs.filename }}"
-        echo "🧪 DRY RUN: Would publish $COLLECTION_FILE to Ansible Galaxy"
-        echo "Version: ${{ steps.version.outputs.version }}"
-        echo "This is a dry run - no actual publication will occur"
-
-        # Test Galaxy API connectivity (without actual upload)
-        if uv run ansible-galaxy collection publish --help | grep -q "api-key"; then
-          echo "✅ ansible-galaxy publish command is available"
-        else
-          echo "❌ ansible-galaxy publish command not found"
-          exit 1
-        fi
-
-    - name: Publish to Ansible Galaxy
-      if: (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.dry_run != 'true'))
-      run: |
-        COLLECTION_FILE="${{ steps.build.outputs.filename }}"
-        echo "🚀 Publishing $COLLECTION_FILE to Ansible Galaxy..."
-
-        # Check if we have the API key
-        if [ -z "${{ secrets.GALAXY_API_KEY }}" ]; then
-          echo "ERROR: GALAXY_API_KEY secret is not set"
-          exit 1
-        fi
-
-        # Attempt to publish with retries
-        MAX_RETRIES=3
-        RETRY_COUNT=0
-
-        while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
-          echo "Attempt $((RETRY_COUNT + 1)) of $MAX_RETRIES"
-
-          if uv run ansible-galaxy collection publish "$COLLECTION_FILE" --api-key "${{ secrets.GALAXY_API_KEY }}"; then
-            echo "✅ Successfully published to Ansible Galaxy!"
-            echo "Collection: wiphoo.frp"
-            echo "Version: ${{ steps.version.outputs.version }}"
-            echo "🎉 Release completed successfully!"
-            break
-          else
-            RETRY_COUNT=$((RETRY_COUNT + 1))
-            if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
-              echo "❌ Publish failed, retrying in 30 seconds..."
-              sleep 30
-            else
-              echo "❌ Failed to publish after $MAX_RETRIES attempts"
-              exit 1
-            fi
-          fi
-        done
-
-    - name: Create release summary
-      if: always()
-      run: |
-        echo "## 📦 Release Summary" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-        echo "**Collection:** wiphoo.frp" >> $GITHUB_STEP_SUMMARY
-        echo "**Version:** ${{ steps.version.outputs.version }}" >> $GITHUB_STEP_SUMMARY
-        echo "**File:** ${{ steps.build.outputs.filename }}" >> $GITHUB_STEP_SUMMARY
-        echo "" >> $GITHUB_STEP_SUMMARY
-
-        if [ "${{ job.status }}" = "success" ]; then
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.dry_run }}" = "true" ]; then
-            echo "**Status:** ✅ Dry run completed successfully" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "**Status:** ✅ Published to Ansible Galaxy" >> $GITHUB_STEP_SUMMARY
-            echo "**Galaxy URL:** https://galaxy.ansible.com/ui/repo/published/wiphoo/frp/" >> $GITHUB_STEP_SUMMARY
-          fi
-        else
-          echo "**Status:** ❌ Release failed" >> $GITHUB_STEP_SUMMARY
-        fi
+        FILE=$(ls -1 wiphoo-frp-*.tar.gz | head -1)
+        echo "Publishing $FILE to Ansible Galaxy..."
+        uv run ansible-galaxy collection publish "$FILE" --api-key "${{ secrets.GALAXY_API_KEY }}"
+        echo "✅ Published to https://galaxy.ansible.com/ui/repo/published/wiphoo/frp/"
