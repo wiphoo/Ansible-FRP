@@ -5,7 +5,7 @@ The FRP installation role includes three Molecule scenarios for different testin
 - **`ci`** - CI/CD optimized testing with full systemd support and version override functionality
 - **`dev`** - Fast development testing without systemd services (great for rapid iteration)
 
-> **Important**: This role is designed to download and install external binaries, making it non-idempotent by nature. Therefore, idempotence testing has been intentionally removed from all scenarios. for FRP Installation Role
+> **Important**: This role is designed to download and install external binaries, making it non-idempotent by nature. Therefore, idempotence testing has been intentionally removed from all scenarios.
 
 This document provides a comprehensive guide for testing the FRP installation role using Molecule.
 
@@ -24,11 +24,7 @@ This document provides a comprehensive guide for testing the FRP installation ro
 3. **CI Preparation**:
    ```bash
    cd roles/frp_install && uv run molecule test --scenario-name ci      # CI-optimized test
-   ```installation role includes three Molecule scenarios for different testing needs:
-
-- **`default`** - Complete testing with systemd services and idempotence checks
-- **`ci`** - CI/CD optimized testing with full systemd support and version override functionality
-- **`dev`** - Fast development testing without systemd services (great for rapid iteration)
+   ```
 
 ## Prerequisites
 
