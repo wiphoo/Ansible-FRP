@@ -19,9 +19,6 @@
 
 **Use Strong Tokens**:
 ```yaml
-# ❌ Weak
-frp_install_auth_token: "123456"
-
 # ✅ Strong with Vault
 frp_install_auth_token: "{{ vault_frp_token }}"
 ```

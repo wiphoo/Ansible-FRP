@@ -37,7 +37,7 @@ frp_install_version: "0.63.0"  # Specify the version of frp to install
 
 # FRP Configuration defaults
 frp_install_auth_method: "token"
-frp_install_auth_token: "changeme_default_token_123"  # CHANGE THIS IN PRODUCTION
+frp_install_auth_token: ""  # REQUIRED: Set a secure token via vars or Vault
 
 # FRP Server binding configuration
 frp_install_server_addr: "0.0.0.0"  # Server bind address (bindAddr)
@@ -51,14 +51,14 @@ frp_install_client_server_port: 7000                               # FRP server 
 frp_install_dashboard_addr: "127.0.0.1"
 frp_install_dashboard_port: 7500
 frp_install_dashboard_user: "admin"
-frp_install_dashboard_password: "admin"  # CHANGE THIS IN PRODUCTION
+frp_install_dashboard_password: ""  # REQUIRED: Set a strong password via vars or Vault
 
 # FRP Client admin webserver configuration (optional)
 frp_install_client_webserver_enabled: false     # Enable client admin webServer interface
 frp_install_client_webserver_addr: "127.0.0.1"  # Client admin webServer bind address
 frp_install_client_webserver_port: 7400         # Client admin webServer port
 frp_install_client_webserver_user: "admin"      # Client admin webServer username
-frp_install_client_webserver_password: "admin"  # Client admin webServer password
+frp_install_client_webserver_password: ""   # Client admin webServer password (set if enabled)
 frp_install_client_webserver_pprof_enabled: false  # Enable pprof endpoint for debugging
 
 # FRP Logging configuration

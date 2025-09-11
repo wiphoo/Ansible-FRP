@@ -93,7 +93,7 @@ The `frp_install` role provides comprehensive automation for deploying FRP in yo
 |----------|---------|-------------|
 | `frp_install_server_addr` | `"0.0.0.0"` | FRP server bind address |
 | `frp_install_server_port` | `7000` | FRP server bind port |
-| `frp_install_auth_token` | `"changeme_default_token_123"` | Authentication token |
+| `frp_install_auth_token` | `""` | REQUIRED. Authentication token (set via vars or Vault). |
 | `frp_install_dashboard_addr` | `"127.0.0.1"` | Dashboard/webServer bind address |
 | `frp_install_dashboard_port` | `7500` | Dashboard/webServer port |
 

@@ -19,7 +19,7 @@ Complete variable reference for the wiphoo.frp collection.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `frp_install_auth_method` | `"token"` | Authentication method |
-| `frp_install_auth_token` | `"changeme_default_token_123"` | Authentication token (CHANGE IN PRODUCTION) |
+| `frp_install_auth_token` | `""` | REQUIRED. Authentication token (set via vars or Vault). |
 
 ## Server Configuration Variables
 
@@ -32,7 +32,7 @@ Configure FRP server binding and dashboard settings.
 | `frp_install_dashboard_addr` | `"127.0.0.1"` | Dashboard web interface bind address |
 | `frp_install_dashboard_port` | `7500` | Dashboard web interface port |
 | `frp_install_dashboard_user` | `"admin"` | Dashboard username |
-| `frp_install_dashboard_password` | `"admin"` | Dashboard password (CHANGE IN PRODUCTION) |
+| `frp_install_dashboard_password` | `""` | REQUIRED. Set a strong password (store in Vault). |
 
 ## Client Configuration Variables
 

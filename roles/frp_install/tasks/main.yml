@@ -7,6 +7,46 @@
     frp_install_version: "{{ frp_version | default(frp_install_version) }}"
   when: frp_version is defined
 
+# Security assertions for required variables
+- name: Assert that auth token is set
+  ansible.builtin.assert:
+    that:
+      - frp_install_auth_token | length > 0
+      - frp_install_auth_token != "changeme_default_token_123"
+    fail_msg: |
+      SECURITY ERROR: frp_install_auth_token is required and must not be empty or use default value.
+      Set a secure token via vars or Ansible Vault:
+        frp_install_auth_token: "{{ vault_frp_token }}"
+    success_msg: "Authentication token is properly configured"
+
+- name: Assert that dashboard password is set when dashboard is enabled
+  ansible.builtin.assert:
+    that:
+      - frp_install_dashboard_password | length > 0
+      - frp_install_dashboard_password != "admin"
+    fail_msg: |
+      SECURITY ERROR: frp_install_dashboard_password is required and must not be empty or use default value.
+      Set a strong password via vars or Ansible Vault:
+        frp_install_dashboard_password: "{{ vault_dashboard_password }}"
+    success_msg: "Dashboard password is properly configured"
+  when:
+    - "'frps' in frp_install_files"
+    - frp_install_dashboard_port is defined
+
+- name: Assert that client webserver password is set when client webserver is enabled
+  ansible.builtin.assert:
+    that:
+      - frp_install_client_webserver_password | length > 0
+      - frp_install_client_webserver_password != "admin"
+    fail_msg: |
+      SECURITY ERROR: frp_install_client_webserver_password is required when client webserver is enabled.
+      Set a strong password via vars or Ansible Vault:
+        frp_install_client_webserver_password: "{{ vault_client_password }}"
+    success_msg: "Client webserver password is properly configured"
+  when:
+    - "'frpc' in frp_install_files"
+    - frp_install_client_webserver_enabled | bool
+
 # Gather OS and architecture for download
 - name: Set the variable for OS
   ansible.builtin.set_fact:
