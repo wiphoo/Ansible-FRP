@@ -1,7 +1,7 @@
 # Molecule Testing
 
 The FRP installation role includes three Molecule scenarios for different testing needs:
-- **`default`** - Complete testing with systemd services (no idempotence testing)
+| `default`    | Complete testing without systemd services (no idempotence testing)
 - **`ci`** - CI/CD optimized testing with full systemd support and version override functionality
 - **`dev`** - Fast development testing without systemd services (great for rapid iteration)
 
