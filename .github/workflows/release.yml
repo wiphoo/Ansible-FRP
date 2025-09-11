@@ -10,7 +10,8 @@ permissions:
   id-token: write
 
 jobs:
-  release:
+  quality:
+    name: Code Quality
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -27,6 +28,39 @@ jobs:
       run: |
         uv sync --extra dev --extra test
 
+    - name: Run pre-commit hooks
+      run: |
+        uv run pre-commit run --all-files --show-diff-on-failure
+
+    - name: Lint Ansible code
+      run: |
+        uv run ansible-lint roles/
+
+  release:
+    name: Build and Release
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v6
+
+    - name: Install dependencies
+      run: |
+        uv sync --extra dev --extra test
+
+    - name: Install collections
+      run: |
+        uv run ansible-galaxy collection install "community.general>=11.0.0,<12.0.0" "ansible.posix>=2.0.0,<3.0.0" "community.docker>=4.0.0,<5.0.0" -p ${{ github.workspace }}/collections
+      env:
+         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+
     - name: Build collection
       run: |
         uv run ansible-galaxy collection build
@@ -41,13 +75,35 @@ jobs:
       env:
          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
+    - name: Run tests and validation
+      run: |
+        uv run python -m pytest tests/ -v --junitxml=test-results.xml --cov=roles --cov-report=xml --cov-report=html --tb=short
+      env:
+         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+      continue-on-error: false
+
+    - name: Run ansible-lint
+      run: |
+        uv run ansible-lint roles/
+      env:
+         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+
+    - name: Run Molecule validation
+      working-directory: roles/frp_install
+      run: |
+        uv run molecule syntax --scenario-name dev
+        uv run molecule syntax --scenario-name ci
+        uv run molecule syntax --scenario-name default
+      env:
+        PY_COLORS: '1'
+        ANSIBLE_FORCE_COLOR: '1'
+        ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+      continue-on-error: false
+
     - name: Run final tests
       run: |
-        uv sync --extra test
-        # Install collection dependencies
-        uv run ansible-galaxy collection install community.general --force -p ${{ github.workspace }}/collections
-        uv run python -m pytest tests/ -v --tb=short
-        uv run ansible-lint roles/
+        # Final validation that everything works
+        echo "All validation checks passed successfully"
 
     - name: Publish to Ansible Galaxy
       run: |
