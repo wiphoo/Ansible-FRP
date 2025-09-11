@@ -73,7 +73,7 @@ jobs:
         path: wiphoo-frp-*.tar.gz
 
     - name: Publish to Galaxy
-      if: github.event_name == 'release' && !inputs.dry_run
+      if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
       run: |
         FILE=$(ls -1 wiphoo-frp-*.tar.gz | head -1)
         echo "Publishing $FILE to Ansible Galaxy..."
