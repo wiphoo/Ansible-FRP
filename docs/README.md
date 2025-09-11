@@ -1,7 +1,6 @@
 # 🌟 Welcome to Ansible Collection - wiphoo.frp
 
 [![Build & Test Collection](https://github.com/wiphoo/Ansible-FRP/actions/workflows/main.yml/badge.svg)](https://github.com/wiphoo/Ansible-FRP/actions/workflows/main.yml)
-[![PR Quality & Security](https://github.com/wiphoo/Ansible-FRP/actions/workflows/pr-validation.yml/badge.svg)](https://github.com/wiphoo/Ansible-FRP/actions/workflows/pr-validation.yml)
 [![Security Scan](https://github.com/wiphoo/Ansible-FRP/actions/workflows/security.yml/badge.svg)](https://github.com/wiphoo/Ansible-FRP/actions/workflows/security.yml)
 [![codecov](https://codecov.io/gh/wiphoo/Ansible-FRP/graph/badge.svg?token=3VSLLM8HB1)](https://codecov.io/gh/wiphoo/Ansible-FRP)
 [![Ansible Galaxy](https://img.shields.io/ansible/collection/wiphoo.frp)](https://galaxy.ansible.com/ui/repo/published/wiphoo/frp/)
