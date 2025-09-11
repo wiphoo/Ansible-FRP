@@ -98,8 +98,8 @@ jobs:
       env:
         PY_COLORS: '1'
         ANSIBLE_FORCE_COLOR: '1'
-        ANSIBLE_ALLOW_BROKEN_CONDITIONALS: 1
         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+        ANSIBLE_ALLOW_BROKEN_CONDITIONALS: 1
 
     - name: Check test coverage
       run: |
