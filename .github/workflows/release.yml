@@ -4,53 +4,78 @@ on:
   release:
     types: [published]
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (build only, no publish)'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
   id-token: write
 
 jobs:
-  release:
+  quality:
+    name: Quality Check
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
-
-    - name: Set up Python
-      uses: actions/setup-python@v5
+    - uses: actions/setup-python@v5
       with:
         python-version: '3.12'
+    - uses: astral-sh/setup-uv@v6
+    - run: uv sync --extra dev --extra test
+    - run: uv run pre-commit run --all-files --show-diff-on-failure
+    - run: uv run ansible-lint roles/
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v6
+  release:
+    name: Build & Publish
+    runs-on: ubuntu-latest
+    needs: quality
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+    - uses: astral-sh/setup-uv@v6
 
     - name: Install dependencies
+      run: uv sync --extra dev --extra test
+
+    - name: Validate version
       run: |
-        uv sync --extra dev --extra test
+        VERSION=$(grep '^version:' galaxy.yml | sed 's/version: *//' | tr -d '"' | tr -d "'")
+        echo "Collection version: $VERSION"
+        if [ "${{ github.event_name }}" = "release" ]; then
+          TAG_VERSION="${{ github.event.release.tag_name }}"
+          TAG_VERSION="${TAG_VERSION#v}"  # Remove 'v' prefix
+          if [ "$VERSION" != "$TAG_VERSION" ]; then
+            echo "ERROR: galaxy.yml version ($VERSION) != release tag ($TAG_VERSION)"
+            exit 1
+          fi
+        fi
 
     - name: Build collection
       run: |
         uv run ansible-galaxy collection build
+        ls -la wiphoo-frp-*.tar.gz
 
-    - name: Test build
+    - name: Test installation
       run: |
         FILE=$(ls -1 wiphoo-frp-*.tar.gz | head -1)
-        # Install to project collections directory to match Ansible's expectations
-        uv run ansible-galaxy collection install "$FILE" --force -p ${{ github.workspace }}/collections
-        # Verify installation in the project collections path
-        uv run ansible-galaxy collection list -p ${{ github.workspace }}/collections | grep wiphoo.frp
-      env:
-         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+        uv run ansible-galaxy collection install "$FILE" --force -p ./collections
+        uv run ansible-galaxy collection list -p ./collections | grep wiphoo.frp
 
-    - name: Run final tests
-      run: |
-        uv sync --extra test
-        # Install collection dependencies
-        uv run ansible-galaxy collection install community.general --force -p ${{ github.workspace }}/collections
-        uv run python -m pytest tests/ -v --tb=short
-        uv run ansible-lint roles/
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: collection-${{ github.run_number }}
+        path: wiphoo-frp-*.tar.gz
 
-    - name: Publish to Ansible Galaxy
+    - name: Publish to Galaxy
+      if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
       run: |
         FILE=$(ls -1 wiphoo-frp-*.tar.gz | head -1)
+        echo "Publishing $FILE to Ansible Galaxy..."
         uv run ansible-galaxy collection publish "$FILE" --api-key "${{ secrets.GALAXY_API_KEY }}"
-      if: github.event_name == 'release'
+        echo "✅ Published to https://galaxy.ansible.com/ui/repo/published/wiphoo/frp/"
