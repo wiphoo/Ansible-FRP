@@ -8,11 +8,3 @@ collections:
     #   - File and directory management
     #   - Archive extraction
     #   - System package management
-
-  - name: ansible.posix
-    version: ">=1.0.0"
-    # Used for:
-    #   - File permissions and ownership
-    #   - Service management (systemctl)
-    #   - User and group management
-    #   - POSIX file operations
