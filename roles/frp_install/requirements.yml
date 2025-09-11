@@ -3,7 +3,7 @@
 # These collections are required for the role to function properly
 collections:
   - name: community.general
-    version: ">=7.0.0"
+    version: ">=11.0.0,<12.0.0"
     # Used for:
     #   - File and directory management
     #   - Archive extraction

@@ -4,10 +4,10 @@
 collections:
   # Core role dependencies (inherited from main requirements.yml)
   - name: community.general
-    version: ">=7.0.0"
+    version: ">=11.0.0,<12.0.0"
 
   - name: ansible.posix
-    version: ">=1.0.0"
+    version: ">=2.0.0,<3.0.0"
 
   # Molecule-specific dependencies
   - name: community.docker

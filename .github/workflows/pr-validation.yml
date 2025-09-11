@@ -41,7 +41,7 @@ jobs:
     - name: Install required Ansible collections for role
       run: |
         # Install collection dependencies from galaxy.yml
-        uv run ansible-galaxy collection install "community.general>=7.0.0" "ansible.posix>=1.0.0" --force -p ${{ github.workspace }}/collections
+        uv run ansible-galaxy collection install "community.general>=11.0.0,<12.0.0" "ansible.posix>=2.0.0,<3.0.0" --force -p ${{ github.workspace }}/collections
       env:
          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
