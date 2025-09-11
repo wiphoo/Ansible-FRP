@@ -1,0 +1,79 @@
+# ==========================================
+# FRP Server Configuration (TOML Format)
+# ==========================================
+# This configuration is based on frps_full_example.toml from official FRP repository
+# Please customize according to your needs
+
+# Basic server binding configuration
+bindAddr = "{{ frp_install_server_addr | default('0.0.0.0') }}"
+bindPort = {{ frp_install_server_port | default(7000) }}
+
+# Authentication configuration (REQUIRED)
+auth.method = "{{ frp_install_auth_method | default('token') }}"
+auth.token = "{{ frp_install_auth_token | default('changeme_default_token_123') }}"
+
+# Log configuration
+log.to = "{{ frp_install_log_dir | default('/var/log/frp') }}/frps.log"
+log.level = "{{ frp_install_log_level | default('info') }}"
+log.maxDays = {{ frp_install_log_max_days | default(3) }}
+log.disablePrintColor = {{ (frp_install_log_disable_print_color | default(false)) | bool | tojson }}
+
+# Dashboard configuration (accessible on unprivileged port)
+webServer.addr = "{{ frp_install_dashboard_addr | default('127.0.0.1') }}"
+webServer.port = {{ frp_install_dashboard_port | default(7500) }}
+webServer.user = "{{ frp_install_dashboard_user | default('admin') }}"
+webServer.password = "{{ frp_install_dashboard_password | default('admin') }}"
+
+# Transport configuration
+transport.maxPoolCount = {{ frp_install_transport_max_pool_count }}
+transport.tcpMux = {{ frp_install_transport_tcp_mux | lower }}
+transport.tcpMuxKeepaliveInterval = {{ frp_install_transport_tcp_mux_keepalive_interval }}
+
+# Port restrictions (optional, disabled by default)
+{% if frp_install_allow_ports is defined and frp_install_allow_ports %}
+allowPorts = {{ frp_install_allow_ports | tojson }}
+{% endif %}
+
+# ==========================================
+# Optional Configurations (commented out)
+# ==========================================
+# Uncomment and configure these as needed
+
+# KCP protocol support (optional)
+# kcpBindPort = 7000
+
+# HTTP/HTTPS virtual host support (requires root privileges for standard ports)
+# WARNING: These require root privileges and may cause "bind: permission denied" errors
+# vhostHTTPPort = 8080   # Use unprivileged ports like 8080 instead of 80
+# vhostHTTPSPort = 8443  # Use unprivileged ports like 8443 instead of 443
+# vhostHTTPTimeout = 60
+
+# TLS configuration (optional)
+# transport.tls.force = false
+
+# Subdomain support (optional)
+# subDomainHost = "frps.com"
+
+# Advanced configurations (optional)
+# userConnTimeout = 10
+# maxPortsPerClient = 0
+# udpPacketSize = 1500
+# detailedErrorsToClient = true
+# natholeAnalysisDataReserveHours = 168
+
+# Custom 404 page (optional)
+# custom404Page = "/path/to/404.html"
+
+# Alternative token loading from file (optional)
+# auth.tokenSource.type = "file"
+# auth.tokenSource.file.path = "/etc/frp/token"
+
+# Additional authentication scopes (optional)
+# auth.additionalScopes = ["HeartBeats", "NewWorkConns"]
+
+# Dashboard assets directory (optional)
+# webServer.assetsDir = "./static"
+# webServer.pprofEnable = false
+
+# Proxy binding address (optional)
+# proxyBindAddr = "127.0.0.1"

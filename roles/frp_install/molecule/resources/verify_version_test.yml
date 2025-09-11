@@ -1,0 +1,79 @@
+---
+- name: Verify FRP Version Test Installation
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    # Version test specific variables - Fixed to avoid recursive loop
+    frp_version: "0.64.0"
+    frp_install_version: "{{ frp_version | default('0.64.0') }}"
+    # Variable definitions to avoid undefined variable issues
+    frp_install_files:
+      - "frps"
+      - "frpc"
+    frp_install_dirs:
+      - "/usr/local/bin/frp"
+      - "/var/log/frp"
+      - "/etc/frp"
+    frp_install_dir: "/usr/local/bin/frp"
+    frp_install_user: "frp"
+    frp_install_group: "frp"
+    frp_install_log_dir: "/var/log/frp"
+    frp_install_config_dir: "/etc/frp"
+
+  tasks:
+    - name: Verify frp binaries are installed
+      ansible.builtin.stat:
+        path: "{{ frp_install_dir }}/{{ item }}"
+      loop: "{{ frp_install_files }}"
+      register: frp_binaries
+
+    - name: Assert frp binaries exist
+      ansible.builtin.assert:
+        that: item.stat.exists
+        fail_msg: "frp binary {{ item.item }} was not installed"
+      loop: "{{ frp_binaries.results }}"
+
+    - name: Test frp version command
+      ansible.builtin.command: "{{ frp_install_dir }}/frps --version"
+      register: version_output
+      changed_when: false
+
+    - name: Debug version variables
+      ansible.builtin.debug:
+        msg:
+          - "frp_version (user variable): {{ frp_version | default('not set') }}"
+          - "frp_install_version (computed): {{ frp_install_version | default('not set') }}"
+          - "version output: {{ version_output.stdout }}"
+
+    - name: Verify version output contains expected version (using frp_version)
+      ansible.builtin.assert:
+        that: frp_version in version_output.stdout
+        fail_msg: "frps version output '{{ version_output.stdout }}' does not contain expected version {{ frp_version }}"
+      when: frp_version is defined
+
+    - name: Verify version output contains expected version (fallback to frp_install_version)
+      ansible.builtin.assert:
+        that: frp_install_version in version_output.stdout
+        fail_msg: "frps version output '{{ version_output.stdout }}' does not contain expected version {{ frp_install_version }}"
+      when: frp_version is not defined
+
+    - name: Verify directories exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop: "{{ frp_install_dirs }}"
+      register: frp_directories
+
+    - name: Assert directories exist
+      ansible.builtin.assert:
+        that: item.stat.exists
+        fail_msg: "Directory {{ item.item }} was not created"
+      loop: "{{ frp_directories.results }}"
+
+    - name: Verify user and group existence
+      ansible.builtin.shell: |
+        getent passwd {{ frp_install_user }} && getent group {{ frp_install_group }}
+      register: user_group_check
+      changed_when: false
+      failed_when: user_group_check.rc != 0

@@ -1,0 +1,73 @@
+---
+# Default variables for frp_install role
+# These can be overridden by users
+
+# User and group configuration
+frp_install_user: frp
+frp_install_group: frp
+
+# Directory configuration (can be overridden)
+frp_install_tmp_dir: "/tmp"
+frp_install_dir: "/usr/local/bin/frp"
+frp_install_config_dir: "/etc/frp"
+frp_install_log_dir: "/var/log/frp"
+
+frp_install_dirs:
+  - "{{ frp_install_dir }}"
+  - "{{ frp_install_log_dir }}"
+  - "{{ frp_install_config_dir }}"
+
+# System detection (leave empty for auto-detection)
+frp_install_system: ""
+frp_install_architecture: ""
+
+# Installation options
+frp_install_cleanup_tmp: true
+frp_install_create_service: true
+frp_install_configure_firewall: true
+frp_install_verify_checksums: true
+
+# Files to install (can be overridden to install only specific binaries)
+frp_install_files:
+  - "frps"
+  - "frpc"
+
+# Version (can be overridden)
+frp_install_version: "0.63.0"  # Specify the version of frp to install
+
+# FRP Configuration defaults
+frp_install_auth_method: "token"
+frp_install_auth_token: ""  # REQUIRED: Set a secure token via vars or Vault
+
+# FRP Server binding configuration
+frp_install_server_addr: "0.0.0.0"  # Server bind address (bindAddr)
+frp_install_server_port: 7000       # Server bind port (bindPort)
+
+# FRP Client server connection configuration
+frp_install_client_server_addr: "your-server-address.example.com"  # FRP server address to connect to
+frp_install_client_server_port: 7000                               # FRP server port to connect to
+
+# FRP Server dashboard/webserver configuration
+frp_install_dashboard_addr: "127.0.0.1"
+frp_install_dashboard_port: 7500
+frp_install_dashboard_user: "admin"
+frp_install_dashboard_password: ""  # REQUIRED: Set a strong password via vars or Vault
+
+# FRP Client admin webserver configuration (optional)
+frp_install_client_webserver_enabled: false     # Enable client admin webServer interface
+frp_install_client_webserver_addr: "127.0.0.1"  # Client admin webServer bind address
+frp_install_client_webserver_port: 7400         # Client admin webServer port
+frp_install_client_webserver_user: "admin"      # Client admin webServer username
+frp_install_client_webserver_password: ""   # Client admin webServer password (set if enabled)
+frp_install_client_webserver_pprof_enabled: false  # Enable pprof endpoint for debugging
+
+# FRP Logging configuration
+frp_install_log_level: "info"  # trace, debug, info, warn, error
+frp_install_log_max_days: 3
+frp_install_log_disable_print_color: false
+
+# FRP Transport configuration
+frp_install_transport_pool_count: 5            # Connection pool size for client
+frp_install_transport_max_pool_count: 5        # Maximum connection pool size for server
+frp_install_transport_tcp_mux: true            # Enable TCP multiplexing
+frp_install_transport_tcp_mux_keepalive_interval: 60  # TCP mux keepalive interval (seconds)

@@ -1,0 +1,126 @@
+# ==========================================
+# FRP Client Configuration (TOML Format)
+# ==========================================
+# This configuration is based on frpc_full_example.toml from official FRP repository
+# Please customize according to your needs
+
+# Basic server connection configuration
+serverAddr = "{{ frp_install_client_server_addr | default('your-server-address.example.com') }}"
+serverPort = {{ frp_install_client_server_port | default(7000) }}
+
+# Authentication configuration (REQUIRED - MUST match server)
+auth.method = "{{ frp_install_auth_method | default('token') }}"
+auth.token = "{{ frp_install_auth_token | default('changeme_default_token_123') }}"
+
+# Log configuration
+log.to = "{{ frp_install_log_dir | default('/var/log/frp') }}/frpc.log"
+log.level = "{{ frp_install_log_level | default('info') }}"
+log.maxDays = {{ frp_install_log_max_days | default(3) }}
+log.disablePrintColor = {{ (frp_install_log_disable_print_color | default(false)) | bool | tojson }}
+
+# Connection settings
+loginFailExit = true
+transport.tcpMux = {{ frp_install_transport_tcp_mux | lower }}
+transport.poolCount = {{ frp_install_transport_pool_count }}
+
+# ==========================================
+# Optional Configurations (commented out)
+# ==========================================
+# Uncomment and configure these as needed
+
+# User prefix for proxy names (optional)
+# user = "your_name"
+
+# Transport protocol options (optional)
+# transport.protocol = "tcp"  # tcp, kcp, quic, websocket, wss
+# transport.connectServerLocalIP = "0.0.0.0"
+# transport.tcpMuxKeepaliveInterval = {{ frp_install_transport_tcp_mux_keepalive_interval }}
+
+# TLS configuration (optional)
+# transport.tls.enable = true
+# transport.tls.disableCustomTLSFirstByte = true
+
+# Admin web server for control (optional)
+{% if frp_install_client_webserver_enabled | default(false) %}
+webServer.addr = "{{ frp_install_client_webserver_addr | default('127.0.0.1') }}"
+webServer.port = {{ frp_install_client_webserver_port | default(7400) }}
+webServer.user = "{{ frp_install_client_webserver_user | default('admin') }}"
+webServer.password = "{{ frp_install_client_webserver_password | default('admin') }}"
+webServer.pprofEnable = {{ frp_install_client_webserver_pprof_enabled | default(false) | lower }}
+{% else %}
+# webServer.addr = "127.0.0.1"
+# webServer.port = 7400
+# webServer.user = "admin"
+# webServer.password = "admin"
+# webServer.pprofEnable = false
+{% endif %}
+
+# Advanced connection settings (optional)
+# transport.dialServerTimeout = 10
+# transport.dialServerKeepalive = 7200
+# transport.heartbeatInterval = 30
+# transport.heartbeatTimeout = 90
+
+# NAT hole punching (optional)
+# natHoleStunServer = "stun.easyvoip.com:3478"
+
+# DNS server (optional)
+# DNS server (optional)
+# dnsServer = "8.8.8.8"
+
+# UDP packet size (optional)
+# udpPacketSize = 1500
+
+# Proxy filtering (optional)
+# start = ["ssh", "web"]  # Only start specific proxies
+
+# Metadata (optional)
+# metadatas.var1 = "abc"
+# metadatas.var2 = "123"
+
+# Alternative token loading from file (optional)
+# auth.tokenSource.type = "file"
+# auth.tokenSource.file.path = "/etc/frp/token"
+
+# Additional authentication scopes (optional)
+# auth.additionalScopes = ["HeartBeats", "NewWorkConns"]
+
+# Include external config files (optional)
+# includes = ["./confd/*.ini"]
+
+# ==========================================
+# Example Proxy Configurations
+# ==========================================
+# Uncomment and modify these examples as needed for your specific services
+
+# Example SSH tunnel configuration
+# [[proxies]]
+# name = "ssh"
+# type = "tcp"
+# localIP = "127.0.0.1"
+# localPort = 22
+# remotePort = 6000
+
+# Example HTTP web service configuration
+# [[proxies]]
+# name = "web"
+# type = "http"
+# localIP = "127.0.0.1"
+# localPort = 80
+# customDomains = ["your.domain.com"]
+
+# Example HTTPS web service configuration
+# [[proxies]]
+# name = "web-ssl"
+# type = "https"
+# localIP = "127.0.0.1"
+# localPort = 443
+# customDomains = ["your.domain.com"]
+
+# Example database tunnel configuration
+# [[proxies]]
+# name = "mysql"
+# type = "tcp"
+# localIP = "127.0.0.1"
+# localPort = 3306
+# remotePort = 7003

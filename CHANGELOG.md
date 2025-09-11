@@ -1,0 +1,97 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+## [0.1.0] - 2025-09-11
+
+### Added
+- **Initial Release**: First version of wiphoo.frp Ansible collection for FRP (Fast Reverse Proxy) deployment
+- **Multi-Architecture Support**: Automatic detection and support for Linux systems (x86_64, aarch64, armv7l, armv6l, riscv64, mips)
+- **Dual Component Installation**: Support for both FRP server (frps) and client (frpc) configurations
+- **Full Template Configurability**: Made both server (frps.toml.j2) and client (frpc.toml.j2) templates fully configurable via Ansible variables
+- **Comprehensive Configuration Variables**:
+  - Authentication: `frp_install_auth_method` and `frp_install_auth_token` for secure connections
+  - Server configuration: `frp_install_server_addr`, `frp_install_server_port` for binding
+  - Dashboard: `frp_install_dashboard_*` variables for web management interface
+  - Client connection: `frp_install_client_server_addr`, `frp_install_client_server_port` for server connection
+  - Client webserver: `frp_install_client_webserver_*` variables with conditional rendering
+  - Logging: `frp_install_log_level`, `frp_install_log_max_days`, `frp_install_log_disable_print_color`
+- **Service Management**: Native systemd integration with automatic service creation and management
+- **Template-Based Configuration**: Modern TOML configuration format with Jinja2 templates
+- **Security Features**: Configurable firewall rules, secure defaults, and production-ready configurations
+- **Comprehensive Testing**:
+  - pytest unit tests with 94.62% test coverage
+  - molecule integration testing with multiple scenarios (dev, ci, default, resources)
+  - Invalid configuration validation tests
+  - GitHub Actions CI/CD pipeline with quality gates and security scanning
+- **Development Tooling**:
+  - Pre-commit hooks for code quality and consistency
+  - Modern Python tooling integration (uv, ruff, mypy, ansible-lint)
+  - Automated documentation with MkDocs and GitHub Pages deployment
+- **Documentation**: Complete documentation suite including API reference, installation guide, examples, and troubleshooting
+
+### Features
+- **Variable Naming Consistency**: Standardized all configuration variables to use `frp_install_*` prefix
+- **Conditional Configuration**: Smart template rendering based on enabled features (e.g., client webserver)
+- **Cross-Platform Compatibility**: Tested on Ubuntu 20.04+, Debian 11+, CentOS/RHEL 8+, Fedora 36+
+- **FRP Version Support**: Compatible with FRP versions 0.61.x - 0.63.x
+- **Flexible Deployment**: Install server only, client only, or both components on same system
+- Pre-commit hooks for code quality and consistency
+- Modern Python tooling integration (uv, ruff, mypy, ansible-lint)
+- Documentation with MkDocs and GitHub Pages deployment
+- Security scanning with TruffleHog and GitGuardian
+- Automated dependency management and updates
+
+### Features
+- Multi-architecture binary support with automatic detection
+- Flexible configuration templates (frps.ini/toml, frpc.ini/toml)
+- Systemd service file templates for both server and client
+- Configurable installation paths, user/group settings, and permissions
+- Version-specific binary downloads with SHA256 checksum verification
+- Architecture variable protection to prevent user override conflicts
+- FRP configuration key fixes (localAddr→localIP) for modern FRP versions
+- Collection-compatible template references (no role_path dependencies)
+- Firewall configuration support with UFW integration
+- Comprehensive error handling and retry mechanisms
+
+### Infrastructure
+- Complete CI/CD pipeline with 3 focused workflows (main, pr-validation, docs)
+- Python 3.10-3.12 compatibility testing
+- Ansible 8.7.0 and 11.9.0 support with version-specific compatibility matrix
+- 53 comprehensive tests covering role functionality, templates, and integration
+- Pre-commit hooks: trailing-whitespace, yaml-check, ruff, ruff-format, yamllint, ansible-lint, mypy
+- Automated documentation building and deployment
+- Code coverage reporting with Codecov integration
+- Security scanning and PR validation workflows
+- Performance optimized with uv package manager
+
+### Configuration Management
+- Centralized configuration in pyproject.toml following PEP 518 standards
+- Development and test dependency separation
+- Modern GitHub Actions with astral-sh/setup-uv@v6
+- Template parameterization and collection-compatible structure
+- Variable precedence management with conditional gates
+
+### Bug Fixes
+- Fixed FRP template parameter references for collection compatibility
+- Corrected invalid FRP configuration keys (localAddr→localIP)
+- Resolved CI dependency installation issues with ansible-lint
+- Fixed uv command syntax for modern uv workflows
+- Resolved Python/Ansible version compatibility matrix
+- Fixed test-reporter permissions for PR status checks
+- Applied comprehensive ruff formatting for code consistency
+
+### Technical Debt
+- Workflow optimization: reduced from 2,600+ lines to manageable structure
+- Configuration consolidation from scattered files to pyproject.toml
+- Template modernization with proper Jinja2 syntax and collection compatibility
+- Test strengthening with comprehensive coverage and integration testing
+- Security improvements with official GitHub Actions and dependency management
+
+[Unreleased]: https://github.com/wiphoo/Ansible-FRP/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/wiphoo/Ansible-FRP/releases/tag/v0.1.0

@@ -1,0 +1,10 @@
+---
+# Role-specific requirements for frp_install role
+# These collections are required for the role to function properly
+collections:
+  - name: community.general
+    version: ">=11.0.0,<12.0.0"
+    # Used for:
+    #   - File and directory management
+    #   - Archive extraction
+    #   - System package management

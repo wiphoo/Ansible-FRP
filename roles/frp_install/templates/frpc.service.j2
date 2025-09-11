@@ -1,0 +1,23 @@
+[Unit]
+Description=FRP Client
+After=network.target
+Wants=network.target
+
+[Service]
+Type=simple
+User={{ frp_install_user | default('frp') }}
+Group={{ frp_install_group | default('frp') }}
+ExecStart={{ frp_install_dir | default('/usr/local/bin/frp') }}/frpc -c {{ frp_install_config_dir | default('/etc/frp') }}/frpc.toml
+Restart=always
+RestartSec=5
+LimitNOFILE=1048576
+
+# Security settings
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths={{ frp_install_config_dir | default('/etc/frp') }} {{ frp_install_log_dir | default('/var/log/frp') }}
+
+[Install]
+WantedBy=multi-user.target

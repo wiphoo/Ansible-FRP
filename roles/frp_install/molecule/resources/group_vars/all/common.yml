@@ -1,0 +1,9 @@
+---
+# Common variables for all molecule scenarios
+frp_install_user: frp
+frp_install_group: frp
+frp_install_dir: /usr/local/bin/frp
+frp_install_config_dir: /etc/frp
+frp_install_log_dir: /var/log/frp
+frp_install_configure_firewall: false
+frp_install_cleanup_tmp: true

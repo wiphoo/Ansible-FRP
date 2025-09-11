@@ -1,0 +1,10 @@
+---
+# vars file for frp_install role
+frp_install_download_base_url: "https://github.com/fatedier/frp/releases/download"
+
+# Derived variables (computed from user defaults)
+frp_install_filename_without_extension: "frp_{{ frp_install_version | trim }}_{{ frp_install_system | trim }}_{{ frp_install_architecture | trim }}"
+frp_install_filename: "{{ frp_install_filename_without_extension }}.tar.gz"
+
+frp_install_download_url: "{{ frp_install_download_base_url }}/v{{ frp_install_version }}/{{ frp_install_filename }}"
+frp_install_checksum_download_url: "{{ frp_install_download_base_url }}/v{{ frp_install_version }}/frp_sha256_checksums.txt"

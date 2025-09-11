@@ -1,0 +1,323 @@
+---
+# tasks file for frp_install role
+
+# Map user-facing variables to internal variables
+- name: Map user variables to internal variables
+  ansible.builtin.set_fact:
+    frp_install_version: "{{ frp_version | default(frp_install_version) }}"
+  when: frp_version is defined
+
+# Security assertions for required variables
+- name: Assert that auth token is set
+  ansible.builtin.assert:
+    that:
+      - frp_install_auth_token | length > 0
+      - frp_install_auth_token != "changeme_default_token_123"
+    fail_msg: |
+      SECURITY ERROR: frp_install_auth_token is required and must not be empty or use default value.
+      Set a secure token via vars or Ansible Vault:
+        frp_install_auth_token: "YOUR_SECURE_TOKEN_HERE"
+    success_msg: "Authentication token is properly configured"
+
+- name: Assert that dashboard password is set when dashboard is enabled
+  ansible.builtin.assert:
+    that:
+      - frp_install_dashboard_password | length > 0
+      - frp_install_dashboard_password != "admin"
+    fail_msg: |
+      SECURITY ERROR: frp_install_dashboard_password is required and must not be empty or use default value.
+      Set a strong password via vars or Ansible Vault:
+        frp_install_dashboard_password: "YOUR_SECURE_PASSWORD_HERE"
+    success_msg: "Dashboard password is properly configured"
+  when:
+    - "'frps' in frp_install_files"
+    - frp_install_dashboard_port is defined
+
+- name: Assert that client webserver password is set when client webserver is enabled
+  ansible.builtin.assert:
+    that:
+      - frp_install_client_webserver_password | length > 0
+      - frp_install_client_webserver_password != "admin"
+    fail_msg: |
+      SECURITY ERROR: frp_install_client_webserver_password is required when client webserver is enabled.
+      Set a strong password via vars or Ansible Vault:
+        frp_install_client_webserver_password: "YOUR_SECURE_PASSWORD_HERE"
+    success_msg: "Client webserver password is properly configured"
+  when:
+    - "'frpc' in frp_install_files"
+    - frp_install_client_webserver_enabled | bool
+
+# Gather OS and architecture for download
+- name: Set the variable for OS
+  ansible.builtin.set_fact:
+    frp_install_system: "{{ ansible_system | lower }}"
+  when: frp_install_system | length <= 0
+
+- name: Fail if no valid OS is set
+  ansible.builtin.fail:
+    msg: "No valid download URL for the current OS: {{ ansible_system }}"
+  when: frp_install_system == ""
+
+- name: Set the variable for architecture
+  ansible.builtin.set_fact:
+    frp_install_architecture: >-
+      {% if ansible_architecture == 'x86_64' %}
+      amd64
+      {% elif ansible_architecture == 'aarch64' %}
+      arm64
+      {% elif ansible_architecture == 'armv7l' %}
+      arm_hf
+      {% elif ansible_architecture == 'armv6l' %}
+      arm
+      {% elif ansible_architecture == 'riscv64' %}
+      riscv64
+      {% elif ansible_architecture == 'mips' %}
+      mips
+      {% else %}
+      {{ ansible_architecture }}
+      {% endif %}
+  when: frp_install_architecture | length <= 0
+
+- name: Fail if no valid architecture is set
+  ansible.builtin.fail:
+    msg: "No valid download URL for the current architecture: {{ ansible_architecture }}"
+  when: frp_install_architecture == ""
+
+- name: Display download information
+  ansible.builtin.debug:
+    msg: |
+      Download URL: {{ frp_install_download_url }}
+      Checksum URL: {{ frp_install_checksum_download_url }}
+      Target file: {{ frp_install_filename }}
+
+# Ensure required packages are installed
+- name: Ensure required packages are installed
+  ansible.builtin.apt:
+    name:
+      - curl
+      - tar
+      - ufw
+    state: present
+    update_cache: true
+    cache_valid_time: 86400
+  register: frp_install_package_install
+  retries: 3
+  delay: 5
+  until: frp_install_package_install is succeeded
+  when: not (frp_install_skip_packages | default(false) | bool)
+
+# Create frp user and group (must be before directory creation)
+- name: Create frp group
+  ansible.builtin.group:
+    name: "{{ frp_install_group }}"
+    system: true
+    state: present
+  when: ansible_user_id == 'root'
+
+- name: Create frp user
+  ansible.builtin.user:
+    name: "{{ frp_install_user }}"
+    shell: /sbin/nologin
+    system: true
+    state: present
+    create_home: false
+  when: ansible_user_id == 'root'
+
+# Create required directories (idempotent)
+- name: Create frp directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ frp_install_user if ansible_user_id == 'root' else omit }}"
+    group: "{{ frp_install_group if ansible_user_id == 'root' else omit }}"
+    mode: '0755'
+  loop: "{{ frp_install_dirs }}"
+
+# Download and verify frp with proper error handling
+- name: Download frp
+  ansible.builtin.get_url:
+    url: "{{ frp_install_download_url }}"
+    dest: "{{ frp_install_tmp_dir }}/{{ frp_install_filename }}"
+    mode: '0644'
+    timeout: 300
+  register: frp_install_download_result
+  retries: 3
+  delay: 10
+  until: frp_install_download_result is succeeded
+
+- name: Download the frp checksum file
+  ansible.builtin.get_url:
+    url: "{{ frp_install_checksum_download_url }}"
+    dest: "{{ frp_install_tmp_dir }}/frp_sha256_checksums.txt"
+    mode: '0644'
+    timeout: 60
+  register: frp_install_checksum_file_result
+  retries: 3
+  delay: 5
+  until: frp_install_checksum_file_result is succeeded
+  when: frp_install_verify_checksums | bool
+
+- name: Extract the specific checksum
+  ansible.builtin.shell: |
+    grep -E "  {{ frp_install_filename | regex_escape }}$" "{{ frp_install_tmp_dir }}/frp_sha256_checksums.txt" > \
+    "{{ frp_install_tmp_dir }}/{{ frp_install_filename }}.sha256sum"
+  args:
+    chdir: "{{ frp_install_tmp_dir }}"
+  register: frp_install_extract_checksum_result
+  changed_when: false
+  failed_when: frp_install_extract_checksum_result.rc != 0
+  when: frp_install_verify_checksums | bool
+
+- name: Verify the checksum
+  ansible.builtin.command: "sha256sum -c {{ frp_install_tmp_dir }}/{{ frp_install_filename }}.sha256sum"
+  args:
+    chdir: "{{ frp_install_tmp_dir }}"
+  register: frp_install_verify_checksum_result
+  failed_when: frp_install_verify_checksum_result.rc != 0
+  changed_when: false
+  when: frp_install_verify_checksums | bool
+
+- name: Extract frp
+  ansible.builtin.unarchive:
+    src: "{{ frp_install_tmp_dir }}/{{ frp_install_filename }}"
+    dest: "{{ frp_install_tmp_dir }}"
+    remote_src: true
+    creates: "{{ frp_install_tmp_dir }}/{{ frp_install_filename_without_extension }}"
+
+- name: Install frp binaries
+  ansible.builtin.copy:
+    src: "{{ frp_install_tmp_dir }}/{{ frp_install_filename_without_extension }}/{{ item }}"
+    dest: "{{ frp_install_dir }}/{{ item }}"
+    owner: "{{ frp_install_user if ansible_user_id == 'root' else omit }}"
+    group: "{{ frp_install_group if ansible_user_id == 'root' else omit }}"
+    mode: '0755'
+    remote_src: true
+  loop: "{{ frp_install_files }}"
+
+- name: Verify frp binaries are executable
+  ansible.builtin.file:
+    path: "{{ frp_install_dir }}/{{ item }}"
+    mode: '0755'
+    owner: "{{ frp_install_user if ansible_user_id == 'root' else omit }}"
+    group: "{{ frp_install_group if ansible_user_id == 'root' else omit }}"
+  loop: "{{ frp_install_files }}"
+
+# Verify installed binaries checksums
+- name: Calculate checksums of installed binaries
+  ansible.builtin.command: "sha256sum {{ frp_install_dir }}/{{ item }}"
+  register: frp_install_installed_checksums
+  changed_when: false
+  loop: "{{ frp_install_files }}"
+
+# Service configuration (optional)
+- name: Create basic frp configuration directory
+  ansible.builtin.file:
+    path: "{{ frp_install_config_dir }}"
+    state: directory
+    owner: "{{ frp_install_user if ansible_user_id == 'root' else omit }}"
+    group: "{{ frp_install_group if ansible_user_id == 'root' else omit }}"
+    mode: '0750'
+  when: frp_install_create_service | bool
+
+- name: Create basic frps configuration file
+  ansible.builtin.template:
+    src: frps.toml.j2
+    dest: "{{ frp_install_config_dir }}/frps.toml"
+    owner: "{{ frp_install_user if ansible_user_id == 'root' else omit }}"
+    group: "{{ frp_install_group if ansible_user_id == 'root' else omit }}"
+    mode: '0600'
+  when:
+    - frp_install_create_service | bool
+    - "'frps' in frp_install_files"
+
+- name: Create basic frpc configuration file
+  ansible.builtin.template:
+    src: frpc.toml.j2
+    dest: "{{ frp_install_config_dir }}/frpc.toml"
+    owner: "{{ frp_install_user if ansible_user_id == 'root' else omit }}"
+    group: "{{ frp_install_group if ansible_user_id == 'root' else omit }}"
+    mode: '0600'
+  when:
+    - frp_install_create_service | bool
+    - "'frpc' in frp_install_files"
+
+- name: Create systemd service file for frps
+  ansible.builtin.template:
+    src: frps.service.j2
+    dest: /etc/systemd/system/frps.service
+    mode: '0644'
+  when:
+    - frp_install_create_service | bool
+    - "'frps' in frp_install_files"
+  notify: Reload systemd
+
+- name: Create systemd service file for frpc
+  ansible.builtin.template:
+    src: frpc.service.j2
+    dest: /etc/systemd/system/frpc.service
+    mode: '0644'
+  when:
+    - frp_install_create_service | bool
+    - "'frpc' in frp_install_files"
+  notify: Reload systemd
+
+# Firewall configuration (optional)
+- name: Configure UFW firewall rules for frp
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - "7000"  # Default frps port
+    - "7500"  # Alternative port
+  when:
+    - frp_install_configure_firewall | bool
+    - ansible_facts['os_family'] == "Debian"
+  failed_when: false  # Allow graceful failure if community.general collection is not available
+  tags:
+    - firewall
+    - molecule-notest  # Skip in molecule tests where community.general may not be available
+
+# Cleanup temporary files
+- name: Clean up temporary files
+  ansible.builtin.file:
+    path: "{{ frp_install_tmp_dir }}/{{ frp_install_filename_without_extension }}"
+    state: absent
+  when: frp_install_cleanup_tmp | bool
+
+- name: Clean up downloaded files
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - "{{ frp_install_tmp_dir }}/{{ frp_install_filename }}"
+    - "{{ frp_install_tmp_dir }}/{{ frp_install_filename }}.sha256sum"
+  when: frp_install_cleanup_tmp | bool
+
+- name: Clean up checksum file after verification
+  ansible.builtin.file:
+    path: "{{ frp_install_tmp_dir }}/frp_sha256_checksums.txt"
+    state: absent
+  when: frp_install_cleanup_tmp | bool
+
+# Final verification
+- name: Verify frp binaries
+  ansible.builtin.command: "{{ frp_install_dir }}/{{ item }} --version"
+  register: frp_install_version_check
+  changed_when: false
+  failed_when: frp_install_version_check.rc != 0
+  loop: "{{ frp_install_files }}"
+
+- name: Collate installed versions
+  ansible.builtin.set_fact:
+    frp_install_versions: "{{ frp_install_version_check.results | map(attribute='stdout') | map('trim') | list }}"
+
+- name: Display installation summary
+  ansible.builtin.debug:
+    msg: |
+      FRP installation completed successfully!
+      Versions: {{ frp_install_versions | join(', ') }}
+      Binaries installed: {{ frp_install_files | join(', ') }}
+      Installation directory: {{ frp_install_dir }}
+      Configuration directory: {{ frp_install_config_dir }}
+      Service created: {{ frp_install_create_service | bool }}

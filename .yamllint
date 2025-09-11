@@ -1,0 +1,36 @@
+---
+extends: default
+
+ignore: |
+  .venv/
+  venv/
+  .git/
+  .github/
+  node_modules/
+  *.egg-info/
+  build/
+  dist/
+  htmlcov/
+  collections/
+
+rules:
+  line-length:
+    max: 150
+    allow-non-breakable-words: true
+    allow-non-breakable-inline-mappings: true
+  document-start: false
+  comments:
+    min-spaces-from-content: 1
+  comments-indentation: false
+  truthy:
+    allowed-values: ['true', 'false', 'on', 'off', 'yes', 'no']
+  brackets:
+    max-spaces-inside: 1
+  braces:
+    max-spaces-inside: 1
+  indentation:
+    spaces: 2
+    check-multi-line-strings: false
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true

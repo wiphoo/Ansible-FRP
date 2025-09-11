@@ -1,0 +1,189 @@
+---
+- name: Verify FRP Installation
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    # Import role defaults for verification
+    frp_install_files: ["frps", "frpc"]
+    frp_install_dir: "/usr/local/bin/frp"
+    frp_install_user: "frp"
+    frp_install_group: "frp"
+    frp_install_config_dir: "/etc/frp"
+    frp_install_log_dir: "/var/log/frp"
+    frp_install_dirs:
+      - "/usr/local/bin/frp"
+      - "/var/log/frp"
+      - "/etc/frp"
+
+  tasks:
+    - name: Verify frp binaries are installed
+      ansible.builtin.stat:
+        path: "{{ frp_install_dir }}/{{ item }}"
+      loop: "{{ frp_install_files }}"
+      register: frp_binaries
+
+    - name: Assert frp binaries exist
+      ansible.builtin.assert:
+        that: item.stat.exists
+        fail_msg: "frp binary {{ item.item }} was not installed"
+      loop: "{{ frp_binaries.results }}"
+
+    - name: Verify frp user exists
+      ansible.builtin.getent:
+        database: passwd
+        key: "{{ frp_install_user }}"
+
+    - name: Verify frp group exists
+      ansible.builtin.getent:
+        database: group
+        key: "{{ frp_install_group }}"
+
+    - name: Verify directories exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop: "{{ frp_install_dirs }}"
+      register: frp_directories
+
+    - name: Assert directories exist
+      ansible.builtin.assert:
+        that: item.stat.exists
+        fail_msg: "Directory {{ item.item }} was not created"
+      loop: "{{ frp_directories.results }}"
+
+    - name: Stat frp binaries for mode
+      ansible.builtin.stat:
+        path: "{{ frp_install_dir }}/{{ item }}"
+      loop: "{{ frp_install_files }}"
+      register: frp_exec_stats
+
+    - name: Assert binaries are executable by owner
+      ansible.builtin.assert:
+        that:
+          - item.stat.exists
+          - item.stat.xusr
+        fail_msg: "frp binary {{ item.item }} is not executable by owner"
+      loop: "{{ frp_exec_stats.results }}"
+
+    - name: Verify frp service files exist
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - "/etc/systemd/system/frps.service"
+        - "/etc/systemd/system/frpc.service"
+        - "{{ frp_install_config_dir }}/frps.toml"
+        - "{{ frp_install_config_dir }}/frpc.toml"
+      register: service_files
+      when: frp_install_create_service | default(true) | bool
+
+    - name: Assert service files exist
+      ansible.builtin.assert:
+        that: item.stat.exists
+        fail_msg: "Service file {{ item.item }} was not created"
+      loop: "{{ service_files.results }}"
+      when: frp_install_create_service | default(true) | bool
+
+    - name: Test frp version command
+      ansible.builtin.command: "{{ frp_install_dir }}/frps --version"
+      register: version_output
+      changed_when: false
+
+    - name: Verify version output contains expected version
+      ansible.builtin.assert:
+        that: frp_install_version in version_output.stdout
+        fail_msg: "frps version output does not contain expected version {{ frp_install_version }}"
+
+    - name: Verify service status (if systemd is available)
+      ansible.builtin.systemd:
+        name: frps
+        state: started
+        enabled: true
+      ignore_errors: true
+      register: service_status
+      when: frp_install_create_service | default(true) | bool
+
+    - name: Display service status for debugging
+      ansible.builtin.debug:
+        msg: "Service status: {{ service_status }}"
+      when:
+        - frp_install_create_service | default(true) | bool
+        - service_status is defined
+
+    # Test invalid configuration validation
+    - name: Create invalid TOML configuration file for testing
+      ansible.builtin.copy:
+        content: |
+          # Invalid TOML - missing quotes and invalid syntax
+          bindPort = invalid_value
+          [auth.token = "test"  # Missing closing bracket
+        dest: "{{ frp_install_config_dir }}/frps_invalid.toml"
+        owner: "{{ frp_install_user }}"
+        group: "{{ frp_install_group }}"
+        mode: '0644'
+
+    - name: Test frps with invalid configuration file
+      ansible.builtin.command: "{{ frp_install_dir }}/frps -c {{ frp_install_config_dir }}/frps_invalid.toml --strict-config"
+      register: invalid_config_result
+      failed_when: false
+      changed_when: false
+
+    - name: Verify invalid configuration is properly rejected
+      ansible.builtin.assert:
+        that: invalid_config_result.rc != 0
+        fail_msg: "frps should reject invalid configuration file but it didn't"
+
+    - name: Create TOML with invalid log level
+      ansible.builtin.copy:
+        content: |
+          bindPort = 7000
+          auth.token = "test"
+          log.level = "invalid_level"
+        dest: "{{ frp_install_config_dir }}/frps_invalid_log.toml"
+        owner: "{{ frp_install_user }}"
+        group: "{{ frp_install_group }}"
+        mode: '0644'
+
+    - name: Test frps with invalid log level
+      ansible.builtin.command: "{{ frp_install_dir }}/frps -c {{ frp_install_config_dir }}/frps_invalid_log.toml --strict-config"
+      register: invalid_log_result
+      failed_when: false
+      changed_when: false
+
+    - name: Verify invalid log level is properly rejected
+      ansible.builtin.assert:
+        that: invalid_log_result.rc != 0
+        fail_msg: "frps should reject invalid log level but it didn't"
+
+    - name: Validate generated configuration files with frps verify
+      ansible.builtin.command: "{{ frp_install_dir }}/frps verify -c {{ frp_install_config_dir }}/frps.toml"
+      register: frps_config_validation
+      failed_when: false
+      changed_when: false
+      when: frp_install_create_service | default(true) | bool
+
+    - name: Verify generated frps config is valid
+      ansible.builtin.assert:
+        that: frps_config_validation.rc == 0
+        fail_msg: "Generated frps.toml configuration is invalid: {{ frps_config_validation.stderr }}"
+      when: frp_install_create_service | default(true) | bool
+
+    - name: Validate generated frpc configuration
+      ansible.builtin.command: "{{ frp_install_dir }}/frpc verify -c {{ frp_install_config_dir }}/frpc.toml"
+      register: frpc_config_validation
+      failed_when: false
+      changed_when: false
+      when: frp_install_create_service | default(true) | bool
+
+    - name: Verify generated frpc config is valid
+      ansible.builtin.assert:
+        that: frpc_config_validation.rc == 0
+        fail_msg: "Generated frpc.toml configuration is invalid: {{ frpc_config_validation.stderr }}"
+      when: frp_install_create_service | default(true) | bool
+
+    - name: Clean up invalid test configuration files
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - "{{ frp_install_config_dir }}/frps_invalid.toml"
+        - "{{ frp_install_config_dir }}/frps_invalid_log.toml"

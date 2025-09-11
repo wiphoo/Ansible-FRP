@@ -1,0 +1,57 @@
+---
+# =============================================================================
+# DEV SCENARIO - Fast Development Testing
+# =============================================================================
+# Purpose: Rapid development iteration with instant feedback
+# Use for: Feature development, bug fixes, template changes, quick validation
+# Benefits: Minimal test sequence for speed, complete basic testing
+
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
+
+platforms:
+  - name: dev-instance
+    image: geerlingguy/docker-ubuntu2204-ansible:latest
+    command: sleep infinity
+    pre_build_image: true
+    privileged: false
+    env:
+      DEBIAN_FRONTEND: noninteractive
+
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      # callbacks_enabled: profile_tasks, timer  # These plugins are not available
+      host_key_checking: false
+      roles_path: ${MOLECULE_PROJECT_DIRECTORY}/../../../
+  playbooks:
+    create: ../resources/create_simple.yml
+    converge: ../resources/playbook.yml
+    verify: ../resources/verify.yml
+    destroy: ../resources/destroy.yml
+  inventory:
+    group_vars:
+      all:
+        frp_install_version: "0.63.0"
+        frp_install_create_service: false
+        # Test credentials for molecule testing
+        frp_install_auth_token: "test_molecule_token_12345"
+        frp_install_dashboard_password: "test_molecule_dashboard_pass"
+        frp_install_client_webserver_password: "test_molecule_client_pass"
+
+verifier:
+  name: ansible
+
+scenario:
+  name: dev
+  # Fast sequence: syntax, create, converge, verify, destroy (no idempotence)
+  test_sequence:
+    - syntax
+    - create
+    - converge
+    - verify
+    - destroy
