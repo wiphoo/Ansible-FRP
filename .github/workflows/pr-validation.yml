@@ -43,13 +43,13 @@ jobs:
         # Install collection dependencies from galaxy.yml
         uv run ansible-galaxy collection install "community.general>=7.0.0" "ansible.posix>=1.0.0" --force -p ./collections
       env:
-        ANSIBLE_COLLECTIONS_PATH: ./collections
+        ANSIBLE_COLLECTIONS_PATHS: ./collections
 
     - name: Install additional Molecule dependencies
       run: |
         uv run ansible-galaxy collection install -r roles/frp_install/molecule/dev/requirements.yml --force -p ./collections
       env:
-        ANSIBLE_COLLECTIONS_PATH: ./collections
+        ANSIBLE_COLLECTIONS_PATHS: ./collections
 
     - name: Run quick checks
       run: |
@@ -60,7 +60,7 @@ jobs:
         fi
         uv run pre-commit run --all-files --show-diff-on-failure
       env:
-        ANSIBLE_COLLECTIONS_PATH: ./collections
+        ANSIBLE_COLLECTIONS_PATHS: ./collections
 
     - name: Build collection
       run: |
@@ -74,7 +74,7 @@ jobs:
         uv run ansible-galaxy collection list -p ./collections | grep -q '^wiphoo\.frp\s'
         echo "wiphoo.frp collection is installed successfully"
       env:
-        ANSIBLE_COLLECTIONS_PATH: ./collections
+        ANSIBLE_COLLECTIONS_PATHS: ./collections
 
     - name: Install test dependencies
       run: |
@@ -99,7 +99,7 @@ jobs:
         PY_COLORS: '1'
         ANSIBLE_FORCE_COLOR: '1'
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS: 1
-        ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+        ANSIBLE_COLLECTIONS_PATHS: ${{ github.workspace }}/collections
 
     - name: Check test coverage
       run: |
@@ -158,7 +158,7 @@ jobs:
         uv run molecule test --scenario-name default
       env:
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS: 1
-        ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+        ANSIBLE_COLLECTIONS_PATHS: ${{ github.workspace }}/collections
         PY_COLORS: '1'
         ANSIBLE_FORCE_COLOR: '1'
 

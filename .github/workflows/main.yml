@@ -69,12 +69,11 @@ jobs:
     - name: Install uv
       uses: astral-sh/setup-uv@v6
 
-    - name: Install Ansible and test dependencies
+    - name: Install collections
       run: |
-        uv sync --extra test
-        uv add ansible==${{ matrix.ansible-version }}
-        # Install collection dependencies from galaxy.yml
-        uv run ansible-galaxy collection install "community.general>=7.0.0" "ansible.posix>=1.0.0" --force -p ./collections
+        uv run ansible-galaxy collection install "community.general>=7.0.0" "ansible.posix>=1.0.0" -p ./collections
+      env:
+        ANSIBLE_COLLECTIONS_PATHS: ./collections
 
     - name: Run tests
       run: |
@@ -90,7 +89,7 @@ jobs:
       env:
         PY_COLORS: '1'
         ANSIBLE_FORCE_COLOR: '1'
-        ANSIBLE_COLLECTIONS_PATH: ./collections
+        ANSIBLE_COLLECTIONS_PATHS: ./collections
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS: 1
       continue-on-error: true  # Don't fail CI if molecule has issues
 

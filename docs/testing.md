@@ -172,7 +172,7 @@ If roles/collections aren't found:
   run: |
     uv run molecule test --scenario-name ci
   env:
-    ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+    ANSIBLE_COLLECTIONS_PATHS: ${{ github.workspace }}/collections
 ```
 
 The `ci` scenario is optimized for automated testing environments. Note the use of `working-directory` and absolute path for collections to ensure proper path resolution in CI/CD pipelines.
