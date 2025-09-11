@@ -25,9 +25,9 @@ webServer.user = "{{ frp_install_dashboard_user | default('admin') }}"
 webServer.password = "{{ frp_install_dashboard_password | default('admin') }}"
 
 # Transport configuration
-transport.maxPoolCount = 5
-transport.tcpMux = true
-transport.tcpMuxKeepaliveInterval = 60
+transport.maxPoolCount = {{ frp_install_transport_max_pool_count }}
+transport.tcpMux = {{ frp_install_transport_tcp_mux | lower }}
+transport.tcpMuxKeepaliveInterval = {{ frp_install_transport_tcp_mux_keepalive_interval }}
 
 # Port restrictions (optional, disabled by default)
 {% if frp_install_allow_ports is defined and frp_install_allow_ports %}

@@ -41,15 +41,15 @@ jobs:
     - name: Install required Ansible collections for role
       run: |
         # Install collection dependencies from galaxy.yml
-        uv run ansible-galaxy collection install "community.general>=7.0.0" "ansible.posix>=1.0.0" --force -p ./collections
+        uv run ansible-galaxy collection install "community.general>=7.0.0" "ansible.posix>=1.0.0" --force -p ${{ github.workspace }}/collections
       env:
-        ANSIBLE_COLLECTIONS_PATHS: ./collections
+         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
     - name: Install additional Molecule dependencies
       run: |
-        uv run ansible-galaxy collection install -r roles/frp_install/molecule/dev/requirements.yml --force -p ./collections
+        uv run ansible-galaxy collection install -r roles/frp_install/molecule/dev/requirements.yml --force -p ${{ github.workspace }}/collections
       env:
-        ANSIBLE_COLLECTIONS_PATHS: ./collections
+         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
     - name: Run quick checks
       run: |
@@ -60,7 +60,7 @@ jobs:
         fi
         uv run pre-commit run --all-files --show-diff-on-failure
       env:
-        ANSIBLE_COLLECTIONS_PATHS: ./collections
+         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
     - name: Build collection
       run: |
@@ -69,12 +69,12 @@ jobs:
     - name: Test collection installation
       run: |
         # Install to project collections directory to match Ansible's expectations
-        uv run ansible-galaxy collection install wiphoo-frp-*.tar.gz --force -p ./collections
+        uv run ansible-galaxy collection install wiphoo-frp-*.tar.gz --force -p ${{ github.workspace }}/collections
         # Verify installation in the project collections path
-        uv run ansible-galaxy collection list -p ./collections | grep -q '^wiphoo\.frp\s'
+        uv run ansible-galaxy collection list -p ${{ github.workspace }}/collections | grep -q '^wiphoo\.frp\s'
         echo "wiphoo.frp collection is installed successfully"
       env:
-        ANSIBLE_COLLECTIONS_PATHS: ./collections
+         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
     - name: Install test dependencies
       run: |
@@ -99,7 +99,7 @@ jobs:
         PY_COLORS: '1'
         ANSIBLE_FORCE_COLOR: '1'
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS: 1
-        ANSIBLE_COLLECTIONS_PATHS: ${{ github.workspace }}/collections
+        ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
     - name: Check test coverage
       run: |
@@ -158,7 +158,7 @@ jobs:
         uv run molecule test --scenario-name default
       env:
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS: 1
-        ANSIBLE_COLLECTIONS_PATHS: ${{ github.workspace }}/collections
+        ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
         PY_COLORS: '1'
         ANSIBLE_FORCE_COLOR: '1'
 

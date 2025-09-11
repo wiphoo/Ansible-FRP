@@ -65,3 +65,9 @@ frp_install_client_webserver_pprof_enabled: false  # Enable pprof endpoint for d
 frp_install_log_level: "info"  # trace, debug, info, warn, error
 frp_install_log_max_days: 3
 frp_install_log_disable_print_color: false
+
+# FRP Transport configuration
+frp_install_transport_pool_count: 5            # Connection pool size for client
+frp_install_transport_max_pool_count: 5        # Maximum connection pool size for server
+frp_install_transport_tcp_mux: true            # Enable TCP multiplexing
+frp_install_transport_tcp_mux_keepalive_interval: 60  # TCP mux keepalive interval (seconds)

@@ -20,8 +20,8 @@ log.disablePrintColor = {{ (frp_install_log_disable_print_color | default(false)
 
 # Connection settings
 loginFailExit = true
-transport.tcpMux = true
-transport.poolCount = 5
+transport.tcpMux = {{ frp_install_transport_tcp_mux | lower }}
+transport.poolCount = {{ frp_install_transport_pool_count }}
 
 # ==========================================
 # Optional Configurations (commented out)
@@ -34,7 +34,7 @@ transport.poolCount = 5
 # Transport protocol options (optional)
 # transport.protocol = "tcp"  # tcp, kcp, quic, websocket, wss
 # transport.connectServerLocalIP = "0.0.0.0"
-# transport.tcpMuxKeepaliveInterval = 30
+# transport.tcpMuxKeepaliveInterval = {{ frp_install_transport_tcp_mux_keepalive_interval }}
 
 # TLS configuration (optional)
 # transport.tls.enable = true

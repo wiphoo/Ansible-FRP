@@ -27,7 +27,7 @@ provisioner:
     defaults:
       # callbacks_enabled: profile_tasks, timer  # These plugins are not available
       host_key_checking: false
-      roles_path: ${MOLECULE_PROJECT_DIRECTORY}/../../
+      roles_path: ${MOLECULE_PROJECT_DIRECTORY}/../../../
   playbooks:
     create: ../resources/create_simple.yml
     converge: ../resources/playbook.yml

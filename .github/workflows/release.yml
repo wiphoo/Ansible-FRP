@@ -35,17 +35,17 @@ jobs:
       run: |
         FILE=$(ls -1 wiphoo-frp-*.tar.gz | head -1)
         # Install to project collections directory to match Ansible's expectations
-        uv run ansible-galaxy collection install "$FILE" --force -p ./collections
+        uv run ansible-galaxy collection install "$FILE" --force -p ${{ github.workspace }}/collections
         # Verify installation in the project collections path
-        uv run ansible-galaxy collection list -p ./collections | grep wiphoo.frp
+        uv run ansible-galaxy collection list -p ${{ github.workspace }}/collections | grep wiphoo.frp
       env:
-        ANSIBLE_COLLECTIONS_PATHS: ./collections
+         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
     - name: Run final tests
       run: |
         uv sync --extra test
         # Install collection dependencies
-        uv run ansible-galaxy collection install community.general --force -p ./collections
+        uv run ansible-galaxy collection install community.general --force -p ${{ github.workspace }}/collections
         uv run python -m pytest tests/ -v --tb=short
         uv run ansible-lint roles/
 

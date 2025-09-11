@@ -97,6 +97,33 @@ The `frp_install` role provides comprehensive automation for deploying FRP in yo
 | `frp_install_dashboard_addr` | `"127.0.0.1"` | Dashboard/webServer bind address |
 | `frp_install_dashboard_port` | `7500` | Dashboard/webServer port |
 
+### Transport Settings
+
+Performance and connection optimization variables.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `frp_install_transport_pool_count` | `5` | Client connection pool size |
+| `frp_install_transport_max_pool_count` | `5` | Server maximum connection pool size |
+| `frp_install_transport_tcp_mux` | `true` | Enable TCP multiplexing |
+| `frp_install_transport_tcp_mux_keepalive_interval` | `60` | TCP mux keepalive interval (seconds) |
+
+**Transport Optimization Examples:**
+
+High-throughput deployment:
+```yaml
+frp_install_transport_pool_count: 20
+frp_install_transport_max_pool_count: 50
+frp_install_transport_tcp_mux_keepalive_interval: 30
+```
+
+Low-resource deployment:
+```yaml
+frp_install_transport_pool_count: 2
+frp_install_transport_max_pool_count: 5
+frp_install_transport_tcp_mux_keepalive_interval: 120
+```
+
 ## Advanced Configuration
 
 ### Custom Paths

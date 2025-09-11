@@ -71,9 +71,9 @@ jobs:
 
     - name: Install collections
       run: |
-        uv run ansible-galaxy collection install "community.general>=7.0.0" "ansible.posix>=1.0.0" -p ./collections
+        uv run ansible-galaxy collection install "community.general>=7.0.0" "ansible.posix>=1.0.0" -p ${{ github.workspace }}/collections
       env:
-        ANSIBLE_COLLECTIONS_PATHS: ./collections
+         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
     - name: Run tests
       run: |
@@ -89,7 +89,7 @@ jobs:
       env:
         PY_COLORS: '1'
         ANSIBLE_FORCE_COLOR: '1'
-        ANSIBLE_COLLECTIONS_PATHS: ./collections
+        ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
         ANSIBLE_ALLOW_BROKEN_CONDITIONALS: 1
       continue-on-error: true  # Don't fail CI if molecule has issues
 
@@ -139,11 +139,11 @@ jobs:
       run: |
         FILE=$(ls -1 wiphoo-frp-*.tar.gz | head -1)
         # Install to project collections directory to match Ansible's expectations
-        uv run ansible-galaxy collection install "$FILE" --force -p ./collections
+        uv run ansible-galaxy collection install "$FILE" --force -p ${{ github.workspace }}/collections
         # Verify installation in the project collections path
-        uv run ansible-galaxy collection list -p ./collections | grep wiphoo.frp
+        uv run ansible-galaxy collection list -p ${{ github.workspace }}/collections | grep wiphoo.frp
       env:
-        ANSIBLE_COLLECTIONS_PATHS: ./collections
+         ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
     - name: Upload collection artifact
       uses: actions/upload-artifact@v4

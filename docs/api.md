@@ -62,6 +62,42 @@ Configure FRP client connection and admin interface.
 | `frp_install_log_max_days` | `3` | Log file retention days |
 | `frp_install_log_disable_print_color` | `false` | Disable colored log output |
 
+## Transport Configuration Variables
+
+Configure FRP transport layer settings for performance optimization.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `frp_install_transport_pool_count` | `5` | Client connection pool size - increase for high throughput |
+| `frp_install_transport_max_pool_count` | `5` | Server maximum connection pool size - increase for many clients |
+| `frp_install_transport_tcp_mux` | `true` | Enable TCP multiplexing for better performance |
+| `frp_install_transport_tcp_mux_keepalive_interval` | `60` | TCP mux keepalive interval in seconds |
+
+### Transport Performance Tuning
+
+**High-throughput scenarios** (many simultaneous connections):
+```yaml
+frp_install_transport_pool_count: 20           # Increase client pool size
+frp_install_transport_max_pool_count: 50       # Increase server pool size
+frp_install_transport_tcp_mux: true            # Keep multiplexing enabled
+frp_install_transport_tcp_mux_keepalive_interval: 30  # More frequent keepalives
+```
+
+**Low-resource environments** (minimal resource usage):
+```yaml
+frp_install_transport_pool_count: 2            # Reduce pool size
+frp_install_transport_max_pool_count: 5        # Conservative server limit
+frp_install_transport_tcp_mux: true            # Keep for efficiency
+frp_install_transport_tcp_mux_keepalive_interval: 120  # Less frequent keepalives
+```
+
+**Network with high latency** (satellite/mobile connections):
+```yaml
+frp_install_transport_pool_count: 10           # More connections to overcome latency
+frp_install_transport_tcp_mux: false           # Disable if causing issues
+frp_install_transport_tcp_mux_keepalive_interval: 180  # Longer intervals
+```
+
 ## Advanced Configuration Examples
 
 ### Server Configuration Example

@@ -15,13 +15,13 @@ If you see "No module named ansible_collections.community" in CI/CD:
 ```bash
 # Ensure collections are installed with absolute paths
 ansible-galaxy collection install community.general -p /absolute/path/to/collections
-export ANSIBLE_COLLECTIONS_PATHS=/absolute/path/to/collections
+export ANSIBLE_COLLECTIONS_PATH=/absolute/path/to/collections
 ```
 
 For GitHub Actions workflows, use:
 ```yaml
 env:
-  ANSIBLE_COLLECTIONS_PATHS: ${{ github.workspace }}/collections
+  ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 ```
 
 ### Download failures
@@ -93,7 +93,7 @@ For consistent collections path in GitHub Actions:
 ```yaml
 working-directory: roles/frp_install
 env:
-  ANSIBLE_COLLECTIONS_PATHS: ${{ github.workspace }}/collections
+  ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 ```
 
 ## Network Issues

@@ -44,4 +44,22 @@ Q: Where are logs located?
 
 A: By default `/var/log/frp/frp.log` and `journalctl -u frpc` for systemd-managed services.
 
+## Performance
+
+Q: How can I optimize FRP for high throughput?
+
+A: Increase connection pools with `frp_install_transport_pool_count` (client) and `frp_install_transport_max_pool_count` (server). Enable TCP multiplexing with `frp_install_transport_tcp_mux: true`.
+
+Q: What transport settings should I use for many clients?
+
+A: Increase `frp_install_transport_max_pool_count` to 50+ on the server and reduce keepalive intervals (`frp_install_transport_tcp_mux_keepalive_interval: 30`) for faster connection management.
+
+Q: How to reduce resource usage on low-power devices?
+
+A: Decrease pool sizes (`frp_install_transport_pool_count: 2`) and increase keepalive intervals (`frp_install_transport_tcp_mux_keepalive_interval: 120`) to reduce CPU and memory usage.
+
+Q: Should I disable TCP multiplexing?
+
+A: Generally no. Only disable `frp_install_transport_tcp_mux` if experiencing issues with high-latency connections (satellite/mobile) or specific network configurations that don't handle multiplexing well.
+
 If your question isn't answered here, open an issue in the repository with relevant details.
