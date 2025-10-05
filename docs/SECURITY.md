@@ -4,14 +4,16 @@
 
 | Version | Supported          | Notes |
 | ------- | ------------------ | ----- |
-| 0.1.x   | ✅ Active Support  | Current stable release |
+| 0.2.x   | ✅ Active Support  | Current stable release |
+| 0.1.x   | ⚠️ Limited Support | Security fixes only |
 | < 0.1   | ❌ End of Life     | Pre-release versions not supported |
 
 **Support Policy:**
 - **Active Support**: Security updates, bug fixes, and feature updates
+- **Limited Support**: Critical security fixes only
 - **End of Life**: No updates or support provided
 
-**Current Stable Version**: `0.1.0` (Initial Release)
+**Current Stable Version**: `0.2.0`
 
 ## Security Best Practices
 

@@ -37,7 +37,7 @@ Using a requirements file:
 ```yaml
 collections:
   - name: wiphoo.frp
-    version: ">=0.1.0"
+    version: ">=0.2.0"
 ```
 
 ```bash

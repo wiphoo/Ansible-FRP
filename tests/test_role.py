@@ -919,7 +919,7 @@ class TestVersionCompatibility:
 
     def test_version_format_validation(self):
         """Test that version format is valid."""
-        valid_versions = ["0.1.0", "0.63.0", "0.64.0"]
+        valid_versions = ["0.63.0", "0.64.0", "0.65.0"]
         invalid_versions = ["0.63", "0.63.0-beta", "latest"]
 
         for version in valid_versions:

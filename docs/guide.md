@@ -31,7 +31,7 @@ ansible-galaxy collection install wiphoo.frp
 ```yaml
 collections:
   - name: wiphoo.frp
-    version: ">=0.1.0"
+    version: ">=0.2.0"
 ```
 ```bash
 ansible-galaxy collection install -r requirements.yml
