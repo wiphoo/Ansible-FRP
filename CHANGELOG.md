@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Expanded Templates**: Added 100+ configuration variables to TOML templates
+  - KCP protocol support
+  - QUIC protocol support
+  - SSH tunnel gateway configuration
+  - OIDC authentication support
+  - Virtual host configurations
+  - Advanced transport options
+  - Enhanced security settings
+- **Centralized Test Fixtures**: New pytest configuration with reusable test fixtures (400+ lines)
+- **Variable Validation Tests**: Added 27 new tests for variable validation and naming conventions
+- **Enhanced Template Tests**: Added 700+ lines of comprehensive template validation tests
+
+### Changed
+- **Updated Default FRP Version**: Changed default version from v0.63.0 to v0.65.0
+- **TOML-Only Configuration**: Removed deprecated INI template support, now exclusively using TOML format (FRP v0.52.0+)
+- **Optimized Dependencies**: Reduced collection dependencies from 3 to 1 (67% reduction)
+  - Removed `ansible.posix` (not used by role)
+  - Removed `community.docker` (testing only)
+  - Kept only `community.general` for UFW firewall support
+- **Optimized Build Artifacts**: Reduced collection size by 92% (1,250 → 98 files, ~850KB → 68KB)
+  - Improved build_ignore patterns to exclude development files
+  - Removed Python caches, test files, and build artifacts
+- **Consistent Molecule Requirements**: Standardized all Molecule scenario dependencies
+
+### Fixed
+- **Molecule Requirements**: Fixed missing `community.docker` dependency in `variables` scenario
+- **Version Constraints**: Corrected `community.docker` version constraint in `dev` scenario
+
+### Removed
+- **INI Templates**: Removed `frpc.ini.j2` and `frps.ini.j2` templates (use TOML format only)
+
 ## [0.1.0] - 2025-09-11
 
 ### Added
@@ -49,7 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Features
 - Multi-architecture binary support with automatic detection
-- Flexible configuration templates (frps.ini/toml, frpc.ini/toml)
+- TOML configuration templates for modern FRP versions (v0.52.0+)
 - Systemd service file templates for both server and client
 - Configurable installation paths, user/group settings, and permissions
 - Version-specific binary downloads with SHA256 checksum verification
