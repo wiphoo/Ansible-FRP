@@ -2,7 +2,7 @@
 
 [![Build & Test Collection](https://github.com/wiphoo/Ansible-FRP/actions/workflows/main.yml/badge.svg)](https://github.com/wiphoo/Ansible-FRP/actions/workflows/main.yml)
 [![codecov](https://codecov.io/gh/wiphoo/Ansible-FRP/graph/badge.svg?token=3VSLLM8HB1)](https://codecov.io/gh/wiphoo/Ansible-FRP)
-[![Ansible Galaxy](https://img.shields.io/ansible/collection/wiphoo.frp)](https://galaxy.ansible.com/ui/repo/published/wiphoo/frp/)
+[![Galaxy Downloads](https://img.shields.io/ansible/collection/d/wiphoo/frp.svg)](https://galaxy.ansible.com/ui/repo/published/wiphoo/frp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **Effortlessly deploy and manage [Fast Reverse Proxy (FRP)](https://github.com/fatedier/frp) with Ansible**

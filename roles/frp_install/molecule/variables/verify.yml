@@ -1,0 +1,4 @@
+---
+# Verification playbook for variables scenario
+- name: Verify configuration variables
+  import_playbook: ../config-variables/verify_variables.yml

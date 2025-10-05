@@ -3,7 +3,7 @@
 [![Build & Test Collection](https://github.com/wiphoo/Ansible-FRP/actions/workflows/main.yml/badge.svg)](https://github.com/wiphoo/Ansible-FRP/actions/workflows/main.yml)
 [![Security Scan](https://github.com/wiphoo/Ansible-FRP/actions/workflows/security.yml/badge.svg)](https://github.com/wiphoo/Ansible-FRP/actions/workflows/security.yml)
 [![codecov](https://codecov.io/gh/wiphoo/Ansible-FRP/graph/badge.svg?token=3VSLLM8HB1)](https://codecov.io/gh/wiphoo/Ansible-FRP)
-[![Ansible Galaxy](https://img.shields.io/ansible/collection/wiphoo.frp)](https://galaxy.ansible.com/ui/repo/published/wiphoo/frp/)
+[![Galaxy Downloads](https://img.shields.io/ansible/collection/d/wiphoo/frp.svg)](https://galaxy.ansible.com/ui/repo/published/wiphoo/frp)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 > **Hello there! 👋 Welcome to your gateway for effortless [Fast Reverse Proxy (FRP)](https://github.com/fatedier/frp) automation with Ansible**
@@ -31,13 +31,13 @@ We're thrilled you're here! This collection was crafted with love to make your n
 - **Security First**: Configurable firewall rules and secure defaults
 
 ### 🔧 **Flexible Configuration**
-- **TOML & INI Support**: Both modern TOML and legacy INI configuration formats
+- **TOML Configuration**: Modern TOML configuration format (FRP v0.52.0+) - INI format deprecated
 - **Template-Based**: Jinja2 templates for dynamic configuration generation
 - **Component Selection**: Deploy server (`frps`), client (`frpc`), or both
-- **Version Management**: Pin specific FRP versions or use latest stable releases
+- **Version Management**: Pin specific FRP versions (default: v0.65.0) or use latest stable releases
 
 ### 🛡️ **Enterprise Quality**
-- **Comprehensive Testing**: Full test coverage with pytest and Molecule
+- **Comprehensive Testing**: Full test coverage with pytest (126 tests, 96.85% coverage) and Molecule (5 scenarios)
 - **CI/CD Pipeline**: Automated testing, security scanning, and quality gates
 - **Complete Documentation**: API docs, examples, and troubleshooting guides
 - **Active Maintenance**: Regular updates and security patches

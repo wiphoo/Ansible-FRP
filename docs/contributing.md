@@ -58,25 +58,36 @@ uv run ruff format --check
 **Available test approaches:**
 
 ```bash
-# Unit tests with pytest
-uv run pytest
+# Unit tests with pytest (126 tests, 96.85% coverage)
+uv run pytest tests/ -v --cov=tests
+
+# Quick unit tests
+uv run pytest tests/ --tb=no -q
+
+# Coverage report
+uv run pytest tests/ --cov-report=html
 
 # Code quality checks
 uv run ruff check .
 uv run ruff format --check
-uv run yamllint .
+yamllint .
+ansible-lint roles/frp_install/
 
-# Molecule integration testing
+# Molecule integration testing (5 scenarios)
 cd roles/frp_install
-uv run molecule test --scenario-name dev     # Fast development testing
-uv run molecule test --scenario-name ci      # CI-optimized testing
-uv run molecule test --scenario-name default # Full comprehensive testing
+uv run molecule test --scenario-name dev              # Fast development (1-2 min)
+uv run molecule test --scenario-name ci               # CI-optimized (2-3 min)
+uv run molecule test --scenario-name default          # Full production (3-5 min)
+uv run molecule test --scenario-name config-variables # Config validation (2-3 min)
+uv run molecule test --scenario-name variables        # Full variable test (2-3 min)
 ```
 
 **Test scenarios explained:**
-- **`dev`** - Fast development testing without systemd (30 seconds)
-- **`ci`** - CI/CD optimized with full systemd support (2 minutes)
-- **`default`** - Complete testing without idempotence checks (3 minutes)
+- **`dev`** - Fast development testing (1-2 min) - Quick iteration with instant feedback
+- **`ci`** - CI/CD optimized with version override (2-3 min) - Automated testing
+- **`default`** - Complete production testing (3-5 min) - Final validation before release
+- **`config-variables`** - Configuration variable validation (2-3 min) - Template testing
+- **`variables`** - Full variable testing (2-3 min) - Comprehensive variable validation
 
 > **Note**: All scenarios exclude idempotence testing as the role downloads external binaries and is non-idempotent by design.
 

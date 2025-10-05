@@ -13,7 +13,10 @@ A: Fast Reverse Proxy - exposes local services behind NAT/firewalls to the inter
 A: Ubuntu 20.04+, Debian 11+, CentOS/RHEL 8+, Fedora.
 
 **Q: Which FRP versions?**
-A: All versions from [FRP releases](https://github.com/fatedier/frp/releases). Pin versions in production.
+A: FRP v0.52.0+ (TOML configuration format). Default version: v0.65.0. Pin versions in production with `frp_install_version: "0.65.0"`.
+
+**Q: Configuration format?**
+A: TOML only (FRP v0.52.0+). INI format deprecated and removed as of v0.1.0.
 
 ### Installation
 
@@ -97,7 +100,17 @@ telnet server-ip 7000
 
 ### Configuration Issues
 
-**TOML Syntax:**
+**TOML Configuration Format:**
+- This collection uses TOML format only (FRP v0.52.0+)
+- INI format has been deprecated and removed
+- Ensure proper TOML syntax (strings quoted, numbers unquoted)
+
+**TOML Syntax Validation:**
+```bash
+# Validate configuration
+/usr/local/bin/frpc verify -c /etc/frp/frpc.toml
+/usr/local/bin/frps verify -c /etc/frp/frps.toml
+```
 ```toml
 serverAddr = "203.0.113.10"  # Quotes for strings
 serverPort = 7000            # No quotes for numbers

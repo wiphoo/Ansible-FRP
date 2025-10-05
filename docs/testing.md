@@ -1,29 +1,35 @@
 # Molecule Testing
 
-The FRP installation role includes three Molecule scenarios for different testing needs:
-| `default`    | Complete testing without systemd services (no idempotence testing)
-- **`ci`** - CI/CD optimized testing with full systemd support and version override functionality
-- **`dev`** - Fast development testing without systemd services (great for rapid iteration)
+The FRP installation role includes **5 Molecule scenarios** for comprehensive testing needs:
+
+- **`dev`** - Fast development testing (1-2 min) - Quick iteration with instant feedback
+- **`ci`** - CI/CD optimized testing (2-3 min) - Automated testing with version override
+- **`default`** - Production testing (3-5 min) - Complete validation for releases
+- **`config-variables`** - Configuration validation (2-3 min) - Template variable testing
+- **`variables`** - Full variable testing (2-3 min) - Comprehensive variable validation
 
 > **Important**: This role is designed to download and install external binaries, making it non-idempotent by nature. Therefore, idempotence testing has been intentionally removed from all scenarios.
 
 This document provides a comprehensive guide for testing the FRP installation role using Molecule.
 
-## 1. **Quick Development Loop**:
+## Quick Reference
+
+### 1. **Quick Development Loop**:
    ```bash
-   cd roles/frp_install && uv run molecule syntax --scenario-name dev  # Check syntax
-   cd roles/frp_install && uv run molecule test --scenario-name dev    # Quick test
+   cd roles/frp_install && molecule syntax --scenario-name dev  # Check syntax
+   cd roles/frp_install && molecule test --scenario-name dev    # Quick test (1-2 min)
    ```
 
-2. **Full Validation**:
+### 2. **Full Validation**:
    ```bash
-   cd roles/frp_install && uv run molecule test --scenario-name default # Complete test
-   cd roles/frp_install && uv run molecule test --scenario-name ci      # Version override test
+   cd roles/frp_install && molecule test --scenario-name default # Complete test (3-5 min)
+   cd roles/frp_install && molecule test --scenario-name ci      # Version override test (2-3 min)
    ```
 
-3. **CI Preparation**:
+### 3. **Configuration Testing**:
    ```bash
-   cd roles/frp_install && uv run molecule test --scenario-name ci      # CI-optimized test
+   cd roles/frp_install && molecule test --scenario-name config-variables # Template validation (2-3 min)
+   cd roles/frp_install && molecule test --scenario-name variables        # Full variable test (2-3 min)
    ```
 
 ## Prerequisites
@@ -34,23 +40,31 @@ This document provides a comprehensive guide for testing the FRP installation ro
 
 ## Quick Start
 
-### Using Direct Molecule Commands
+### Using uv run (Recommended)
 
-The recommended way to run tests is using molecule directly:
+The recommended way to run tests is using `uv run` to ensure proper environment isolation:
 
 ```bash
-# Run default scenario (full test)
+# Run default scenario (full production test - 3-5 min)
 cd roles/frp_install && uv run molecule test --scenario-name default
 
-# Run dev scenario (fast, no systemd)
+# Run dev scenario (fast development - 1-2 min)
 cd roles/frp_install && uv run molecule test --scenario-name dev
 
-# Run CI scenario
+# Run CI scenario (2-3 min)
 cd roles/frp_install && uv run molecule test --scenario-name ci
+
+# Run configuration variable testing (2-3 min)
+cd roles/frp_install && uv run molecule test --scenario-name config-variables
+
+# Run full variable testing (2-3 min)
+cd roles/frp_install && uv run molecule test --scenario-name variables
 
 # Run specific commands
 cd roles/frp_install && uv run molecule syntax --scenario-name dev     # Just syntax check
 cd roles/frp_install && uv run molecule converge --scenario-name default # Just run the role
+cd roles/frp_install && uv run molecule verify --scenario-name default   # Just run verification
+cd roles/frp_install && uv run molecule destroy --scenario-name default  # Clean up resources
 ```
 
 ### Manual Testing
@@ -70,26 +84,45 @@ uv run molecule test --scenario-name dev
 
 ## Test Scenarios Explained
 
-### Default Scenario
-- **Purpose**: Complete role testing with all features
+### 1. dev - Development Testing
+- **Purpose**: Fast iteration with instant feedback during development
 - **Container**: Ubuntu 22.04 with systemd
-- **Features**: Full systemd service testing (idempotence testing removed as role downloads by design)
+- **Features**: Binary installation and basic verification
+- **Runtime**: ~1-2 minutes
+- **FRP Version**: 0.65.0 (default)
+- **Use case**: Feature development, bug fixes, template changes, quick validation
+
+### 2. ci - Continuous Integration Testing
+- **Purpose**: Optimized for CI/CD pipelines with version testing
+- **Container**: Ubuntu 22.04 with systemd
+- **Features**: Full testing with version override functionality (tests v0.64.0)
 - **Runtime**: ~2-3 minutes
-- **Use case**: Final validation before release
+- **FRP Version**: 0.64.0 (tests version override)
+- **Use case**: GitHub Actions, GitLab CI, automated builds, version upgrades
 
-### CI Scenario
-- **Purpose**: Optimized for CI/CD pipelines
+### 3. default - Production Testing
+- **Purpose**: Complete production-ready testing with all features
 - **Container**: Ubuntu 22.04 with systemd
-- **Features**: Full testing with version override functionality, streamlined sequence
-- **Runtime**: ~2 minutes
-- **Use case**: Automated testing in GitHub Actions
+- **Features**: Full systemd service testing, comprehensive validation
+- **Runtime**: ~3-5 minutes
+- **FRP Version**: 0.65.0 (default)
+- **Use case**: Final validation before release, production readiness verification
 
-### Dev Scenario
-- **Purpose**: Fast development testing
-- **Container**: Basic Ubuntu 22.04 (no systemd)
-- **Features**: Binary installation, basic verification
-- **Runtime**: ~30 seconds
-- **Use case**: Rapid development feedback
+### 4. config-variables - Configuration Variable Testing
+- **Purpose**: Validate variable pass-through to TOML configuration files
+- **Container**: Ubuntu 22.04 with systemd
+- **Features**: Template variable verification, configuration validation
+- **Runtime**: ~2-3 minutes
+- **FRP Version**: 0.65.0 (default)
+- **Use case**: Configuration changes, template modifications, variable updates
+
+### 5. variables - Full Variable Testing
+- **Purpose**: Comprehensive testing of all variables and enable flags
+- **Container**: Ubuntu 22.04 with systemd
+- **Features**: Complete variable validation, all configuration options
+- **Runtime**: ~2-3 minutes
+- **FRP Version**: 0.65.0 (default)
+- **Use case**: Feature additions, advanced configurations, variable validation
 
 > **Note**: Idempotence testing has been removed from all scenarios because this role downloads external binaries and is inherently non-idempotent by design.
 
@@ -232,7 +265,7 @@ You can customize test variables in each scenario's molecule.yml:
 inventory:
   group_vars:
     all:
-      frp_install_version: "0.63.0"
+      frp_install_version: "0.65.0"
       frp_install_user: "custom_user"
       # ... other variables
 ```
