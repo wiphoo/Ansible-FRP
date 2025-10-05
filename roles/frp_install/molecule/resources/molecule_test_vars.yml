@@ -1,0 +1,192 @@
+---
+# Consolidated Molecule Test Variables
+# This file contains all variables used across molecule scenarios
+# for testing the frp_install role
+
+# ==========================================
+# Basic Configuration
+# ==========================================
+frp_install_version: "0.65.0"
+frp_install_user: frp
+frp_install_group: frp
+frp_install_dir: /usr/local/bin/frp
+frp_install_config_dir: /etc/frp
+frp_install_log_dir: /var/log/frp
+frp_install_tmp_dir: /tmp
+frp_install_cleanup_tmp: true
+frp_install_create_service: true
+frp_install_configure_firewall: false  # Disabled in test environments
+frp_install_verify_checksums: true
+
+# ==========================================
+# Authentication Configuration
+# ==========================================
+frp_install_auth_method: token
+frp_install_auth_token: molecule_test_token_12345
+
+# Auth Additional Scopes (for testing)
+frp_install_auth_additional_scopes_enabled: true
+frp_install_auth_additional_scopes:
+  - HeartBeats
+  - NewWorkConns
+
+# ==========================================
+# Server-Specific Variables (frps)
+# ==========================================
+frp_install_server_addr: 0.0.0.0
+frp_install_server_port: 7000
+
+# Dashboard
+frp_install_dashboard_addr: 127.0.0.1
+frp_install_dashboard_port: 7500
+frp_install_dashboard_user: admin
+frp_install_dashboard_password: molecule_dashboard_password
+frp_install_dashboard_pprof_enable: false
+frp_install_enable_prometheus: true
+
+# Dashboard Assets Dir (for testing)
+frp_install_dashboard_assets_dir_enabled: true
+frp_install_dashboard_assets_dir: /var/www/frp
+
+# KCP Protocol (for testing)
+frp_install_kcp_bind_port_enabled: true
+frp_install_kcp_bind_port: 7000
+
+# QUIC Protocol (for testing)
+frp_install_quic_bind_port_enabled: true
+frp_install_quic_bind_port: 7002
+
+# Proxy Bind Address (for testing)
+frp_install_proxy_bind_addr_enabled: true
+frp_install_proxy_bind_addr: 0.0.0.0
+
+# Virtual Host (for testing)
+frp_install_vhost_http_port_enabled: true
+frp_install_vhost_http_port: 8080
+frp_install_vhost_https_port_enabled: true
+frp_install_vhost_https_port: 8443
+frp_install_vhost_http_timeout_enabled: true
+frp_install_vhost_http_timeout: 90
+
+# TCP Multiplexing (for testing)
+frp_install_tcpmux_http_connect_port_enabled: true
+frp_install_tcpmux_http_connect_port: 1337
+frp_install_tcpmux_passthrough_enabled: false
+frp_install_tcpmux_passthrough: false
+
+# Connection Limits (for testing)
+frp_install_user_conn_timeout_enabled: false
+frp_install_user_conn_timeout: 10
+frp_install_max_ports_per_client_enabled: false
+frp_install_max_ports_per_client: 0
+
+# Domain and Pages (for testing)
+frp_install_subdomain_host_enabled: true
+frp_install_subdomain_host: frps.test.local
+frp_install_custom_404_page_enabled: true
+frp_install_custom_404_page: /etc/frp/404.html
+
+# SSH Tunnel Gateway (for testing)
+frp_install_ssh_tunnel_gateway_enabled: true
+frp_install_ssh_tunnel_gateway_bind_port: 2200
+
+# ==========================================
+# Client-Specific Variables (frpc)
+# ==========================================
+frp_install_client_user: molecule_test_user
+frp_install_client_server_addr: frps.test.local
+frp_install_client_server_port: 7000
+frp_install_login_fail_exit: true
+
+# NAT Hole Punching (for testing)
+frp_install_nat_hole_stun_server_enabled: true
+frp_install_nat_hole_stun_server: stun.test.local:3478
+
+# Client WebServer (for testing)
+frp_install_client_webserver_enabled: true
+frp_install_client_webserver_addr: 127.0.0.1
+frp_install_client_webserver_port: 7400
+frp_install_client_webserver_user: molecule_admin
+frp_install_client_webserver_password: molecule_webserver_password
+frp_install_client_webserver_pprof_enabled: false
+
+# Feature Gates (for testing)
+frp_install_feature_gates_enabled: true
+frp_install_feature_gates:
+  VirtualNet: true
+
+# ==========================================
+# Logging Configuration
+# ==========================================
+frp_install_log_level: debug  # More verbose for testing
+frp_install_log_max_days: 1  # Short retention for tests
+frp_install_log_disable_print_color: false
+frp_install_detailed_errors_to_client: true
+
+# ==========================================
+# Transport Configuration
+# ==========================================
+
+# Connection Pools
+frp_install_transport_pool_count: 3  # Smaller for tests
+frp_install_transport_max_pool_count: 3
+
+# TCP Multiplexing
+frp_install_transport_tcp_mux: true
+frp_install_transport_tcp_mux_keepalive_interval: 30  # Shorter for tests
+
+# Heartbeat (for testing)
+frp_install_transport_heartbeat_timeout_enabled: true
+frp_install_transport_heartbeat_timeout: 120
+frp_install_transport_heartbeat_enabled: true
+frp_install_transport_heartbeat_interval: 45
+
+# Keepalive (for testing)
+frp_install_transport_tcp_keepalive_enabled: true
+frp_install_transport_tcp_keepalive: 3600
+frp_install_transport_dial_server_timeout_enabled: true
+frp_install_transport_dial_server_timeout: 15
+frp_install_transport_dial_server_keepalive_enabled: true
+frp_install_transport_dial_server_keepalive: 3600
+
+# Protocol
+frp_install_transport_protocol: tcp
+frp_install_transport_connect_server_local_ip: 0.0.0.0
+
+# QUIC Options (for testing)
+frp_install_transport_quic_enabled: true
+frp_install_transport_quic_keepalive_period: 15
+frp_install_transport_quic_max_idle_timeout: 45
+frp_install_transport_quic_max_incoming_streams: 200000
+
+# TLS
+frp_install_transport_tls_enable: true
+frp_install_transport_tls_force: false
+
+# TLS Custom First Byte
+frp_install_transport_tls_disable_custom_tls_first_byte_enabled: false
+frp_install_transport_tls_disable_custom_tls_first_byte: true
+
+# UDP
+frp_install_udp_packet_size: 1500
+
+# NAT Analysis
+frp_install_nathole_analysis_data_reserve_hours: 24  # Shorter for tests
+
+# ==========================================
+# OIDC Configuration (disabled by default)
+# ==========================================
+frp_install_auth_oidc_enabled: false
+frp_install_auth_oidc_issuer: ""
+frp_install_auth_oidc_audience: ""
+frp_install_auth_oidc_skip_expiry_check: false
+frp_install_auth_oidc_skip_issuer_check: false
+frp_install_auth_oidc_client_id: ""
+frp_install_auth_oidc_client_secret: ""
+frp_install_auth_oidc_scope: ""
+frp_install_auth_oidc_token_endpoint_url: ""
+
+# Token Source (disabled by default, mutually exclusive with auth_token)
+frp_install_auth_token_source_enabled: false
+frp_install_auth_token_source_type: file
+frp_install_auth_token_source_file_path: /etc/frp/token

@@ -1,0 +1,150 @@
+---
+# Test scenario for all configuration variables
+# This playbook enables and tests all variables added to the templates
+
+- name: Converge with Configuration Variables
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    # Disable service creation in container
+    frp_install_create_service: false
+    frp_install_version: "0.65.0"
+
+    # ==========================================
+    # SERVER CONFIGURATION VARIABLES
+    # ==========================================
+
+    # KCP Protocol
+    frp_install_kcp_bind_port_enabled: true
+    frp_install_kcp_bind_port: 7000
+
+    # QUIC Protocol
+    frp_install_quic_bind_port_enabled: true
+    frp_install_quic_bind_port: 7002
+
+    # Proxy Bind Address
+    frp_install_proxy_bind_addr_enabled: true
+    frp_install_proxy_bind_addr: "0.0.0.0"
+
+    # Transport QUIC Options
+    frp_install_transport_quic_enabled: true
+    frp_install_transport_quic_keepalive_period: 15
+    frp_install_transport_quic_max_idle_timeout: 45
+    frp_install_transport_quic_max_incoming_streams: 200000
+
+    # Transport Heartbeat
+    frp_install_transport_heartbeat_timeout_enabled: true
+    frp_install_transport_heartbeat_timeout: 120
+
+    # Transport TCP Keepalive
+    frp_install_transport_tcp_keepalive_enabled: true
+    frp_install_transport_tcp_keepalive: 3600
+
+    # Virtual Host
+    frp_install_vhost_http_port_enabled: true
+    frp_install_vhost_http_port: 8080
+    frp_install_vhost_https_port_enabled: true
+    frp_install_vhost_https_port: 8443
+    frp_install_vhost_http_timeout_enabled: true
+    frp_install_vhost_http_timeout: 90
+
+    # TCP Multiplexing
+    frp_install_tcpmux_http_connect_port_enabled: true
+    frp_install_tcpmux_http_connect_port: 1338
+    frp_install_tcpmux_passthrough_enabled: true
+    frp_install_tcpmux_passthrough: true
+
+    # Dashboard
+    frp_install_dashboard_assets_dir_enabled: true
+    frp_install_dashboard_assets_dir: "/opt/frp/static"
+
+    # Authentication
+    frp_install_auth_additional_scopes_enabled: true
+    frp_install_auth_additional_scopes:
+      - "HeartBeats"
+      - "NewWorkConns"
+
+    # Auth Token Source (commented out as it's mutually exclusive with token)
+    # frp_install_auth_token_source_enabled: true
+    # frp_install_auth_token_source_type: "file"
+    # frp_install_auth_token_source_file_path: "/etc/frp/token"
+
+    # OIDC Authentication (requires auth_method = oidc)
+    frp_install_auth_oidc_enabled: false  # Set to true to test OIDC
+    frp_install_auth_oidc_issuer: "https://auth.example.com"
+    frp_install_auth_oidc_audience: "frp-server"
+    frp_install_auth_oidc_skip_expiry_check: false
+    frp_install_auth_oidc_skip_issuer_check: false
+
+    # Connection Timeout
+    frp_install_user_conn_timeout_enabled: true
+    frp_install_user_conn_timeout: 15
+
+    # Port Configuration
+    frp_install_max_ports_per_client_enabled: true
+    frp_install_max_ports_per_client: 100
+
+    # Subdomain and Custom Pages
+    frp_install_subdomain_host_enabled: true
+    frp_install_subdomain_host: "test.frps.local"
+    frp_install_custom_404_page_enabled: true
+    frp_install_custom_404_page: "/opt/frp/404.html"
+
+    # SSH Tunnel Gateway
+    frp_install_ssh_tunnel_gateway_enabled: true
+    frp_install_ssh_tunnel_gateway_bind_port: 2222
+    frp_install_ssh_tunnel_gateway_private_key_file: "/home/frp/.ssh/id_rsa"
+    frp_install_ssh_tunnel_gateway_authorized_keys_file: "/home/frp/.ssh/authorized_keys"
+
+    # ==========================================
+    # CLIENT CONFIGURATION VARIABLES
+    # ==========================================
+
+    # NAT Hole Punching
+    frp_install_nat_hole_stun_server_enabled: true
+    frp_install_nat_hole_stun_server: "stun.l.google.com:19302"
+
+    # Transport Dial Server
+    frp_install_transport_dial_server_timeout_enabled: true
+    frp_install_transport_dial_server_timeout: 15
+    frp_install_transport_dial_server_keepalive_enabled: true
+    frp_install_transport_dial_server_keepalive: 3600
+
+    # Transport Proxy URL
+    # frp_install_transport_proxy_url: "http://proxy.example.com:8080"
+
+    # Transport TLS
+    frp_install_transport_tls_disable_custom_tls_first_byte_enabled: true
+    frp_install_transport_tls_disable_custom_tls_first_byte: true
+
+    # Transport Heartbeat (client)
+    frp_install_transport_heartbeat_enabled: true
+    frp_install_transport_heartbeat_interval: 20
+    # Note: frp_install_transport_heartbeat_timeout is different from server's heartbeat timeout
+    # This is the client-side heartbeat timeout configuration
+
+    # DNS and Proxy Selection
+    frp_install_dns_server: "8.8.8.8"
+    frp_install_start_proxies:
+      - "ssh"
+      - "web"
+
+    # Feature Gates and Virtual Network
+    frp_install_feature_gates_enabled: true
+    frp_install_feature_gates:
+      VirtualNet: true
+    frp_install_virtual_net_address: "100.86.10.1/24"
+
+    # Configuration Includes
+    frp_install_includes:
+      - "./confd/*.toml"
+
+    # Client WebServer (already tested in original)
+    frp_install_client_webserver_enabled: true
+    frp_install_client_webserver_addr: "127.0.0.1"
+    frp_install_client_webserver_port: 7400
+
+  roles:
+    - role: frp_install

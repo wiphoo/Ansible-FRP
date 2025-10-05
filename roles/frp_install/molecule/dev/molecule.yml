@@ -36,7 +36,7 @@ provisioner:
   inventory:
     group_vars:
       all:
-        frp_install_version: "0.63.0"
+        frp_install_version: "0.65.0"
         frp_install_create_service: false
         # Test credentials for molecule testing
         frp_install_auth_token: "test_molecule_token_12345"

@@ -38,7 +38,7 @@ provisioner:
   inventory:
     group_vars:
       all:
-        # Test version override functionality (0.64.0 vs default 0.63.0)
+        # Test version override functionality (0.64.0 vs default 0.65.0)
         frp_version: "0.64.0"
         frp_install_create_service: false
         # Test credentials for molecule testing

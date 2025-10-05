@@ -4,7 +4,7 @@ This document describes the consolidated molecule testing scenarios for the FRP 
 
 ## 🎯 **Scenario Overview**
 
-We've simplified from 5 scenarios to 3 focused scenarios with clear objectives:
+We have focused molecule testing scenarios with clear objectives:
 
 ### 1. **`dev` - Development Testing**
 - **Purpose**: Fast development iteration with instant feedback
@@ -12,7 +12,7 @@ We've simplified from 5 scenarios to 3 focused scenarios with clear objectives:
 - **Benefits**: Minimal test sequence for speed, complete basic testing
 - **Test sequence**: `syntax → create → converge → verify → destroy`
 - **Duration**: ~1-2 minutes
-- **FRP Version**: 0.63.0 (default)
+- **FRP Version**: 0.65.0 (default)
 
 ```bash
 molecule test --scenario-name dev
@@ -36,10 +36,34 @@ molecule test --scenario-name ci
 - **Benefits**: Full test suite with thorough validation, production-ready testing
 - **Test sequence**: Complete sequence without idempotence (role downloads by design)
 - **Duration**: ~3-5 minutes
-- **FRP Version**: 0.63.0 (default)
+- **FRP Version**: 0.65.0 (default)
 
 ```bash
 molecule test --scenario-name default
+```
+
+### 4. **`config-variables` - Configuration Variables Testing**
+- **Purpose**: Validate that all configuration variables properly pass through to TOML files
+- **Use for**: Testing configuration variable changes, template modifications
+- **Benefits**: Comprehensive variable validation, ensures template correctness
+- **Test sequence**: Full sequence with variable verification
+- **Duration**: ~2-3 minutes
+- **FRP Version**: 0.65.0 (default)
+
+```bash
+molecule test --scenario-name config-variables
+```
+
+### 5. **`variables` - Variables Testing**
+- **Purpose**: Validate all configuration variables and enable flags
+- **Use for**: Testing feature additions, advanced configuration options
+- **Benefits**: Tests all enable flags, optional configurations, and advanced features
+- **Test sequence**: Full sequence with comprehensive variable verification
+- **Duration**: ~2-3 minutes
+- **FRP Version**: 0.65.0 (default)
+
+```bash
+molecule test --scenario-name variables
 ```
 
 ## 🔍 **Why No Idempotence Testing?**
@@ -58,6 +82,8 @@ Idempotence testing would fail and doesn't provide meaningful validation for thi
 | `dev`    | ⚡ Fast | Basic    | ❌ N/A      | ❌ No        | Development |
 | `ci`     | 🚀 Fast | Full     | ❌ N/A      | ✅ Yes       | CI/CD Pipeline |
 | `default`| 🐌 Slow | Full     | ❌ N/A      | ❌ No        | Release Testing |
+| `config-variables` | 🚀 Fast | Variables | ❌ N/A | ❌ No | Config Testing |
+| `variables` | 🚀 Fast | All Features | ❌ N/A | ❌ No | Full Config Testing |
 
 > **Note**: Idempotence testing is not applicable to this role as it downloads/installs by design.
 
@@ -73,8 +99,14 @@ molecule test --scenario-name ci
 # Complete production-ready testing
 molecule test --scenario-name default
 
+# Test configuration variables
+molecule test --scenario-name config-variables
+
+# Test variables and enable flags
+molecule test --scenario-name variables
+
 # Test all scenarios
-for scenario in dev ci default; do
+for scenario in dev ci default config-variables variables; do
   echo "Testing $scenario..."
   molecule test --scenario-name $scenario
 done
