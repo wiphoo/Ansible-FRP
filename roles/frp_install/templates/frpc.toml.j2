@@ -5,49 +5,130 @@
 # Please customize according to your needs
 
 # Basic server connection configuration
-serverAddr = "{{ frp_install_client_server_addr | default('your-server-address.example.com') }}"
+# your proxy name will be changed to {user}.{proxy}
+user = "{{ frp_install_client_user | default('your_name') }}"
+
+# A literal address or host name for IPv6 must be enclosed
+# in square brackets, as in "[::1]:80", "[ipv6-host]:http" or "[ipv6-host%zone]:80"
+# For single serverAddr field, no need square brackets, like serverAddr = "::".
+serverAddr = "{{ frp_install_client_server_addr | default('0.0.0.0') }}"
 serverPort = {{ frp_install_client_server_port | default(7000) }}
 
-# Authentication configuration (REQUIRED - MUST match server)
-auth.method = "{{ frp_install_auth_method | default('token') }}"
-auth.token = "{{ frp_install_auth_token | default('changeme_default_token_123') }}"
+# STUN server to help penetrate NAT hole.
+{% if frp_install_nat_hole_stun_server_enabled | default(false) %}
+natHoleStunServer = "{{ frp_install_nat_hole_stun_server | default('stun.easyvoip.com:3478') }}"
+{% else %}
+# natHoleStunServer = "stun.easyvoip.com:3478"
+{% endif %}
 
-# Log configuration
+# Decide if exit program when first login failed, otherwise continuous relogin to frps
+# default is true
+loginFailExit = {{ frp_install_login_fail_exit | default(true) | bool | tojson }}
+
+# console or real logFile path like ./frpc.log
 log.to = "{{ frp_install_log_dir | default('/var/log/frp') }}/frpc.log"
+# trace, debug, info, warn, error
 log.level = "{{ frp_install_log_level | default('info') }}"
 log.maxDays = {{ frp_install_log_max_days | default(3) }}
+# disable log colors when log.to is console, default is false
 log.disablePrintColor = {{ (frp_install_log_disable_print_color | default(false)) | bool | tojson }}
 
-# Connection settings
-loginFailExit = true
-transport.tcpMux = {{ frp_install_transport_tcp_mux | lower }}
-transport.poolCount = {{ frp_install_transport_pool_count }}
+auth.method = "{{ frp_install_auth_method | default('token') }}"
+# auth.additionalScopes specifies additional scopes to include authentication information.
+# Optional values are HeartBeats, NewWorkConns.
+{% if frp_install_auth_additional_scopes_enabled | default(false) %}
+auth.additionalScopes = {{ frp_install_auth_additional_scopes | default(['HeartBeats', 'NewWorkConns']) | tojson }}
+{% else %}
+# auth.additionalScopes = ["HeartBeats", "NewWorkConns"]
+{% endif %}
 
-# ==========================================
-# Optional Configurations (commented out)
-# ==========================================
-# Uncomment and configure these as needed
+# auth token
+{% if frp_install_auth_token_source_enabled | default(false) %}
+# Using token from file (mutually exclusive with auth.token)
+auth.tokenSource.type = "{{ frp_install_auth_token_source_type | default('file') }}"
+auth.tokenSource.file.path = "{{ frp_install_auth_token_source_file_path | default('/etc/frp/token') }}"
+{% else %}
+auth.token = "{{ frp_install_auth_token | default('12345678') }}"
+{% endif %}
 
-# User prefix for proxy names (optional)
-# user = "your_name"
+# alternatively, you can use tokenSource to load the token from a file
+# this is mutually exclusive with auth.token
+# auth.tokenSource.type = "file"
+# auth.tokenSource.file.path = "/etc/frp/token"
 
-# Transport protocol options (optional)
-# transport.protocol = "tcp"  # tcp, kcp, quic, websocket, wss
-# transport.connectServerLocalIP = "0.0.0.0"
-# transport.tcpMuxKeepaliveInterval = {{ frp_install_transport_tcp_mux_keepalive_interval }}
+# oidc.clientID specifies the client ID to use to get a token in OIDC authentication.
+{% if frp_install_auth_oidc_enabled | default(false) %}
+auth.oidc.clientID = "{{ frp_install_auth_oidc_client_id | default('') }}"
+# oidc.clientSecret specifies the client secret to use to get a token in OIDC authentication.
+auth.oidc.clientSecret = "{{ frp_install_auth_oidc_client_secret | default('') }}"
+# oidc.audience specifies the audience of the token in OIDC authentication.
+auth.oidc.audience = "{{ frp_install_auth_oidc_audience | default('') }}"
+# oidc.scope specifies the permissions of the token in OIDC authentication if AuthenticationMethod == "oidc". By default, this value is "".
+auth.oidc.scope = "{{ frp_install_auth_oidc_scope | default('') }}"
+# oidc.tokenEndpointURL specifies the URL which implements OIDC Token Endpoint.
+# It will be used to get an OIDC token.
+auth.oidc.tokenEndpointURL = "{{ frp_install_auth_oidc_token_endpoint_url | default('') }}"
+{% else %}
+# auth.oidc.clientID = ""
+# oidc.clientSecret specifies the client secret to use to get a token in OIDC authentication.
+# auth.oidc.clientSecret = ""
+# oidc.audience specifies the audience of the token in OIDC authentication.
+# auth.oidc.audience = ""
+# oidc.scope specifies the permissions of the token in OIDC authentication if AuthenticationMethod == "oidc". By default, this value is "".
+# auth.oidc.scope = ""
+# oidc.tokenEndpointURL specifies the URL which implements OIDC Token Endpoint.
+# It will be used to get an OIDC token.
+# auth.oidc.tokenEndpointURL = ""
+{% endif %}
 
-# TLS configuration (optional)
-# transport.tls.enable = true
-# transport.tls.disableCustomTLSFirstByte = true
+# oidc.additionalEndpointParams specifies additional parameters to be sent to the OIDC Token Endpoint.
+# For example, if you want to specify the "audience" parameter, you can set as follow.
+# frp will add "audience=<value>" "var1=<value>" to the additional parameters.
+{% if frp_install_auth_oidc_additional_endpoint_params_enabled | default(false) %}
+{% for key, value in (frp_install_auth_oidc_additional_endpoint_params | default({})).items() %}
+auth.oidc.additionalEndpointParams.{{ key }} = "{{ value }}"
+{% endfor %}
+{% else %}
+# auth.oidc.additionalEndpointParams.audience = "https://dev.auth.com/api/v2/"
+# auth.oidc.additionalEndpointParams.var1 = "foobar"
+{% endif %}
 
-# Admin web server for control (optional)
+# OIDC TLS and proxy configuration
+# Specify a custom CA certificate file for verifying the OIDC token endpoint's TLS certificate.
+# This is useful when the OIDC provider uses a self-signed certificate or a custom CA.
+{% if frp_install_auth_oidc_trusted_ca_file is defined and frp_install_auth_oidc_trusted_ca_file %}
+auth.oidc.trustedCaFile = "{{ frp_install_auth_oidc_trusted_ca_file }}"
+{% else %}
+# auth.oidc.trustedCaFile = "/path/to/ca.crt"
+{% endif %}
+
+# Skip TLS certificate verification for the OIDC token endpoint.
+# INSECURE: Only use this for debugging purposes, not recommended for production.
+{% if frp_install_auth_oidc_insecure_skip_verify_enabled | default(false) %}
+auth.oidc.insecureSkipVerify = {{ frp_install_auth_oidc_insecure_skip_verify | default(false) | bool | tojson }}
+{% else %}
+# auth.oidc.insecureSkipVerify = false
+{% endif %}
+
+# Specify a proxy server for OIDC token endpoint connections.
+# Supports http, https, socks5, and socks5h proxy protocols.
+# If not specified, no proxy is used for OIDC connections.
+{% if frp_install_auth_oidc_proxy_url is defined and frp_install_auth_oidc_proxy_url %}
+auth.oidc.proxyURL = "{{ frp_install_auth_oidc_proxy_url }}"
+{% else %}
+# auth.oidc.proxyURL = "http://proxy.example.com:8080"
+{% endif %}
+
+# Set admin address for control frpc's action by http api such as reload
 {% if frp_install_client_webserver_enabled | default(false) %}
 webServer.addr = "{{ frp_install_client_webserver_addr | default('127.0.0.1') }}"
 webServer.port = {{ frp_install_client_webserver_port | default(7400) }}
 webServer.user = "{{ frp_install_client_webserver_user | default('admin') }}"
 webServer.password = "{{ frp_install_client_webserver_password | default('admin') }}"
-webServer.pprofEnable = {{ frp_install_client_webserver_pprof_enabled | default(false) | lower }}
+# Enable golang pprof handlers in admin listener.
+webServer.pprofEnable = {{ frp_install_client_webserver_pprof_enabled | default(false) | bool | tojson }}
 {% else %}
+# Admin webServer is disabled. To enable it, set frp_install_client_webserver_enabled: true
 # webServer.addr = "127.0.0.1"
 # webServer.port = 7400
 # webServer.user = "admin"
@@ -55,38 +136,152 @@ webServer.pprofEnable = {{ frp_install_client_webserver_pprof_enabled | default(
 # webServer.pprofEnable = false
 {% endif %}
 
-# Advanced connection settings (optional)
+# The maximum amount of time a dial to server will wait for a connect to complete. Default value is 10 seconds.
+{% if frp_install_transport_dial_server_timeout_enabled | default(false) %}
+transport.dialServerTimeout = {{ frp_install_transport_dial_server_timeout | default(10) }}
+{% else %}
 # transport.dialServerTimeout = 10
+{% endif %}
+
+# dialServerKeepalive specifies the interval between keep-alive probes for an active network connection between frpc and frps.
+# If negative, keep-alive probes are disabled.
+{% if frp_install_transport_dial_server_keepalive_enabled | default(false) %}
+transport.dialServerKeepalive = {{ frp_install_transport_dial_server_keepalive | default(7200) }}
+{% else %}
 # transport.dialServerKeepalive = 7200
+{% endif %}
+
+# connections will be established in advance, default value is zero
+transport.poolCount = {{ frp_install_transport_pool_count | default(5) }}
+
+# If tcp stream multiplexing is used, default is true, it must be same with frps
+transport.tcpMux = {{ frp_install_transport_tcp_mux | default(true) | bool | tojson }}
+
+# Specify keep alive interval for tcp mux.
+# only valid if tcpMux is enabled.
+transport.tcpMuxKeepaliveInterval = {{ frp_install_transport_tcp_mux_keepalive_interval | default(60) }}
+
+# Communication protocol used to connect to server
+# supports tcp, kcp, quic, websocket and wss now, default is tcp
+transport.protocol = "{{ frp_install_transport_protocol | default('tcp') }}"
+
+# set client binding ip when connect server, default is empty.
+# only when protocol = tcp or websocket, the value will be used.
+transport.connectServerLocalIP = "{{ frp_install_transport_connect_server_local_ip | default('0.0.0.0') }}"
+
+# if you want to connect frps by http proxy or socks5 proxy or ntlm proxy, you can set proxyURL here or in global environment variables
+# it only works when protocol is tcp
+{% if frp_install_transport_proxy_url is defined and frp_install_transport_proxy_url %}
+transport.proxyURL = "{{ frp_install_transport_proxy_url }}"
+{% else %}
+# transport.proxyURL = "http://user:passwd@192.168.1.128:8080"
+# transport.proxyURL = "socks5://user:passwd@192.168.1.128:1080"
+# transport.proxyURL = "ntlm://user:passwd@192.168.1.128:2080"
+{% endif %}
+
+# quic protocol options
+{% if frp_install_transport_quic_enabled | default(false) %}
+transport.quic.keepalivePeriod = {{ frp_install_transport_quic_keepalive_period | default(10) }}
+transport.quic.maxIdleTimeout = {{ frp_install_transport_quic_max_idle_timeout | default(30) }}
+transport.quic.maxIncomingStreams = {{ frp_install_transport_quic_max_incoming_streams | default(100000) }}
+{% else %}
+# transport.quic.keepalivePeriod = 10
+# transport.quic.maxIdleTimeout = 30
+# transport.quic.maxIncomingStreams = 100000
+{% endif %}
+
+# If tls.enable is true, frpc will connect frps by tls.
+# Since v0.50.0, the default value has been changed to true, and tls is enabled by default.
+transport.tls.enable = {{ frp_install_transport_tls_enable | default(true) | bool | tojson }}
+
+# TLS certificate configuration (optional)
+{% if frp_install_client_tls_cert_file is defined and frp_install_client_tls_cert_file %}
+transport.tls.certFile = "{{ frp_install_client_tls_cert_file }}"
+{% else %}
+# transport.tls.certFile = "client.crt"
+{% endif %}
+{% if frp_install_client_tls_key_file is defined and frp_install_client_tls_key_file %}
+transport.tls.keyFile = "{{ frp_install_client_tls_key_file }}"
+{% else %}
+# transport.tls.keyFile = "client.key"
+{% endif %}
+{% if frp_install_client_tls_trusted_ca_file is defined and frp_install_client_tls_trusted_ca_file %}
+transport.tls.trustedCaFile = "{{ frp_install_client_tls_trusted_ca_file }}"
+{% else %}
+# transport.tls.trustedCaFile = "ca.crt"
+{% endif %}
+{% if frp_install_client_tls_server_name is defined and frp_install_client_tls_server_name %}
+transport.tls.serverName = "{{ frp_install_client_tls_server_name }}"
+{% else %}
+# transport.tls.serverName = "example.com"
+{% endif %}
+
+# If the disableCustomTLSFirstByte is set to false, frpc will establish a connection with frps using the
+# first custom byte when tls is enabled.
+# Since v0.50.0, the default value has been changed to true, and the first custom byte is disabled by default.
+{% if frp_install_transport_tls_disable_custom_tls_first_byte_enabled | default(false) %}
+transport.tls.disableCustomTLSFirstByte = {{ frp_install_transport_tls_disable_custom_tls_first_byte | default(true) | bool | tojson }}
+{% else %}
+# transport.tls.disableCustomTLSFirstByte = true
+{% endif %}
+
+# Heartbeat configure, it's not recommended to modify the default value.
+# The default value of heartbeatInterval is 10 and heartbeatTimeout is 90. Set negative value
+# to disable it.
+{% if frp_install_transport_heartbeat_enabled | default(false) %}
+transport.heartbeatInterval = {{ frp_install_transport_heartbeat_interval | default(30) }}
+transport.heartbeatTimeout = {{ frp_install_transport_heartbeat_timeout | default(90) }}
+{% else %}
 # transport.heartbeatInterval = 30
 # transport.heartbeatTimeout = 90
+{% endif %}
 
-# NAT hole punching (optional)
-# natHoleStunServer = "stun.easyvoip.com:3478"
-
-# DNS server (optional)
-# DNS server (optional)
+# Specify a dns server, so frpc will use this instead of default one
+{% if frp_install_dns_server is defined and frp_install_dns_server %}
+dnsServer = "{{ frp_install_dns_server }}"
+{% else %}
 # dnsServer = "8.8.8.8"
+{% endif %}
 
-# UDP packet size (optional)
-# udpPacketSize = 1500
+# Proxy names you want to start.
+# Default is empty, means all proxies.
+{% if frp_install_start_proxies is defined and frp_install_start_proxies %}
+start = {{ frp_install_start_proxies | tojson }}
+{% else %}
+# start = ["ssh", "dns"]
+{% endif %}
 
-# Proxy filtering (optional)
-# start = ["ssh", "web"]  # Only start specific proxies
+# Specify udp packet size, unit is byte. If not set, the default value is 1500.
+# This parameter should be same between client and server.
+# It affects the udp and sudp proxy.
+udpPacketSize = {{ frp_install_udp_packet_size | default(1500) }}
 
-# Metadata (optional)
-# metadatas.var1 = "abc"
-# metadatas.var2 = "123"
+# Feature gates allows you to enable or disable experimental features
+# Format is a map of feature names to boolean values
+# You can enable specific features:
+{% if frp_install_feature_gates_enabled | default(false) %}
+featureGates = {{ frp_install_feature_gates | default({'VirtualNet': true}) | tojson }}
+{% else %}
+#featureGates = { VirtualNet = true }
+{% endif %}
 
-# Alternative token loading from file (optional)
-# auth.tokenSource.type = "file"
-# auth.tokenSource.file.path = "/etc/frp/token"
+# VirtualNet settings for experimental virtual network capabilities
+# The virtual network feature requires enabling the VirtualNet feature gate above
+{% if frp_install_virtual_net_address is defined and frp_install_virtual_net_address %}
+virtualNet.address = "{{ frp_install_virtual_net_address }}"
+{% else %}
+# virtualNet.address = "100.86.1.1/24"
+{% endif %}
 
 # Additional authentication scopes (optional)
 # auth.additionalScopes = ["HeartBeats", "NewWorkConns"]
 
 # Include external config files (optional)
+{% if frp_install_includes is defined and frp_install_includes %}
+includes = {{ frp_install_includes | tojson }}
+{% else %}
 # includes = ["./confd/*.ini"]
+{% endif %}
 
 # ==========================================
 # Example Proxy Configurations

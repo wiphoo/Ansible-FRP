@@ -12,7 +12,7 @@ Installs frp (Fast Reverse Proxy) on Linux systems.
 ### Core Installation Variables
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `frp_install_version` | `"0.63.0"` | FRP version |
+| `frp_install_version` | `"0.65.0"` | FRP version |
 | `frp_install_files` | `['frps', 'frpc']` | Components to install |
 | `frp_install_create_service` | `true` | Create systemd services |
 | `frp_install_user` | `"frp"` | System user |

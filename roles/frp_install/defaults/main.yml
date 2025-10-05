@@ -2,6 +2,10 @@
 # Default variables for frp_install role
 # These can be overridden by users
 
+# =============================================================================
+# BASIC CONFIGURATION
+# =============================================================================
+
 # User and group configuration
 frp_install_user: frp
 frp_install_group: frp
@@ -33,41 +37,243 @@ frp_install_files:
   - "frpc"
 
 # Version (can be overridden)
-frp_install_version: "0.63.0"  # Specify the version of frp to install
+frp_install_version: "0.65.0"  # Specify the version of frp to install
 
-# FRP Configuration defaults
+# =============================================================================
+# AUTHENTICATION CONFIGURATION
+# =============================================================================
+
 frp_install_auth_method: "token"
 frp_install_auth_token: ""  # REQUIRED: Set a secure token via vars or Vault
+
+# Auth additional scopes (optional)
+frp_install_auth_additional_scopes_enabled: false
+frp_install_auth_additional_scopes:
+  - "HeartBeats"
+  - "NewWorkConns"
+
+# Auth token from file (mutually exclusive with auth_token)
+frp_install_auth_token_source_enabled: false
+frp_install_auth_token_source_type: "file"
+frp_install_auth_token_source_file_path: "/etc/frp/token"
+
+# OIDC authentication (requires auth_method: "oidc")
+frp_install_auth_oidc_enabled: false
+frp_install_auth_oidc_issuer: ""
+frp_install_auth_oidc_audience: ""
+frp_install_auth_oidc_skip_expiry_check: false
+frp_install_auth_oidc_skip_issuer_check: false
+
+# OIDC client configuration
+frp_install_auth_oidc_client_id: ""
+frp_install_auth_oidc_client_secret: ""
+frp_install_auth_oidc_scope: ""
+frp_install_auth_oidc_token_endpoint_url: ""
+
+# OIDC additional configuration
+frp_install_auth_oidc_additional_endpoint_params_enabled: false
+frp_install_auth_oidc_additional_endpoint_params: {}
+# frp_install_auth_oidc_trusted_ca_file: "/path/to/ca.crt"
+# frp_install_auth_oidc_insecure_skip_verify_enabled: false
+# frp_install_auth_oidc_insecure_skip_verify: false
+# frp_install_auth_oidc_proxy_url: "http://proxy.example.com:8080"
+
+# =============================================================================
+# SERVER CONFIGURATION
+# =============================================================================
 
 # FRP Server binding configuration
 frp_install_server_addr: "0.0.0.0"  # Server bind address (bindAddr)
 frp_install_server_port: 7000       # Server bind port (bindPort)
 
-# FRP Client server connection configuration
-frp_install_client_server_addr: "your-server-address.example.com"  # FRP server address to connect to
-frp_install_client_server_port: 7000                               # FRP server port to connect to
+# KCP Protocol (optional)
+frp_install_kcp_bind_port_enabled: false
+frp_install_kcp_bind_port: 7000
+
+# QUIC Protocol (optional)
+frp_install_quic_bind_port_enabled: false
+frp_install_quic_bind_port: 7002
+
+# Proxy bind address (optional)
+frp_install_proxy_bind_addr_enabled: false
+frp_install_proxy_bind_addr: "127.0.0.1"
 
 # FRP Server dashboard/webserver configuration
 frp_install_dashboard_addr: "127.0.0.1"
 frp_install_dashboard_port: 7500
 frp_install_dashboard_user: "admin"
 frp_install_dashboard_password: ""  # REQUIRED: Set a strong password via vars or Vault
+frp_install_dashboard_pprof_enable: false
+frp_install_enable_prometheus: true
+
+# Dashboard TLS (optional)
+# frp_install_dashboard_tls_cert_file: "/path/to/server.crt"
+# frp_install_dashboard_tls_key_file: "/path/to/server.key"
+
+# Dashboard assets directory (optional)
+frp_install_dashboard_assets_dir_enabled: false
+frp_install_dashboard_assets_dir: "./static"
+
+# Virtual Host configuration (optional)
+frp_install_vhost_http_port_enabled: false
+frp_install_vhost_http_port: 8080
+frp_install_vhost_https_port_enabled: false
+frp_install_vhost_https_port: 8443
+frp_install_vhost_http_timeout_enabled: false
+frp_install_vhost_http_timeout: 60
+
+# TCP Multiplexing (optional)
+frp_install_tcpmux_http_connect_port_enabled: false
+frp_install_tcpmux_http_connect_port: 1337
+frp_install_tcpmux_passthrough_enabled: false
+frp_install_tcpmux_passthrough: false
+
+# Server connection limits (optional)
+frp_install_user_conn_timeout_enabled: false
+frp_install_user_conn_timeout: 10
+frp_install_max_ports_per_client_enabled: false
+frp_install_max_ports_per_client: 0
+
+# Subdomain configuration (optional)
+frp_install_subdomain_host_enabled: false
+frp_install_subdomain_host: "frps.com"
+
+# Custom pages (optional)
+frp_install_custom_404_page_enabled: false
+frp_install_custom_404_page: "/path/to/404.html"
+
+# Port restrictions (optional)
+# frp_install_allow_ports:
+#   - { start: 2000, end: 3000 }
+#   - { single: 3001 }
+
+# SSH Tunnel Gateway (optional)
+frp_install_ssh_tunnel_gateway_enabled: false
+frp_install_ssh_tunnel_gateway_bind_port: 2200
+# frp_install_ssh_tunnel_gateway_private_key_file: "/home/frp-user/.ssh/id_rsa"
+# frp_install_ssh_tunnel_gateway_auto_gen_private_key_path: ""
+# frp_install_ssh_tunnel_gateway_authorized_keys_file: "/home/frp-user/.ssh/authorized_keys"
+
+# =============================================================================
+# CLIENT CONFIGURATION
+# =============================================================================
+
+# FRP Client server connection configuration
+frp_install_client_user: "your_name"  # Client user name (user field in frpc.toml)
+frp_install_client_server_addr: "your-server-address.example.com"  # FRP server address to connect to
+frp_install_client_server_port: 7000                               # FRP server port to connect to
+
+# Login behavior
+frp_install_login_fail_exit: true
+
+# NAT hole punching (optional)
+frp_install_nat_hole_stun_server_enabled: false
+frp_install_nat_hole_stun_server: "stun.easyvoip.com:3478"
 
 # FRP Client admin webserver configuration (optional)
 frp_install_client_webserver_enabled: false     # Enable client admin webServer interface
 frp_install_client_webserver_addr: "127.0.0.1"  # Client admin webServer bind address
 frp_install_client_webserver_port: 7400         # Client admin webServer port
 frp_install_client_webserver_user: "admin"      # Client admin webServer username
-frp_install_client_webserver_password: ""   # Client admin webServer password (set if enabled)
+frp_install_client_webserver_password: ""       # Client admin webServer password (set if enabled)
 frp_install_client_webserver_pprof_enabled: false  # Enable pprof endpoint for debugging
 
-# FRP Logging configuration
+# Client TLS configuration (optional)
+# frp_install_client_tls_cert_file: "/path/to/client.crt"
+# frp_install_client_tls_key_file: "/path/to/client.key"
+# frp_install_client_tls_trusted_ca_file: "/path/to/ca.crt"
+# frp_install_client_tls_server_name: "example.com"
+
+# DNS configuration (optional)
+# frp_install_dns_server: "8.8.8.8"
+
+# Proxy selection (optional)
+# frp_install_start_proxies:
+#   - "ssh"
+#   - "web"
+
+# Feature gates (optional)
+frp_install_feature_gates_enabled: false
+frp_install_feature_gates:
+  VirtualNet: true
+
+# Virtual network (optional)
+# frp_install_virtual_net_address: "100.86.1.1/24"
+
+# Configuration includes (optional)
+# frp_install_includes:
+#   - "./confd/*.toml"
+
+# =============================================================================
+# LOGGING CONFIGURATION
+# =============================================================================
+
 frp_install_log_level: "info"  # trace, debug, info, warn, error
 frp_install_log_max_days: 3
 frp_install_log_disable_print_color: false
 
-# FRP Transport configuration
+# Server detailed errors
+frp_install_detailed_errors_to_client: true
+
+# =============================================================================
+# TRANSPORT CONFIGURATION
+# =============================================================================
+
+# Connection pool
 frp_install_transport_pool_count: 5            # Connection pool size for client
 frp_install_transport_max_pool_count: 5        # Maximum connection pool size for server
+
+# TCP Multiplexing
 frp_install_transport_tcp_mux: true            # Enable TCP multiplexing
 frp_install_transport_tcp_mux_keepalive_interval: 60  # TCP mux keepalive interval (seconds)
+
+# Heartbeat (server)
+frp_install_transport_heartbeat_timeout_enabled: false
+frp_install_transport_heartbeat_timeout: 90
+
+# Heartbeat (client)
+frp_install_transport_heartbeat_enabled: false
+frp_install_transport_heartbeat_interval: 30
+# Note: client heartbeat timeout uses server's transport_heartbeat_timeout
+
+# TCP Keepalive (optional)
+frp_install_transport_tcp_keepalive_enabled: false
+frp_install_transport_tcp_keepalive: 7200
+
+# Dial server configuration (client)
+frp_install_transport_dial_server_timeout_enabled: false
+frp_install_transport_dial_server_timeout: 10
+frp_install_transport_dial_server_keepalive_enabled: false
+frp_install_transport_dial_server_keepalive: 7200
+
+# Protocol configuration
+frp_install_transport_protocol: "tcp"  # tcp, kcp, quic, websocket, wss
+frp_install_transport_connect_server_local_ip: "0.0.0.0"
+
+# Proxy configuration (client, optional)
+# frp_install_transport_proxy_url: "http://user:passwd@192.168.1.128:8080"
+
+# QUIC protocol options (optional)
+frp_install_transport_quic_enabled: false
+frp_install_transport_quic_keepalive_period: 10
+frp_install_transport_quic_max_idle_timeout: 30
+frp_install_transport_quic_max_incoming_streams: 100000
+
+# TLS configuration
+frp_install_transport_tls_enable: true
+frp_install_transport_tls_force: false  # Server only: force TLS connections
+
+# TLS certificates (optional)
+# frp_install_transport_tls_cert_file: "/path/to/server.crt"
+# frp_install_transport_tls_key_file: "/path/to/server.key"
+# frp_install_transport_tls_trusted_ca_file: "/path/to/ca.crt"
+
+# TLS custom first byte (client)
+frp_install_transport_tls_disable_custom_tls_first_byte_enabled: false
+frp_install_transport_tls_disable_custom_tls_first_byte: true
+
+# UDP packet size
+frp_install_udp_packet_size: 1500
+
+# NAT hole analysis
+frp_install_nathole_analysis_data_reserve_hours: 168
