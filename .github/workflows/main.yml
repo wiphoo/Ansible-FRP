@@ -41,6 +41,8 @@ jobs:
       - name: Lint Ansible code
         run: |
           uv run ansible-lint roles/
+        env:
+          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
   test:
     name: Test
