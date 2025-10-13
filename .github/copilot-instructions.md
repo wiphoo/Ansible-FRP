@@ -102,7 +102,7 @@ uv run pytest tests/ -v --cov=tests
 uv run pytest tests/ --tb=no -q
 
 # Generate HTML coverage report
-uv run pytest tests/ --cov-report=html
+uv run pytest tests/ --cov=tests --cov-report=html
 
 # Run specific test file
 uv run pytest tests/test_variables.py -v

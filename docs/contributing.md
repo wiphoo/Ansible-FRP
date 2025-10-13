@@ -65,7 +65,7 @@ uv run pytest tests/ -v --cov=tests
 uv run pytest tests/ --tb=no -q
 
 # Coverage report
-uv run pytest tests/ --cov-report=html
+uv run pytest tests/ --cov=tests --cov-report=html
 
 # Code quality checks
 uv run ruff check .
