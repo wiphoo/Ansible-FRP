@@ -190,7 +190,7 @@ Use Vault for tokens and enable logging for audit:
         frp_install_dashboard_addr: "0.0.0.0"
         frp_install_dashboard_port: 7500
         frp_install_dashboard_user: "admin"
-        frp_install_dashboard_pwd: "{{ vault_dashboard_password }}"
+        frp_install_dashboard_password: "{{ vault_dashboard_password }}"
 
 - hosts: corp_clients
   become: true

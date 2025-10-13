@@ -426,8 +426,8 @@ frp_install_transport_tcp_mux_keepalive_interval: 180  # Longer intervals
         frp_install_dashboard_addr: "0.0.0.0"
         frp_install_dashboard_port: 7500
         frp_install_dashboard_user: "admin"
-        frp_install_dashboard_pwd: "admin-password"
-        frp_install_dashboard_tls_mode: true
+        frp_install_dashboard_password: "admin-password"
+        frp_install_transport_tls_enable: true
         frp_install_dashboard_tls_cert_file: "/etc/frp/ssl/server.crt"
         frp_install_dashboard_tls_key_file: "/etc/frp/ssl/server.key"
 
@@ -525,7 +525,9 @@ frp_install_transport_tcp_mux_keepalive_interval: 180  # Longer intervals
         # Dashboard with TLS
         frp_install_dashboard_addr: "127.0.0.1"
         frp_install_dashboard_port: 7500
-        frp_install_dashboard_tls_mode: true
+        frp_install_transport_tls_enable: true
+        frp_install_dashboard_tls_cert_file: "/etc/frp/ssl/server.crt"
+        frp_install_dashboard_tls_key_file: "/etc/frp/ssl/server.key"
 
         # Connection Limits
         frp_install_max_ports_per_client: 10
@@ -560,9 +562,9 @@ frp_install_transport_tcp_mux_keepalive_interval: 180  # Longer intervals
 
         # QUIC Protocol
         frp_install_transport_protocol: "quic"
-        frp_install_quic_keepalive_period: 10
-        frp_install_quic_max_idle_timeout: 30
-        frp_install_quic_max_incoming_streams: 100000
+        frp_install_transport_quic_keepalive_period: 10
+        frp_install_transport_quic_max_idle_timeout: 30
+        frp_install_transport_quic_max_incoming_streams: 100000
 
         # Development-friendly Logging
         frp_install_log_level: "debug"
@@ -657,10 +659,8 @@ frp_install_transport_tcp_mux_keepalive_interval: 180  # Longer intervals
         frp_install_transport_heartbeat_timeout: 45
 
         # TCP Keepalive
-        frp_install_transport_tcp_keepalive: true
-        frp_install_transport_tcp_keepalive_idle: 3
-        frp_install_transport_tcp_keepalive_interval: 5
-        frp_install_transport_tcp_keepalive_count: 3
+        frp_install_transport_tcp_keepalive_enabled: true
+        frp_install_transport_tcp_keepalive: 7200
 ```
 
 ## Configuration Files Generated
