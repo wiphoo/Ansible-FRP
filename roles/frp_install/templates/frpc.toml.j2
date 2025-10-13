@@ -260,7 +260,9 @@ udpPacketSize = {{ frp_install_udp_packet_size | default(1500) }}
 # Format is a map of feature names to boolean values
 # You can enable specific features:
 {% if frp_install_feature_gates_enabled | default(false) %}
-featureGates = {{ frp_install_feature_gates | default({'VirtualNet': true}) | tojson }}
+featureGates = { {% for key, value in (frp_install_feature_gates | default({'VirtualNet': true})).items() -%}
+{{ key }} = {{ value | bool | lower }}{% if not loop.last %}, {% endif %}
+{%- endfor %} }
 {% else %}
 #featureGates = { VirtualNet = true }
 {% endif %}
