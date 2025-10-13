@@ -37,9 +37,11 @@ repos:
     rev: v25.8.2  # Match local version
     hooks:
       - id: ansible-lint
-        additional_dependencies: [ansible-core==2.19.2, ansible-compat>=25.8.1]
+        additional_dependencies:
+          - ansible-core==2.19.2
+          - ansible-compat>=25.8.1
         files: \.(yaml|yml)$
-        exclude: ^(collections/|\.venv/|\.github/)
+        exclude: ^(collections/|\.venv/|\.github/|roles/.*/molecule/resources/)
         args: [--project-dir=.]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
