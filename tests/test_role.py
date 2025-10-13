@@ -4,6 +4,7 @@ import os
 
 import pytest
 import yaml
+from jinja2 import select_autoescape
 
 # All fixtures are now imported from tests.fixtures via conftest.py
 
@@ -138,7 +139,7 @@ class TestFrpInstallRole:
         architecture = "amd64"
         import jinja2
 
-        env = jinja2.Environment()
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
 
         # Test filename generation using actual templates
         fn_wo_ext_t = env.from_string(
@@ -679,7 +680,7 @@ bindPort = 7000
 auth = { method = "token", token = "test_token" }
 log = { to = "{{ frp_install_log_dir }}/frps.log", level = "info" }"""
 
-        env = jinja2.Environment()
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
         template = env.from_string(template_content)
 
         # Test with default variables
@@ -700,7 +701,7 @@ serverPort = 7000
 auth = { method = "token", token = "test_token" }
 log = { to = "{{ frp_install_log_dir }}/frpc.log", level = "info" }"""
 
-        env = jinja2.Environment()
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
         template = env.from_string(template_content)
         rendered = template.render(**role_vars)
 
@@ -726,7 +727,7 @@ Restart=always
 [Install]
 WantedBy=multi-user.target"""
 
-        env = jinja2.Environment()
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
         template = env.from_string(service_template)
         rendered = template.render(**role_vars)
 
@@ -1150,7 +1151,7 @@ class TestTemplateParameters:
         # Simplified template without Ansible filters
         template_content = """{% if frp_install_login_fail_exit is defined %}loginFailExit = {{ frp_install_login_fail_exit | lower }}{% else %}loginFailExit = true{% endif %}"""
 
-        env = jinja2.Environment()
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
         template = env.from_string(template_content)
 
         # Test with undefined variable (should use default)
@@ -1167,7 +1168,7 @@ class TestTemplateParameters:
 
         template_content = """transport.protocol = "{{ frp_install_transport_protocol | default('tcp') }}" """
 
-        env = jinja2.Environment()
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
         template = env.from_string(template_content)
 
         # Test with default
@@ -1184,7 +1185,7 @@ class TestTemplateParameters:
 
         template_content = """transport.connectServerLocalIP = "{{ frp_install_transport_connect_server_local_ip | default('0.0.0.0') }}" """
 
-        env = jinja2.Environment()
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
         template = env.from_string(template_content)
 
         # Test with default
@@ -1204,7 +1205,7 @@ class TestTemplateParameters:
         # Simplified template without Ansible filters
         template_content = """{% if frp_install_transport_tls_enable is defined %}transport.tls.enable = {{ frp_install_transport_tls_enable | lower }}{% else %}transport.tls.enable = true{% endif %}"""
 
-        env = jinja2.Environment()
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
         template = env.from_string(template_content)
 
         # Test with default (should be true)
@@ -1223,7 +1224,7 @@ class TestTemplateParameters:
             """udpPacketSize = {{ frp_install_udp_packet_size | default(1500) }}"""
         )
 
-        env = jinja2.Environment()
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
         template = env.from_string(template_content)
 
         # Test with default
@@ -1245,7 +1246,7 @@ webServer.port = {{ frp_install_client_webserver_port | default(7400) }}
 # Admin webServer is disabled
 {% endif %}"""
 
-        env = jinja2.Environment()
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
         template = env.from_string(template_content)
 
         # Test with webServer disabled (default)
