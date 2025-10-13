@@ -41,6 +41,8 @@ repos:
           - ansible-core==2.19.2
           - ansible-compat>=25.8.1
         files: \.(yaml|yml)$
+        # Exclude molecule resources from pre-commit (community.docker not available in isolated env)
+        # These files are linted in CI/CD where all collections are installed
         exclude: ^(collections/|\.venv/|\.github/|roles/.*/molecule/resources/)
         args: [--project-dir=.]
 

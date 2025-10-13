@@ -34,6 +34,12 @@ jobs:
         run: |
           uv sync --extra dev --extra test
 
+      - name: Install collections
+        run: |
+          uv run ansible-galaxy collection install "community.general>=11.0.0,<12.0.0" "ansible.posix>=2.0.0,<3.0.0" "community.docker>=4.0.0,<5.0.0" -p ${{ github.workspace }}/collections
+        env:
+          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+
       - name: Run pre-commit hooks
         run: |
           uv run pre-commit run --all-files --show-diff-on-failure
@@ -77,7 +83,7 @@ jobs:
 
       - name: Install collections
         run: |
-          uv run ansible-galaxy collection install "community.general>=11.0.0,<12.0.0" "ansible.posix>=2.0.0,<3.0.0" -p ${{ github.workspace }}/collections
+          uv run ansible-galaxy collection install "community.general>=11.0.0,<12.0.0" "ansible.posix>=2.0.0,<3.0.0" "community.docker>=4.0.0,<5.0.0" -p ${{ github.workspace }}/collections
         env:
           ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
