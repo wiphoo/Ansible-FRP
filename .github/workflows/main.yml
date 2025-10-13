@@ -142,14 +142,9 @@ jobs:
           uv run python -m pytest tests/ --cov=roles --cov-report=xml --cov-report=html
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v4
+        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          args: >
-            -Dsonar.projectKey=wiphoo:ansible-frp
-            -Dsonar.projectName=wiphoo-ansible-frp
-            -Dsonar.projectVersion=0.2.0
 
   build:
     name: Build Collection

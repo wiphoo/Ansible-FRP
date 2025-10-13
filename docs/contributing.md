@@ -67,7 +67,8 @@ sonar-scanner
 ```
 
 **SonarQube Settings:**
-- **Project Key**: `wiphoo:ansible-frp`
+- **Project Key**: `wiphoo_Ansible-FRP`
+- **Organization**: `wiphoo-dev`
 - **Source Directories**: `roles/`, `plugins/`, `meta/`, `scripts/`
 - **Excluded**: `tests/` directory and all test files
 - **Coverage**: Uses `coverage.xml` for test coverage reporting
