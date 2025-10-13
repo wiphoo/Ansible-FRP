@@ -53,6 +53,31 @@ uv run ruff format --check
   notify: restart frpc
 ```
 
+## Code Quality Analysis
+
+**SonarQube Configuration:**
+The project includes SonarQube configuration to analyze code quality while excluding test directories.
+
+```bash
+# Run SonarQube analysis (requires sonar-scanner CLI)
+./scripts/sonar-analysis.sh
+
+# Or run directly with sonar-scanner
+sonar-scanner
+```
+
+**SonarQube Settings:**
+- **Project Key**: `wiphoo:ansible-frp`
+- **Source Directories**: `roles/`, `plugins/`, `meta/`, `scripts/`
+- **Excluded**: `tests/` directory and all test files
+- **Coverage**: Uses `coverage.xml` for test coverage reporting
+- **Python Versions**: 3.11, 3.12
+
+**Configuration File**: `sonar-project.properties`
+- Automatically excludes test files, cache directories, and build artifacts
+- Configured for Python analysis with proper exclusions
+- Includes coverage and quality gate settings
+
 ## Testing
 
 **Available test approaches:**
