@@ -4,7 +4,7 @@ This page documents practical installation steps for the wiphoo.frp Ansible coll
 
 ## Requirements
 
-- **Ansible Core**: 2.15+ (automatically handled by uv/pip)
+- **Ansible Core**: 2.17+ (automatically handled by uv/pip)
 - **Python**: 3.11+ for development, 3.8+ for runtime
 - **Target Systems**: Linux (Ubuntu 20.04+, Debian 10+, CentOS 8+/RHEL 8+, Fedora 35+)
 - **FRP Version**: 0.52.0+ (TOML configuration format) - default: 0.65.0
