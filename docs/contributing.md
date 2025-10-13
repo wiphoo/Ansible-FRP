@@ -11,7 +11,7 @@ Thank you for contributing to the wiphoo.frp collection!
 
 **Requirements:**
 - Git, Python 3.11+, Docker
-- Ansible Core >=2.15.0 (automatically installed via uv)
+- Ansible Core >=2.17.0 (automatically installed via uv)
 - uv package manager for dependency management
 
 ## Development Setup
@@ -52,32 +52,6 @@ uv run ruff format --check
   become: true
   notify: restart frpc
 ```
-
-## Code Quality Analysis
-
-**SonarQube Configuration:**
-The project includes SonarQube configuration to analyze code quality while excluding test directories.
-
-```bash
-# Run SonarQube analysis (requires sonar-scanner CLI)
-./scripts/sonar-analysis.sh
-
-# Or run directly with sonar-scanner
-sonar-scanner
-```
-
-**SonarQube Settings:**
-- **Project Key**: `wiphoo_Ansible-FRP`
-- **Organization**: `wiphoo-dev`
-- **Source Directories**: `roles/`, `plugins/`, `meta/`, `scripts/`
-- **Excluded**: `tests/` directory and all test files
-- **Coverage**: Uses `coverage.xml` for test coverage reporting
-- **Python Versions**: 3.11, 3.12
-
-**Configuration File**: `sonar-project.properties`
-- Automatically excludes test files, cache directories, and build artifacts
-- Configured for Python analysis with proper exclusions
-- Includes coverage and quality gate settings
 
 ## Testing
 
@@ -182,7 +156,7 @@ sudo ansible-galaxy collection install wiphoo-frp-0.2.0.tar.gz --force
 
 **The project uses a streamlined dependency structure:**
 
-- **Core dependencies**: Only `ansible-core>=2.15.0` for minimal runtime
+- **Core dependencies**: Only `ansible-core>=2.17.0` for minimal runtime
 - **Test dependencies**: All testing and molecule dependencies (`uv sync --extra test`)
 - **Dev dependencies**: Includes test + development tools (`uv sync --extra dev`)
 

@@ -12,7 +12,7 @@ frp_install_transport_tcp_mux_keepalive_interval: 120ction with practical exampl
 ## 📦 Installation
 
 ### Requirements
-- Ansible Core >=2.15.0, Python >=3.11
+- Ansible Core >=2.17.0, Python >=3.11
 - Linux (Ubuntu, Debian, CentOS/RHEL, Fedora)
 - FRP v0.52.0+ (TOML configuration format) - default: v0.65.0
 - Internet access and admin privileges
