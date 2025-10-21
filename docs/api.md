@@ -427,13 +427,15 @@ frp_install_transport_tcp_mux_keepalive_interval: 180  # Longer intervals
         frp_install_dashboard_port: 7500
         frp_install_dashboard_user: "admin"
         frp_install_dashboard_password: "admin-password"
-        frp_install_transport_tls_enable: true
         frp_install_dashboard_tls_cert_file: "/etc/frp/ssl/server.crt"
         frp_install_dashboard_tls_key_file: "/etc/frp/ssl/server.key"
 
         # Virtual Hosts
+        frp_install_vhost_http_port_enabled: true
         frp_install_vhost_http_port: 80
+        frp_install_vhost_https_port_enabled: true
         frp_install_vhost_https_port: 443
+        frp_install_subdomain_host_enabled: true
         frp_install_subdomain_host: "frp.example.com"
 
         # Transport Security
@@ -508,6 +510,7 @@ frp_install_transport_tcp_mux_keepalive_interval: 180  # Longer intervals
         frp_install_auth_oidc_skip_issuer_check: false
 
         # Additional OIDC Settings
+        frp_install_auth_additional_scopes_enabled: true
         frp_install_auth_additional_scopes:
           - "email"
           - "profile"
@@ -525,12 +528,13 @@ frp_install_transport_tcp_mux_keepalive_interval: 180  # Longer intervals
         # Dashboard with TLS
         frp_install_dashboard_addr: "127.0.0.1"
         frp_install_dashboard_port: 7500
-        frp_install_transport_tls_enable: true
         frp_install_dashboard_tls_cert_file: "/etc/frp/ssl/server.crt"
         frp_install_dashboard_tls_key_file: "/etc/frp/ssl/server.key"
 
         # Connection Limits
+        frp_install_max_ports_per_client_enabled: true
         frp_install_max_ports_per_client: 10
+        frp_install_user_conn_timeout_enabled: true
         frp_install_user_conn_timeout: 10
 ```
 
@@ -562,6 +566,7 @@ frp_install_transport_tcp_mux_keepalive_interval: 180  # Longer intervals
 
         # QUIC Protocol
         frp_install_transport_protocol: "quic"
+        frp_install_transport_quic_enabled: true
         frp_install_transport_quic_keepalive_period: 10
         frp_install_transport_quic_max_idle_timeout: 30
         frp_install_transport_quic_max_incoming_streams: 100000
@@ -569,7 +574,7 @@ frp_install_transport_tcp_mux_keepalive_interval: 180  # Longer intervals
         # Development-friendly Logging
         frp_install_log_level: "debug"
         frp_install_log_max_days: 1
-        frp_install_disable_log_color: false
+        frp_install_log_disable_print_color: false
 ```
 
 ### Example 5: SSH Tunnel Gateway with Port Restrictions
@@ -594,6 +599,7 @@ frp_install_transport_tcp_mux_keepalive_interval: 180  # Longer intervals
         frp_install_server_port: 7000
 
         # SSH Tunnel Gateway
+        frp_install_ssh_tunnel_gateway_enabled: true
         frp_install_ssh_tunnel_gateway_bind_port: 2200
         frp_install_ssh_tunnel_gateway_private_key_file: "/etc/frp/ssh/id_rsa"
         frp_install_ssh_tunnel_gateway_authorized_keys_file: "/etc/frp/ssh/authorized_keys"
@@ -655,6 +661,7 @@ frp_install_transport_tcp_mux_keepalive_interval: 180  # Longer intervals
         frp_install_transport_tcp_mux_keepalive_interval: 30
 
         # Heartbeat
+        frp_install_transport_heartbeat_enabled: true
         frp_install_transport_heartbeat_interval: 15
         frp_install_transport_heartbeat_timeout: 45
 

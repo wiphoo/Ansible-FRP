@@ -41,6 +41,9 @@ jobs:
           ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
       - name: Run pre-commit hooks
+        env:
+          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+          ANSIBLE_ROLES_PATH: ${{ github.workspace }}/roles
         run: |
           uv run pre-commit run --all-files --show-diff-on-failure
 
@@ -89,7 +92,8 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run python -m pytest tests/ -v --junitxml=test-results.xml --cov=tests --cov-report=xml --cov-report=html --tb=short
+          # Run tests to generate source coverage for Sonar and Codecov
+          uv run python -m pytest tests/ -v --junitxml=test-results.xml --cov=ansible_collections.wiphoo.frp --cov-report=xml --cov-report=html --tb=short
         continue-on-error: false
 
       - name: Run Molecule syntax check
@@ -113,7 +117,9 @@ jobs:
           path: |
             test-results.xml
             htmlcov/
+            coverage.xml
           retention-days: 7
+          if-no-files-found: warn
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
@@ -151,12 +157,20 @@ jobs:
         env:
           ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
-      - name: Run tests to generate coverage
+      - name: Download coverage from tests
+        uses: actions/download-artifact@v4
+        with:
+          name: test-results-3.12-12.0.0
+          path: test-artifacts
+
+      - name: Prepare coverage report
         run: |
-          # Run tests with default configuration (measures test code coverage for quality metrics)
-          uv run python -m pytest tests/ -v --cov=tests --cov-report=xml:coverage.xml --cov-report=html --tb=short
-        env:
-          ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+          SOURCE_FILE="test-artifacts/coverage.xml"
+          if [ ! -f "${SOURCE_FILE}" ]; then
+            echo "Error: ${SOURCE_FILE} not found. Ensure the test job uploads coverage."
+            exit 1
+          fi
+          cp "${SOURCE_FILE}" coverage.xml
 
       - name: Verify coverage file exists
         run: |

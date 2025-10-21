@@ -44,7 +44,8 @@ The `frp_install` role provides comprehensive automation for deploying FRP in yo
     - role: wiphoo.frp.frp_install
       vars:
         frp_install_files: ["frpc"]
-        frp_install_server_addr: "server.example.com"
+        frp_install_client_server_addr: "server.example.com"
+        frp_install_client_server_port: 7000
         frp_install_auth_token: "{{ vault_frp_token }}"
 ```
 
@@ -149,17 +150,13 @@ TLS configuration is handled in the configuration templates. To enable TLS, you 
 
 ### Proxy Configuration
 
-```yaml
-frp_proxies:
-  - name: "ssh"
-    type: "tcp"
-    local_port: 22
-    remote_port: 2222
+Define individual proxy stanzas in your `frpc.toml.j2` template (see comments near the bottom of the shipped template). Use `frp_install_start_proxies` to restrict which configured proxies start automatically:
 
-  - name: "web"
-    type: "http"
-    local_port: 80
-    custom_domains: ["app.example.com"]
+```yaml
+frp_install_start_proxies:
+  - "ssh"
+  - "web"
+  - "database"
 ```
 
 ## Examples

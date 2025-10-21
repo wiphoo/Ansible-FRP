@@ -37,6 +37,8 @@ ansible-galaxy collection install wiphoo.frp
         frp_install_server_port: 7000
         frp_install_auth_token: "your-secure-token"  # CHANGE THIS
         frp_install_configure_firewall: true
+        frp_install_dashboard_user: "admin"
+        frp_install_dashboard_password: "{{ vault_admin_password }}"
 ```
 
 **Client Setup:**
@@ -50,6 +52,8 @@ ansible-galaxy collection install wiphoo.frp
         frp_install_client_server_addr: "your-server.example.com"
         frp_install_client_server_port: 7000
         frp_install_auth_token: "your-secure-token"  # Must match server
+        frp_install_start_proxies:
+          - "ssh"
 ```
 
 ## ✨ Features
@@ -68,7 +72,7 @@ ansible-galaxy collection install wiphoo.frp
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `frp_install_version` | `0.63.0` | FRP version |
+| `frp_install_version` | `0.65.0` | FRP version |
 | `frp_install_files` | `['frps', 'frpc']` | Components to install |
 | `frp_install_user` | `frp` | System user |
 | `frp_install_dir` | `/usr/local/bin/frp` | Installation directory |
@@ -106,11 +110,18 @@ ansible-galaxy collection install wiphoo.frp
     frp_install_log_max_days: 7
     frp_install_dashboard_addr: "0.0.0.0"  # Make dashboard accessible from all interfaces
     frp_install_dashboard_port: 7500
+    frp_install_dashboard_user: "admin"
+    frp_install_dashboard_password: "{{ vault_dashboard_password }}"
+    frp_install_dashboard_assets_dir_enabled: true
+    frp_install_dashboard_assets_dir: "/opt/frp/dashboard"
   roles:
     - role: wiphoo.frp.frp_install
       vars:
         frp_install_configure_firewall: true
-        frp_server_max_clients: 100
+        frp_install_user_conn_timeout_enabled: true
+        frp_install_user_conn_timeout: 10
+        frp_install_max_ports_per_client_enabled: true
+        frp_install_max_ports_per_client: 100
 ```
 
 **Client Configuration Example:**
@@ -127,6 +138,13 @@ ansible-galaxy collection install wiphoo.frp
     frp_install_client_webserver_user: "admin"
     frp_install_client_webserver_password: "{{ vault_frpc_admin_password }}"
     frp_install_auth_token: "{{ vault_frp_token }}"
+    frp_install_transport_protocol: "quic"
+    frp_install_transport_quic_enabled: true
+    frp_install_transport_quic_keepalive_period: 15
+    frp_install_transport_quic_max_idle_timeout: 45
+    frp_install_transport_quic_max_incoming_streams: 100000
+    frp_install_transport_tcp_keepalive_enabled: true
+    frp_install_transport_tcp_keepalive: 7200
   roles:
     - role: wiphoo.frp.frp_install
 ```
@@ -164,7 +182,7 @@ pre-commit install
 
 **Testing:**
 ```bash
-uv run pytest tests/ -v --cov=tests
+uv run pytest tests/ -v --cov=ansible_collections.wiphoo.frp
 cd roles/frp_install && uv run molecule test --scenario-name dev  # Fast development testing
 cd roles/frp_install && uv run molecule test --scenario-name ci   # CI testing
 cd roles/frp_install && uv run molecule test --scenario-name default # Full testing
