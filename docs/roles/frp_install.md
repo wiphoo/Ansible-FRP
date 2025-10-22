@@ -86,7 +86,7 @@ The `frp_install` role provides comprehensive automation for deploying FRP in yo
 | `frp_install_version` | `"0.65.0"` | FRP version to install |
 | `frp_install_files` | `["frpc"]` | Components: frpc, frps, or both |
 | `frp_install_verify_checksums` | `true` | Verify download integrity |
-| `frp_install_dir` | `"/usr/local/bin"` | Binary installation directory |
+| `frp_install_dir` | `"/usr/local/bin/frp"` | Binary installation directory |
 
 ### Service Management
 
@@ -146,7 +146,13 @@ frp_install_group: "svcfrp"
 
 ### TLS Security
 
-TLS configuration is handled in the configuration templates. To enable TLS, you would need to customize the frp configuration files manually or extend the role templates.
+TLS is configured through role variables—no manual template edits required. For example:
+
+- `frp_install_transport_tls_enable: true`
+- **Client-specific**: `frp_install_client_tls_{cert_file,key_file,trusted_ca_file,server_name}`
+- **Server / transport**: `frp_install_transport_tls_{cert_file,key_file,trusted_ca_file}`
+
+Refer to the API documentation for the complete TLS variable reference.
 
 ### Proxy Configuration
 

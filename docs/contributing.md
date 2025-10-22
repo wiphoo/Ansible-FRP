@@ -58,7 +58,7 @@ uv run ruff format --check
 **Available test approaches:**
 
 ```bash
-# Unit tests with pytest (126 tests, 96.85% coverage)
+# Unit tests with pytest (see CI badges for current counts/coverage)
 uv run pytest tests/ -v --cov=ansible_collections.wiphoo.frp
 
 # Quick unit tests

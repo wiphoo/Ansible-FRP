@@ -70,11 +70,6 @@ jobs:
         env:
           ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
 
-      - name: Install test dependencies
-        run: |
-          # Install test dependencies (ensure pytest, pytest-cov, coverage are in [project.optional-dependencies].test)
-          uv sync --extra test
-
       - name: Run pytest tests
         run: |
           uv run pytest tests/ -v \
@@ -140,8 +135,6 @@ jobs:
           # Install collection dependencies directly using molecule requirements
           uv run ansible-galaxy collection install -r molecule/dev/requirements.yml --force -p ${{ github.workspace }}/collections
 
-          export ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1
-
           echo "🧪 Running dev scenario (fast)..."
           uv run molecule test --scenario-name dev
 
@@ -151,7 +144,6 @@ jobs:
           echo "🧪 Running default scenario..."
           uv run molecule test --scenario-name default
         env:
-          ANSIBLE_ALLOW_BROKEN_CONDITIONALS: 1
           ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'

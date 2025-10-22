@@ -66,19 +66,23 @@ Complete variable reference for the wiphoo.frp collection.
 
 ### OIDC Authentication
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `frp_install_auth_oidc_enabled` | `false` | Enable OIDC authentication |
-| `frp_install_auth_oidc_issuer` | `""` | OIDC issuer URL |
-| `frp_install_auth_oidc_audience` | `""` | OIDC audience |
-| `frp_install_auth_oidc_skip_expiry_check` | `false` | Skip token expiry validation |
-| `frp_install_auth_oidc_skip_issuer_check` | `false` | Skip issuer validation |
-| `frp_install_auth_oidc_client_id` | `""` | OIDC client ID |
-| `frp_install_auth_oidc_client_secret` | `""` | OIDC client secret |
-| `frp_install_auth_oidc_scope` | `""` | OIDC scope |
-| `frp_install_auth_oidc_token_endpoint_url` | `""` | OIDC token endpoint URL |
-| `frp_install_auth_oidc_additional_endpoint_params_enabled` | `false` | Enable additional OIDC endpoint parameters |
-| `frp_install_auth_oidc_additional_endpoint_params` | `{}` | Additional OIDC endpoint parameters (dict) |
+| Variable | Default | Applies To | Description |
+|----------|---------|------------|-------------|
+| `frp_install_auth_oidc_enabled` | `false` | Both | Enable OIDC authentication for the collection |
+| `frp_install_auth_oidc_issuer` | `""` | Server (frps) | OIDC issuer URL expected by the server |
+| `frp_install_auth_oidc_audience` | `""` | Both | OIDC audience (validated by both frps and frpc) |
+| `frp_install_auth_oidc_skip_expiry_check` | `false` | Server (frps) | Skip token expiry validation on the server |
+| `frp_install_auth_oidc_skip_issuer_check` | `false` | Server (frps) | Skip issuer validation on the server |
+| `frp_install_auth_oidc_client_id` | `""` | Client (frpc) | OIDC client ID used by the client |
+| `frp_install_auth_oidc_client_secret` | `""` | Client (frpc) | OIDC client secret used by the client |
+| `frp_install_auth_oidc_scope` | `""` | Client (frpc) | Scope request for client tokens |
+| `frp_install_auth_oidc_token_endpoint_url` | `""` | Client (frpc) | Token endpoint URL for client authentication |
+| `frp_install_auth_oidc_additional_endpoint_params_enabled` | `false` | Client (frpc) | Enable extra OIDC endpoint parameters for the client |
+| `frp_install_auth_oidc_additional_endpoint_params` | `{}` | Client (frpc) | Additional endpoint parameters (dict) sent by the client |
+| `frp_install_auth_oidc_trusted_ca_file` | `""` | Client (frpc) | Path to a trusted CA bundle for client OIDC requests |
+| `frp_install_auth_oidc_insecure_skip_verify_enabled` | `false` | Client (frpc) | Allow overriding TLS verification for client OIDC requests |
+| `frp_install_auth_oidc_insecure_skip_verify` | `false` | Client (frpc) | Disable TLS verification when enabled (use with caution) |
+| `frp_install_auth_oidc_proxy_url` | `""` | Client (frpc) | Proxy URL for client OIDC communication |
 
 ## Server Configuration Variables
 
@@ -192,7 +196,7 @@ Complete variable reference for the wiphoo.frp collection.
 | `frp_install_nat_hole_stun_server_enabled` | `false` | Enable NAT hole punching |
 | `frp_install_nat_hole_stun_server` | `"stun.easyvoip.com:3478"` | STUN server for NAT traversal |
 
-### Client Admin WebServer
+### Client Admin Web Server
 
 | Variable | Default | Description |
 |----------|---------|-------------|
@@ -729,7 +733,7 @@ sudo systemctl status frpc
 
 - **OS**: Ubuntu 20.04+, Debian 11+, CentOS/RHEL 8+, Fedora 36+
 - **FRP**: Versions 0.52.0+ (TOML configuration format)
-- **Architectures**: amd64, arm64, armv7
+- **Architectures**: amd64, arm64, arm (armv7/armv6), mips, riscv64
 - **Configuration Format**: TOML (INI deprecated as of v0.1.0)
 
 See [Guide](guide.md) for step-by-step tutorials and practical examples.

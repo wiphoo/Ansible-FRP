@@ -1,0 +1,21 @@
+name: Install Ansible Collections
+description: Install required Ansible collections to the workspace collections directory
+
+outputs:
+  collections-path:
+    description: Path where collections were installed
+    value: ${{ github.workspace }}/collections
+
+runs:
+  using: composite
+  steps:
+    - name: Install collections
+      shell: bash
+      env:
+        ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+      run: |
+        uv run ansible-galaxy collection install \
+          "community.general>=11.0.0,<12.0.0" \
+          "ansible.posix>=2.0.0,<3.0.0" \
+          "community.docker>=4.0.0,<5.0.0" \
+          -p "${ANSIBLE_COLLECTIONS_PATH}"

@@ -86,7 +86,7 @@ auth.oidc.tokenEndpointURL = "{{ frp_install_auth_oidc_token_endpoint_url | defa
 # frp will add "audience=<value>" "var1=<value>" to the additional parameters.
 {% if frp_install_auth_oidc_additional_endpoint_params_enabled | default(false) %}
 {% for key, value in (frp_install_auth_oidc_additional_endpoint_params | default({})).items() %}
-auth.oidc.additionalEndpointParams.{{ key }} = "{{ value }}"
+auth.oidc.additionalEndpointParams."{{ key }}" = "{{ value }}"
 {% endfor %}
 {% else %}
 # auth.oidc.additionalEndpointParams.audience = "https://dev.auth.com/api/v2/"
@@ -282,7 +282,7 @@ virtualNet.address = "{{ frp_install_virtual_net_address }}"
 {% if frp_install_includes is defined and frp_install_includes %}
 includes = {{ frp_install_includes | tojson }}
 {% else %}
-# includes = ["./confd/*.ini"]
+# includes = ["./confd/*.toml"]
 {% endif %}
 
 # ==========================================

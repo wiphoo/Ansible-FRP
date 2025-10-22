@@ -37,7 +37,7 @@ We're thrilled you're here! This collection was crafted with love to make your n
 - **Version Management**: Pin specific FRP versions (default: v0.65.0) or use latest stable releases
 
 ### 🛡️ **Enterprise Quality**
-- **Comprehensive Testing**: Full test coverage with pytest (126 tests, 96.85% coverage) and Molecule (5 scenarios)
+- **Comprehensive Testing**: Extensive coverage with pytest and Molecule (see badges/CI for latest status)
 - **CI/CD Pipeline**: Automated testing, security scanning, and quality gates
 - **Complete Documentation**: API docs, examples, and troubleshooting guides
 - **Active Maintenance**: Regular updates and security patches

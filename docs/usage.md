@@ -91,6 +91,6 @@ This page shows practical usage patterns for the `wiphoo.frp` collection. Use th
 - **TLS encryption**: Configure TLS manually in frp configuration templates for encrypted connections
 - **Firewall**: Use `frp_install_configure_firewall: true` to automatically allow required ports
 - **Performance**: Tune transport settings (`frp_install_transport_*`) based on deployment scale and network conditions
-- **Testing**: Run `uv run pytest tests/` (126 tests, 96.85% coverage) or molecule scenarios before production
+- **Testing**: Run `uv run pytest tests/` or Molecule scenarios before production (see CI for latest coverage)
 
 For templates and full variable list, see `api.md`.
