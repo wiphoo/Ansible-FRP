@@ -209,7 +209,7 @@
   changed_when: false
   loop: "{{ frp_install_files }}"
 
-# Configuration files (optional, controlled by frp_install_create_config)
+# Configuration files
 - name: Create basic frp configuration directory
   ansible.builtin.file:
     path: "{{ frp_install_config_dir }}"
@@ -241,7 +241,7 @@
     - frp_install_create_config | bool
     - "'frpc' in frp_install_files"
 
-# Systemd service files (optional, controlled by frp_install_create_service)
+# Systemd service files
 - name: Create systemd service file for frps
   ansible.builtin.template:
     src: frps.service.j2

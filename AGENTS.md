@@ -1,7 +1,5 @@
 # Repository Guidelines
 
-This file is the single source of truth for all AI agents (Claude Code, Codex, Cursor, Gemini CLI, etc.).
-
 ## Project Overview
 
 This is `wiphoo.frp`, an Ansible Collection for deploying and managing [Fast Reverse Proxy (FRP)](https://github.com/fatedier/frp) on Linux systems. The single role `frp_install` handles downloading binaries, configuring TOML config files, systemd services, and firewall rules.

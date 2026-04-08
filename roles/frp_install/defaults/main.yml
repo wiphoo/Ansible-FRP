@@ -19,7 +19,6 @@ frp_install_log_dir: "/var/log/frp"
 frp_install_dirs:
   - "{{ frp_install_dir }}"
   - "{{ frp_install_log_dir }}"
-  - "{{ frp_install_config_dir }}"
 
 # System detection (leave empty for auto-detection)
 frp_install_system: ""
@@ -27,8 +26,8 @@ frp_install_architecture: ""
 
 # Installation options
 frp_install_cleanup_tmp: true
-frp_install_create_config: true   # Create TOML config files (frps.toml, frpc.toml)
-frp_install_create_service: true  # Create systemd unit files and enable the service
+frp_install_create_config: true    # Create TOML config files (frps.toml, frpc.toml)
+frp_install_create_service: true   # Create systemd unit files and enable the service
 frp_install_configure_firewall: true
 frp_install_verify_checksums: true
 

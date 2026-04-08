@@ -437,17 +437,22 @@ class TestFrpInstallRole:
         assert isinstance(dirs_var, list), "frp_install_dirs should be a list"
         assert len(dirs_var) > 0, "frp_install_dirs should not be empty"
 
-        # Check that directories contain template variables (they will be resolved at runtime)
+        # frp_install_dirs covers binaries and logs; the config dir is created
+        # separately by the config task (mode 0750) when frp_install_create_config is true
         expected_dirs = [
             "{{ frp_install_dir }}",
             "{{ frp_install_log_dir }}",
-            "{{ frp_install_config_dir }}",
         ]
 
         for expected_dir in expected_dirs:
             assert expected_dir in dirs_var, (
                 f"Expected directory {expected_dir} not found in frp_install_dirs"
             )
+
+        assert "{{ frp_install_config_dir }}" not in dirs_var, (
+            "frp_install_config_dir should not be in frp_install_dirs; "
+            "it is created by the config task with restricted permissions (0750)"
+        )
 
     def test_architecture_detection_logic(self):
         """Test that architecture detection logic works correctly."""
