@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Variable Validation Tests**: Added 27 new tests for variable validation and naming conventions
 - **Enhanced Template Tests**: Added 700+ lines of comprehensive template validation tests
 
+### Breaking Changes
+- **Minimum Ansible Core raised to 2.17.0** (was 2.15.0). Users on ansible-core 2.15.x or 2.16.x must upgrade before installing this version.
+- **`frp_install_create_service` now controls only systemd unit files**. A new `frp_install_create_config` variable (default: `true`) controls TOML config file creation. Previously, setting `frp_install_create_service: false` skipped both config files and systemd units. Now it skips only systemd units; set `frp_install_create_config: false` to also skip config files.
+
 ### Changed
 - **Updated Default FRP Version**: Changed default version from v0.63.0 to v0.65.0
 - **TOML-Only Configuration**: Removed deprecated INI template support, now exclusively using TOML format (FRP v0.52.0+)

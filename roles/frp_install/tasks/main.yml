@@ -209,7 +209,7 @@
   changed_when: false
   loop: "{{ frp_install_files }}"
 
-# Service configuration (optional)
+# Configuration files (optional, controlled by frp_install_create_config)
 - name: Create basic frp configuration directory
   ansible.builtin.file:
     path: "{{ frp_install_config_dir }}"
@@ -217,7 +217,7 @@
     owner: "{{ frp_install_user if ansible_user_id == 'root' else omit }}"
     group: "{{ frp_install_group if ansible_user_id == 'root' else omit }}"
     mode: '0750'
-  when: frp_install_create_service | bool
+  when: frp_install_create_config | bool
 
 - name: Create basic frps configuration file
   ansible.builtin.template:
@@ -227,7 +227,7 @@
     group: "{{ frp_install_group if ansible_user_id == 'root' else omit }}"
     mode: '0600'
   when:
-    - frp_install_create_service | bool
+    - frp_install_create_config | bool
     - "'frps' in frp_install_files"
 
 - name: Create basic frpc configuration file
@@ -238,9 +238,10 @@
     group: "{{ frp_install_group if ansible_user_id == 'root' else omit }}"
     mode: '0600'
   when:
-    - frp_install_create_service | bool
+    - frp_install_create_config | bool
     - "'frpc' in frp_install_files"
 
+# Systemd service files (optional, controlled by frp_install_create_service)
 - name: Create systemd service file for frps
   ansible.builtin.template:
     src: frps.service.j2

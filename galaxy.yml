@@ -77,14 +77,10 @@ build_ignore:
   - .ansible/
   - "*/.ansible"
   - "*/.ansible/"
-  - "**/.ansible"
-  - "**/.ansible/"
   - collections
   - collections/
   - "*/collections"
   - "*/collections/"
-  - "**/collections"
-  - "**/collections/"
 
   # Python cache and build artifacts
   - .mypy_cache
@@ -95,8 +91,6 @@ build_ignore:
   - .ruff_cache/
   - __pycache__
   - __pycache__/
-  - "**/__pycache__"
-  - "**/__pycache__/"
   - "*.pyc"
   - "*.pyo"
   - "*.pyd"
@@ -168,7 +162,12 @@ build_ignore:
   # Molecule test files (keep only what's needed for users)
   - "roles/*/molecule/*/molecule.yml"
   - "roles/*/.molecule/"
-  - "roles/**/.molecule/"
+
+  # Release and review artifacts (not part of the published collection)
+  - "RELEASE_REVIEW*.md"
+  - "COVERAGE_SUMMARY.md"
+  - "PR_REVIEW.md"
+  - "SONAR_REVIEW.md"
 
   # Build artifacts
   - "*.tar.gz"
