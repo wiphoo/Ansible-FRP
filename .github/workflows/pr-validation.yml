@@ -299,10 +299,16 @@ jobs:
         run: |
           uv run mkdocs build --clean --strict
 
+      - name: Prepare local root for lychee
+        run: |
+          rm -rf .lychee-root
+          mkdir -p .lychee-root
+          ln -s ../site .lychee-root/Ansible-FRP
+
       - name: Check documentation links
         uses: lycheeverse/lychee-action@v2
         with:
-          args: --no-progress --verbose --accept 200,206 --max-concurrency 10 "site/**/*.html"
+          args: --no-progress --verbose --accept 200,206 --max-concurrency 10 --root-dir .lychee-root "site/**/*.html"
 
       - name: Run yamllint
         run: |
