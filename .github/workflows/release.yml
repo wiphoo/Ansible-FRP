@@ -25,8 +25,20 @@ jobs:
         python-version: '3.12'
     - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
     - run: uv sync --extra dev --extra test
-    - run: uv run pre-commit run --all-files --show-diff-on-failure
-    - run: uv run ansible-lint roles/
+
+    - name: Install collections
+      uses: ./.github/actions/install-collections
+
+    - name: Run pre-commit hooks
+      env:
+        ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+        ANSIBLE_ROLES_PATH: ${{ github.workspace }}/roles
+      run: uv run pre-commit run --all-files --show-diff-on-failure
+
+    - name: Lint Ansible code
+      env:
+        ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
+      run: uv run ansible-lint roles/
 
   release:
     name: Build & Publish
