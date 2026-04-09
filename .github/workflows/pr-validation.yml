@@ -81,9 +81,9 @@ jobs:
       - name: Run Molecule syntax check
         working-directory: roles/frp_install
         run: |
-          ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1 uv run molecule syntax --scenario-name dev
-          ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1 uv run molecule syntax --scenario-name ci
-          ANSIBLE_ALLOW_BROKEN_CONDITIONALS=1 uv run molecule syntax --scenario-name default
+          uv run molecule syntax --scenario-name dev
+          uv run molecule syntax --scenario-name ci
+          uv run molecule syntax --scenario-name default
         env:
           PY_COLORS: '1'
           ANSIBLE_FORCE_COLOR: '1'

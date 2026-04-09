@@ -59,13 +59,13 @@ uv run ruff format --check
 
 ```bash
 # Unit tests with pytest (see CI badges for current counts/coverage)
-uv run pytest tests/ -v --cov=ansible_collections.wiphoo.frp
+uv run pytest tests/ -v
 
 # Quick unit tests
 uv run pytest tests/ --tb=no -q
 
-# Coverage report
-uv run pytest tests/ --cov=ansible_collections.wiphoo.frp --cov-report=html
+# Coverage report (HTML output in htmlcov/)
+uv run pytest tests/ --cov=tests --cov-report=html
 
 # Code quality checks
 uv run ruff check .

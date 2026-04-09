@@ -193,7 +193,7 @@ jobs:
 
       - name: Test collection installation
         run: |
-          FILE=$(ls -1 wiphoo-frp-*.tar.gz | head -1)
+          FILE=$(find . -maxdepth 1 -name 'wiphoo-frp-*.tar.gz' | head -1)
           # Install to project collections directory to match Ansible's expectations
           uv run ansible-galaxy collection install "$FILE" --force -p ${{ github.workspace }}/collections
           # Verify installation in the project collections path

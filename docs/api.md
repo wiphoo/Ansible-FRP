@@ -508,6 +508,7 @@ frp_install_transport_tcp_mux_keepalive_interval: 180  # Longer intervals
 
         # OIDC Authentication
         frp_install_auth_method: "oidc"
+        frp_install_auth_oidc_enabled: true
         frp_install_auth_oidc_issuer: "https://auth.example.com"
         frp_install_auth_oidc_audience: "frp-server"
         frp_install_auth_oidc_skip_expiry_check: false

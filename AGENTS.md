@@ -50,7 +50,7 @@ uv run molecule destroy --scenario-name dev
 uv run ruff check .                   # Python linting
 uv run ruff format --check .          # formatting check
 uv run ansible-lint roles/            # Ansible linting
-yamllint .                            # YAML linting
+uv run yamllint .                     # YAML linting
 uv run pre-commit run --all-files     # full quality gate
 ```
 
