@@ -438,11 +438,10 @@ class TestCollectionMetadata:
         Molecule is dev-only infrastructure — end users of the collection don't need it.
         """
         import os
+
         import yaml
 
-        galaxy_path = os.path.join(
-            os.path.dirname(__file__), "..", "galaxy.yml"
-        )
+        galaxy_path = os.path.join(os.path.dirname(__file__), "..", "galaxy.yml")
         with open(galaxy_path) as f:
             galaxy = yaml.safe_load(f)
 

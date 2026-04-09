@@ -1385,7 +1385,9 @@ webServer.port = {{ frp_install_client_webserver_port | default(7400) }}
             template_content = f.read()
 
         # Check that sensible defaults are specified in the template
-        assert "frp_install_client_user" in template_content  # user rendered conditionally from defaults
+        assert (
+            "frp_install_client_user" in template_content
+        )  # user rendered conditionally from defaults
         assert "| default(true)" in template_content  # loginFailExit has default
         assert "| default('tcp')" in template_content  # transport protocol has default
         assert "| default(true)" in template_content  # TLS enabled by default
@@ -1505,9 +1507,7 @@ webServer.port = {{ frp_install_client_webserver_port | default(7400) }}
         import re
 
         # Find the featureGates for-loop block
-        fg_block = re.search(
-            r"featureGates\s*=\s*\{[^}]*\}", content
-        )
+        fg_block = re.search(r"featureGates\s*=\s*\{[^}]*\}", content)
         assert fg_block is not None, "featureGates block not found in frpc.toml.j2"
 
         fg_text = fg_block.group(0)
