@@ -5,8 +5,12 @@
 # Please customize according to your needs
 
 # Basic server connection configuration
+{% if frp_install_client_user %}
 # your proxy name will be changed to {user}.{proxy}
-user = "{{ frp_install_client_user | default('your_name') }}"
+user = "{{ frp_install_client_user }}"
+{% else %}
+# user = "your_name"  # optional: prefix proxy names with this username
+{% endif %}
 
 # A literal address or host name for IPv6 must be enclosed
 # in square brackets, as in "[::1]:80", "[ipv6-host]:http" or "[ipv6-host%zone]:80"
@@ -48,7 +52,7 @@ auth.additionalScopes = {{ frp_install_auth_additional_scopes | default(['HeartB
 auth.tokenSource.type = "{{ frp_install_auth_token_source_type | default('file') }}"
 auth.tokenSource.file.path = "{{ frp_install_auth_token_source_file_path | default('/etc/frp/token') }}"
 {% else %}
-auth.token = "{{ frp_install_auth_token | default('12345678') }}"
+auth.token = "{{ frp_install_auth_token }}"
 {% endif %}
 
 # oidc.clientID specifies the client ID to use to get a token in OIDC authentication.
@@ -223,6 +227,7 @@ transport.tls.disableCustomTLSFirstByte = {{ frp_install_transport_tls_disable_c
 # Heartbeat configure, it's not recommended to modify the default value.
 # The default value of heartbeatInterval is 10 and heartbeatTimeout is 90. Set negative value
 # to disable it.
+# Note: frp_install_transport_heartbeat_timeout is shared with frps — set it consistently on both sides.
 {% if frp_install_transport_heartbeat_enabled | default(false) %}
 transport.heartbeatInterval = {{ frp_install_transport_heartbeat_interval | default(30) }}
 transport.heartbeatTimeout = {{ frp_install_transport_heartbeat_timeout | default(90) }}
@@ -256,7 +261,7 @@ udpPacketSize = {{ frp_install_udp_packet_size | default(1500) }}
 # You can enable specific features:
 {% if frp_install_feature_gates_enabled | default(false) %}
 featureGates = { {% for key, value in (frp_install_feature_gates | default({'VirtualNet': true})).items() -%}
-{{ key | tojson }} = {{ value | bool | tojson }}{% if not loop.last %}, {% endif %}
+{{ key }} = {{ value | bool | tojson }}{% if not loop.last %}, {% endif %}
 {%- endfor %} }
 {% else %}
 #featureGates = { VirtualNet = true }

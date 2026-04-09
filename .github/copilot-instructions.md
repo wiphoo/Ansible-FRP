@@ -13,7 +13,7 @@ This is an **Ansible Collection** for deploying and managing **Fast Reverse Prox
 ## Tech Stack
 
 ### Core Technologies
-- **Ansible Core**: >=2.15.0
+- **Ansible Core**: >=2.17.0
 - **Python**: 3.11+ (tested on 3.10, 3.12)
 - **Package Manager**: `uv` (for Python package management)
 - **Configuration Format**: TOML (INI support deprecated as of v0.1.0)

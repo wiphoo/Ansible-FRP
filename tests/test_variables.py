@@ -228,8 +228,8 @@ class TestMinimalConfigurations:
 
     def test_minimal_client_config_has_required_variables(self, minimal_client_config):
         """Test that minimal client config contains required variables."""
+        # frp_install_client_user is optional (defaults to "" in defaults/main.yml)
         required = [
-            "frp_install_client_user",
             "frp_install_client_server_addr",
             "frp_install_auth_token",
         ]
@@ -363,6 +363,8 @@ class TestVariableTypeValidation:
             "frp_install_transport_tcp_mux",
             "frp_install_transport_tls_enable",
             "frp_install_transport_tls_force",
+            "frp_install_auth_oidc_insecure_skip_verify",
+            "frp_install_auth_oidc_insecure_skip_verify_enabled",
         ]
 
         for var in boolean_vars:
@@ -422,4 +424,45 @@ class TestVariableTypeValidation:
             if var in role_vars:
                 assert isinstance(role_vars[var], list), (
                     f"Variable {var} should be list, got {type(role_vars[var])}"
+                )
+
+
+class TestCollectionMetadata:
+    """Test galaxy.yml collection metadata and build configuration."""
+
+    def test_galaxy_molecule_exclusion_is_complete(self):
+        """Test that galaxy.yml excludes all molecule content, not just molecule.yml.
+
+        Partial exclusion (only molecule.yml) leaves orphaned verify/requirements
+        files in the published artifact, which is worse than all-or-nothing.
+        Molecule is dev-only infrastructure — end users of the collection don't need it.
+        """
+        import os
+        import yaml
+
+        galaxy_path = os.path.join(
+            os.path.dirname(__file__), "..", "galaxy.yml"
+        )
+        with open(galaxy_path) as f:
+            galaxy = yaml.safe_load(f)
+
+        build_ignore = galaxy.get("build_ignore", [])
+
+        # Must exclude the full molecule directory (not just individual files)
+        assert "roles/*/molecule/" in build_ignore or any(
+            "molecule/" in str(p) and "*" not in str(p).replace("roles/*/molecule/", "")
+            for p in build_ignore
+        ), "galaxy.yml must exclude the full roles/*/molecule/ directory"
+
+        # Must NOT use the partial pattern that leaves orphaned files behind
+        partial_patterns = [
+            "roles/*/molecule/*/molecule.yml",
+            "roles/*/molecule/**",
+        ]
+        for pattern in partial_patterns:
+            if pattern in build_ignore:
+                # Partial pattern is only acceptable if the full dir is also excluded
+                assert "roles/*/molecule/" in build_ignore, (
+                    f"galaxy.yml uses partial pattern '{pattern}' without "
+                    f"also excluding the full 'roles/*/molecule/' directory"
                 )

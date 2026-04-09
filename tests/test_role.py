@@ -1385,7 +1385,7 @@ webServer.port = {{ frp_install_client_webserver_port | default(7400) }}
             template_content = f.read()
 
         # Check that sensible defaults are specified in the template
-        assert "| default('your_name')" in template_content  # user has default
+        assert "frp_install_client_user" in template_content  # user rendered conditionally from defaults
         assert "| default(true)" in template_content  # loginFailExit has default
         assert "| default('tcp')" in template_content  # transport protocol has default
         assert "| default(true)" in template_content  # TLS enabled by default
@@ -1428,6 +1428,93 @@ webServer.port = {{ frp_install_client_webserver_port | default(7400) }}
 
         # Check for proxy examples section
         assert "[[proxies]]" in template_content
+
+    def test_auth_token_has_no_hardcoded_fallback(self):
+        """Test that auth.token uses the variable directly without a hardcoded fallback.
+
+        Security: a hardcoded default token is an anti-pattern. The variable
+        frp_install_auth_token is defined as "" in defaults/main.yml and must
+        be set explicitly by the user.
+        """
+        for tpl_name in ("frpc.toml.j2", "frps.toml.j2"):
+            tpl_path = os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "roles",
+                "frp_install",
+                "templates",
+                tpl_name,
+            )
+            with open(tpl_path) as f:
+                content = f.read()
+
+            assert "12345678" not in content, (
+                f"{tpl_name} must not contain hardcoded token '12345678'"
+            )
+            assert "changeme" not in content, (
+                f"{tpl_name} must not contain hardcoded token 'changeme'"
+            )
+            assert 'auth_token }}"' in content or "auth_token }}" in content, (
+                f"{tpl_name} must render auth.token directly from frp_install_auth_token"
+            )
+
+    def test_client_user_is_conditionally_rendered(self):
+        """Test that client user field is only rendered when frp_install_client_user is set.
+
+        frp_install_client_user defaults to "" so the user = line must be
+        guarded by an if-block, not rendered unconditionally with a placeholder.
+        """
+        tpl_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+        with open(tpl_path) as f:
+            content = f.read()
+
+        # The user line must be inside an if block
+        assert "{% if frp_install_client_user %}" in content, (
+            "frpc.toml.j2 must guard 'user =' with {% if frp_install_client_user %}"
+        )
+        # No unconditional default placeholder
+        assert "default('your_name')" not in content, (
+            "frpc.toml.j2 must not use | default('your_name') — "
+            "empty default is set in defaults/main.yml"
+        )
+
+    def test_feature_gates_uses_bare_toml_keys(self):
+        """Test that featureGates rendering uses bare TOML keys, not JSON-quoted strings.
+
+        TOML keys should be bare identifiers (VirtualNet = true) not JSON strings
+        ("VirtualNet" = true).
+        """
+        tpl_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+        with open(tpl_path) as f:
+            content = f.read()
+
+        import re
+
+        # Find the featureGates for-loop block
+        fg_block = re.search(
+            r"featureGates\s*=\s*\{[^}]*\}", content
+        )
+        assert fg_block is not None, "featureGates block not found in frpc.toml.j2"
+
+        fg_text = fg_block.group(0)
+        # The key should NOT be passed through tojson (which adds JSON quotes)
+        assert "key | tojson" not in fg_text, (
+            "featureGates keys must use bare TOML format, not JSON-quoted strings"
+        )
 
 
 class TestConfigurationVariables:
@@ -2158,3 +2245,60 @@ class TestConfigurationVariables:
         assert len(client_conditionals) > 0, (
             "Client template should have enable flag conditionals"
         )
+
+    def test_server_auth_appears_before_transport(self):
+        """Test that auth section is ordered before transport in frps.toml.j2.
+
+        Matches FRP official docs ordering and frpc.toml.j2 convention: bind ports
+        → auth (REQUIRED, near top) → transport → dashboard → log → server limits.
+        """
+        tpl_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+        with open(tpl_path) as f:
+            content = f.read()
+
+        auth_pos = content.index("auth.method")
+        transport_pos = content.index("transport.maxPoolCount")
+        dashboard_pos = content.index("webServer.addr")
+        log_pos = content.index("log.to")
+
+        assert auth_pos < transport_pos, (
+            "frps.toml.j2: auth.method must appear before transport settings"
+        )
+        assert transport_pos < dashboard_pos, (
+            "frps.toml.j2: transport settings must appear before dashboard settings"
+        )
+        assert dashboard_pos < log_pos, (
+            "frps.toml.j2: dashboard settings must appear before log settings"
+        )
+
+    def test_heartbeat_timeout_shared_variable_documented(self):
+        """Test that frp_install_transport_heartbeat_timeout is used in both templates.
+
+        This variable is intentionally shared: frps uses it as server heartbeat timeout
+        and frpc uses it as client heartbeat timeout. Both sides must be set consistently.
+        """
+        for tpl_name in ("frpc.toml.j2", "frps.toml.j2"):
+            tpl_path = os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "roles",
+                "frp_install",
+                "templates",
+                tpl_name,
+            )
+            with open(tpl_path) as f:
+                content = f.read()
+
+            assert "frp_install_transport_heartbeat_timeout" in content, (
+                f"{tpl_name} must reference frp_install_transport_heartbeat_timeout"
+            )
+            assert "transport.heartbeatTimeout" in content, (
+                f"{tpl_name} must render transport.heartbeatTimeout"
+            )

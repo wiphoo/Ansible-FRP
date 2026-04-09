@@ -159,8 +159,8 @@ build_ignore:
   - "*.log"
   - logs/
 
-  # Molecule test files (keep only what's needed for users)
-  - "roles/*/molecule/*/molecule.yml"
+  # Molecule test infrastructure (dev-only, not needed for collection users)
+  - "roles/*/molecule/"
   - "roles/*/.molecule/"
 
   # Release and review artifacts (not part of the published collection)

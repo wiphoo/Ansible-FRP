@@ -34,6 +34,53 @@ proxyBindAddr = "{{ frp_install_proxy_bind_addr | default('127.0.0.1') }}"
 # proxyBindAddr = "127.0.0.1"
 {% endif %}
 
+# Authentication configuration (REQUIRED)
+# auth.method specifies what authentication method to use authenticate frpc with frps.
+# If "token" is specified - token will be read into login message.
+# If "oidc" is specified - OIDC (Open ID Connect) token will be issued using OIDC settings. By default, this value is "token".
+auth.method = "{{ frp_install_auth_method | default('token') }}"
+
+# auth.additionalScopes specifies additional scopes to include authentication information.
+# Optional values are HeartBeats, NewWorkConns.
+{% if frp_install_auth_additional_scopes_enabled | default(false) %}
+auth.additionalScopes = {{ frp_install_auth_additional_scopes | default(['HeartBeats', 'NewWorkConns']) | tojson }}
+{% else %}
+# auth.additionalScopes = ["HeartBeats", "NewWorkConns"]
+{% endif %}
+
+# auth token (REQUIRED - MUST match client)
+{% if frp_install_auth_token_source_enabled | default(false) %}
+# Using token from file (mutually exclusive with auth.token)
+auth.tokenSource.type = "{{ frp_install_auth_token_source_type | default('file') }}"
+auth.tokenSource.file.path = "{{ frp_install_auth_token_source_file_path | default('/etc/frp/token') }}"
+{% else %}
+auth.token = "{{ frp_install_auth_token }}"
+{% endif %}
+
+# alternatively, you can use tokenSource to load the token from a file
+# this is mutually exclusive with auth.token
+# auth.tokenSource.type = "file"
+# auth.tokenSource.file.path = "/etc/frp/token"
+
+# OIDC issuer specifies the issuer to verify OIDC tokens with.
+{% if frp_install_auth_oidc_enabled | default(false) %}
+auth.oidc.issuer = "{{ frp_install_auth_oidc_issuer | default('') }}"
+# OIDC audience specifies the audience OIDC tokens should contain when validated.
+auth.oidc.audience = "{{ frp_install_auth_oidc_audience | default('') }}"
+# OIDC skipExpiryCheck specifies whether to skip checking if the OIDC token is expired.
+auth.oidc.skipExpiryCheck = {{ frp_install_auth_oidc_skip_expiry_check | default(false) | bool | tojson }}
+# OIDC skipIssuerCheck specifies whether to skip checking if the OIDC token's issuer claim matches the issuer specified in OidcIssuer.
+auth.oidc.skipIssuerCheck = {{ frp_install_auth_oidc_skip_issuer_check | default(false) | bool | tojson }}
+{% else %}
+# auth.oidc.issuer = ""
+# OIDC audience specifies the audience OIDC tokens should contain when validated.
+# auth.oidc.audience = ""
+# OIDC skipExpiryCheck specifies whether to skip checking if the OIDC token is expired.
+# auth.oidc.skipExpiryCheck = false
+# OIDC skipIssuerCheck specifies whether to skip checking if the OIDC token's issuer claim matches the issuer specified in OidcIssuer.
+# auth.oidc.skipIssuerCheck = false
+{% endif %}
+
 # QUIC protocol options
 {% if frp_install_transport_quic_enabled | default(false) %}
 transport.quic.keepalivePeriod = {{ frp_install_transport_quic_keepalive_period | default(10) }}
@@ -47,6 +94,7 @@ transport.quic.maxIncomingStreams = {{ frp_install_transport_quic_max_incoming_s
 
 # Heartbeat configure, it's not recommended to modify the default value
 # The default value of heartbeatTimeout is 90. Set negative value to disable it.
+# Note: frp_install_transport_heartbeat_timeout is shared with frpc — set it consistently on both sides.
 {% if frp_install_transport_heartbeat_timeout_enabled | default(false) %}
 transport.heartbeatTimeout = {{ frp_install_transport_heartbeat_timeout | default(90) }}
 {% else %}
@@ -173,53 +221,6 @@ log.disablePrintColor = {{ (frp_install_log_disable_print_color | default(false)
 
 # DetailedErrorsToClient defines whether to send the specific error (with debug info) to frpc. By default, this value is true.
 detailedErrorsToClient = {{ frp_install_detailed_errors_to_client | default(true) | bool | tojson }}
-
-# Authentication configuration (REQUIRED)
-# auth.method specifies what authentication method to use authenticate frpc with frps.
-# If "token" is specified - token will be read into login message.
-# If "oidc" is specified - OIDC (Open ID Connect) token will be issued using OIDC settings. By default, this value is "token".
-auth.method = "{{ frp_install_auth_method | default('token') }}"
-
-# auth.additionalScopes specifies additional scopes to include authentication information.
-# Optional values are HeartBeats, NewWorkConns.
-{% if frp_install_auth_additional_scopes_enabled | default(false) %}
-auth.additionalScopes = {{ frp_install_auth_additional_scopes | default(['HeartBeats', 'NewWorkConns']) | tojson }}
-{% else %}
-# auth.additionalScopes = ["HeartBeats", "NewWorkConns"]
-{% endif %}
-
-# auth token (REQUIRED - MUST match client)
-{% if frp_install_auth_token_source_enabled | default(false) %}
-# Using token from file (mutually exclusive with auth.token)
-auth.tokenSource.type = "{{ frp_install_auth_token_source_type | default('file') }}"
-auth.tokenSource.file.path = "{{ frp_install_auth_token_source_file_path | default('/etc/frp/token') }}"
-{% else %}
-auth.token = "{{ frp_install_auth_token | default('12345678') }}"
-{% endif %}
-
-# alternatively, you can use tokenSource to load the token from a file
-# this is mutually exclusive with auth.token
-# auth.tokenSource.type = "file"
-# auth.tokenSource.file.path = "/etc/frp/token"
-
-# OIDC issuer specifies the issuer to verify OIDC tokens with.
-{% if frp_install_auth_oidc_enabled | default(false) %}
-auth.oidc.issuer = "{{ frp_install_auth_oidc_issuer | default('') }}"
-# OIDC audience specifies the audience OIDC tokens should contain when validated.
-auth.oidc.audience = "{{ frp_install_auth_oidc_audience | default('') }}"
-# OIDC skipExpiryCheck specifies whether to skip checking if the OIDC token is expired.
-auth.oidc.skipExpiryCheck = {{ frp_install_auth_oidc_skip_expiry_check | default(false) | bool | tojson }}
-# OIDC skipIssuerCheck specifies whether to skip checking if the OIDC token's issuer claim matches the issuer specified in OidcIssuer.
-auth.oidc.skipIssuerCheck = {{ frp_install_auth_oidc_skip_issuer_check | default(false) | bool | tojson }}
-{% else %}
-# auth.oidc.issuer = ""
-# OIDC audience specifies the audience OIDC tokens should contain when validated.
-# auth.oidc.audience = ""
-# OIDC skipExpiryCheck specifies whether to skip checking if the OIDC token is expired.
-# auth.oidc.skipExpiryCheck = false
-# OIDC skipIssuerCheck specifies whether to skip checking if the OIDC token's issuer claim matches the issuer specified in OidcIssuer.
-# auth.oidc.skipIssuerCheck = false
-{% endif %}
 
 # userConnTimeout specifies the maximum time to wait for a work connection.
 {% if frp_install_user_conn_timeout_enabled | default(false) %}

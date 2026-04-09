@@ -74,8 +74,8 @@ frp_install_auth_oidc_token_endpoint_url: ""
 frp_install_auth_oidc_additional_endpoint_params_enabled: false
 frp_install_auth_oidc_additional_endpoint_params: {}
 # frp_install_auth_oidc_trusted_ca_file: "/path/to/ca.crt"
-# frp_install_auth_oidc_insecure_skip_verify_enabled: false
-# frp_install_auth_oidc_insecure_skip_verify: false
+frp_install_auth_oidc_insecure_skip_verify_enabled: false
+frp_install_auth_oidc_insecure_skip_verify: false
 # frp_install_auth_oidc_proxy_url: "http://proxy.example.com:8080"
 
 # =============================================================================
@@ -159,7 +159,7 @@ frp_install_ssh_tunnel_gateway_bind_port: 2200
 # =============================================================================
 
 # FRP Client server connection configuration
-frp_install_client_user: "your_name"  # Client user name (user field in frpc.toml)
+frp_install_client_user: ""  # Client user name prefix for proxy names (optional, e.g. "alice" → "alice.ssh")
 frp_install_client_server_addr: "your-server-address.example.com"  # FRP server address to connect to
 frp_install_client_server_port: 7000                               # FRP server port to connect to
 
@@ -227,14 +227,16 @@ frp_install_transport_max_pool_count: 5        # Maximum connection pool size fo
 frp_install_transport_tcp_mux: true            # Enable TCP multiplexing
 frp_install_transport_tcp_mux_keepalive_interval: 60  # TCP mux keepalive interval (seconds)
 
-# Heartbeat (server)
+# Heartbeat timeout — shared by both server and client templates.
+# Server uses frp_install_transport_heartbeat_timeout_enabled to gate it.
+# Client uses frp_install_transport_heartbeat_enabled to gate it, but reads
+# the same frp_install_transport_heartbeat_timeout value.
 frp_install_transport_heartbeat_timeout_enabled: false
-frp_install_transport_heartbeat_timeout: 90
+frp_install_transport_heartbeat_timeout: 90  # seconds; used by both frps and frpc
 
-# Heartbeat (client)
+# Client heartbeat interval (separate from timeout above)
 frp_install_transport_heartbeat_enabled: false
-frp_install_transport_heartbeat_interval: 30
-# Note: client heartbeat timeout uses server's transport_heartbeat_timeout
+frp_install_transport_heartbeat_interval: 30  # seconds; frpc only
 
 # TCP Keepalive (optional)
 frp_install_transport_tcp_keepalive_enabled: false

@@ -115,6 +115,8 @@ def expected_auth_variables():
         "frp_install_auth_oidc_client_secret",
         "frp_install_auth_oidc_scope",
         "frp_install_auth_oidc_token_endpoint_url",
+        "frp_install_auth_oidc_insecure_skip_verify_enabled",
+        "frp_install_auth_oidc_insecure_skip_verify",
     ]
 
 
@@ -258,6 +260,7 @@ def expected_enable_flags():
         "frp_install_auth_additional_scopes_enabled",
         "frp_install_auth_token_source_enabled",
         "frp_install_auth_oidc_enabled",
+        "frp_install_auth_oidc_insecure_skip_verify_enabled",
         "frp_install_kcp_bind_port_enabled",
         "frp_install_quic_bind_port_enabled",
         "frp_install_proxy_bind_addr_enabled",
@@ -469,6 +472,8 @@ def expected_defaults():
         "frp_install_configure_firewall": True,
         "frp_install_verify_checksums": True,
         "frp_install_auth_method": "token",
+        "frp_install_auth_token": "",
+        "frp_install_client_user": "",
         "frp_install_server_addr": "0.0.0.0",
         "frp_install_server_port": 7000,
         "frp_install_dashboard_addr": "127.0.0.1",
