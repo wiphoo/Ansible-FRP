@@ -242,8 +242,8 @@ Complete variable reference for the wiphoo.frp collection.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `frp_install_transport_heartbeat_timeout_enabled` | `false` | Enable heartbeat timeout (server) |
-| `frp_install_transport_heartbeat_timeout` | `90` | Heartbeat timeout in seconds (server) |
+| `frp_install_transport_heartbeat_timeout_enabled` | `false` | Enable heartbeat timeout for client and server (`frpc.toml.j2`, `frps.toml.j2`) |
+| `frp_install_transport_heartbeat_timeout` | `90` | Heartbeat timeout in seconds for client and server (`frpc.toml.j2`, `frps.toml.j2`) |
 | `frp_install_transport_heartbeat_enabled` | `false` | Enable heartbeat (client) |
 | `frp_install_transport_heartbeat_interval` | `30` | Heartbeat interval in seconds (client) |
 
