@@ -4,55 +4,9 @@ import os
 
 import pytest
 import yaml
+from jinja2 import select_autoescape
 
-
-@pytest.fixture
-def role_vars():
-    """Load default variables from the role."""
-    vars_file = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "roles",
-        "frp_install",
-        "defaults",
-        "main.yml",
-    )
-    with open(vars_file) as f:
-        return yaml.safe_load(f)
-
-
-@pytest.fixture
-def role_vars_combined():
-    """Load both defaults and vars files from the role."""
-    defaults_file = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "roles",
-        "frp_install",
-        "defaults",
-        "main.yml",
-    )
-    vars_file = os.path.join(
-        os.path.dirname(__file__),
-        "..",
-        "roles",
-        "frp_install",
-        "vars",
-        "main.yml",
-    )
-
-    # Load defaults
-    with open(defaults_file) as f:
-        defaults = yaml.safe_load(f)
-
-    # Load vars (these override defaults)
-    with open(vars_file) as f:
-        vars_data = yaml.safe_load(f)
-
-    # Combine them (vars override defaults)
-    combined = defaults.copy()
-    combined.update(vars_data)
-    return combined
+# All fixtures are now imported from tests.fixtures via conftest.py
 
 
 class TestFrpInstallRole:
@@ -185,7 +139,7 @@ class TestFrpInstallRole:
         architecture = "amd64"
         import jinja2
 
-        env = jinja2.Environment()
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
 
         # Test filename generation using actual templates
         fn_wo_ext_t = env.from_string(
@@ -241,8 +195,6 @@ class TestFrpInstallRole:
         import os
         import re
 
-        import yaml
-
         defaults_path = os.path.join(
             os.path.dirname(__file__),
             "..",
@@ -281,8 +233,6 @@ class TestFrpInstallRole:
 
         # Read actual default version from role defaults
         import os
-
-        import yaml
 
         defaults_path = os.path.join(
             os.path.dirname(__file__),
@@ -487,17 +437,22 @@ class TestFrpInstallRole:
         assert isinstance(dirs_var, list), "frp_install_dirs should be a list"
         assert len(dirs_var) > 0, "frp_install_dirs should not be empty"
 
-        # Check that directories contain template variables (they will be resolved at runtime)
+        # frp_install_dirs covers binaries and logs; the config dir is created
+        # separately by the config task (mode 0750) when frp_install_create_config is true
         expected_dirs = [
             "{{ frp_install_dir }}",
             "{{ frp_install_log_dir }}",
-            "{{ frp_install_config_dir }}",
         ]
 
         for expected_dir in expected_dirs:
             assert expected_dir in dirs_var, (
                 f"Expected directory {expected_dir} not found in frp_install_dirs"
             )
+
+        assert "{{ frp_install_config_dir }}" not in dirs_var, (
+            "frp_install_config_dir should not be in frp_install_dirs; "
+            "it is created by the config task with restricted permissions (0750)"
+        )
 
     def test_architecture_detection_logic(self):
         """Test that architecture detection logic works correctly."""
@@ -730,7 +685,7 @@ bindPort = 7000
 auth = { method = "token", token = "test_token" }
 log = { to = "{{ frp_install_log_dir }}/frps.log", level = "info" }"""
 
-        env = jinja2.Environment()
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
         template = env.from_string(template_content)
 
         # Test with default variables
@@ -751,7 +706,7 @@ serverPort = 7000
 auth = { method = "token", token = "test_token" }
 log = { to = "{{ frp_install_log_dir }}/frpc.log", level = "info" }"""
 
-        env = jinja2.Environment()
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
         template = env.from_string(template_content)
         rendered = template.render(**role_vars)
 
@@ -777,7 +732,7 @@ Restart=always
 [Install]
 WantedBy=multi-user.target"""
 
-        env = jinja2.Environment()
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
         template = env.from_string(service_template)
         rendered = template.render(**role_vars)
 
@@ -970,7 +925,7 @@ class TestVersionCompatibility:
 
     def test_version_format_validation(self):
         """Test that version format is valid."""
-        valid_versions = ["0.1.0", "0.63.0", "0.64.0"]
+        valid_versions = ["0.63.0", "0.64.0", "0.65.0"]
         invalid_versions = ["0.63", "0.63.0-beta", "latest"]
 
         for version in valid_versions:
@@ -1182,3 +1137,1168 @@ class TestAnsibleIntegration:
         assert "[Install]" in service_content
         assert "ExecStart" in service_content
         assert "frps" in service_content
+
+
+class TestTemplateParameters:
+    """Test cases for template parameters added to frpc.toml.j2."""
+
+    def test_user_parameter_default(self, role_vars):
+        """Test that frp_install_user parameter is defined."""
+        assert "frp_install_user" in role_vars
+        assert role_vars["frp_install_user"] == "frp"
+
+    def test_login_fail_exit_parameter(self, role_vars):
+        """Test that loginFailExit parameter has proper default."""
+        # The parameter should use default of true if not defined
+        # This is tested in template rendering
+        import jinja2
+
+        # Simplified template without Ansible filters
+        template_content = """{% if frp_install_login_fail_exit is defined %}loginFailExit = {{ frp_install_login_fail_exit | lower }}{% else %}loginFailExit = true{% endif %}"""
+
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
+        template = env.from_string(template_content)
+
+        # Test with undefined variable (should use default)
+        rendered = template.render()
+        assert "true" in rendered.lower()
+
+        # Test with explicit false
+        rendered = template.render(frp_install_login_fail_exit="false")
+        assert "false" in rendered.lower()
+
+    def test_transport_protocol_parameter(self, role_vars):
+        """Test that transport protocol parameter is properly handled."""
+        import jinja2
+
+        template_content = """transport.protocol = "{{ frp_install_transport_protocol | default('tcp') }}" """
+
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
+        template = env.from_string(template_content)
+
+        # Test with default
+        rendered = template.render()
+        assert 'transport.protocol = "tcp"' in rendered
+
+        # Test with custom protocol
+        rendered = template.render(frp_install_transport_protocol="websocket")
+        assert 'transport.protocol = "websocket"' in rendered
+
+    def test_transport_connect_server_local_ip(self, role_vars):
+        """Test that connectServerLocalIP parameter is properly handled."""
+        import jinja2
+
+        template_content = """transport.connectServerLocalIP = "{{ frp_install_transport_connect_server_local_ip | default('0.0.0.0') }}" """
+
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
+        template = env.from_string(template_content)
+
+        # Test with default
+        rendered = template.render()
+        assert 'transport.connectServerLocalIP = "0.0.0.0"' in rendered
+
+        # Test with custom IP
+        rendered = template.render(
+            frp_install_transport_connect_server_local_ip="192.168.1.100"
+        )
+        assert 'transport.connectServerLocalIP = "192.168.1.100"' in rendered
+
+    def test_transport_tls_enable_parameter(self, role_vars):
+        """Test that TLS enable parameter is properly handled."""
+        import jinja2
+
+        # Simplified template without Ansible filters
+        template_content = """{% if frp_install_transport_tls_enable is defined %}transport.tls.enable = {{ frp_install_transport_tls_enable | lower }}{% else %}transport.tls.enable = true{% endif %}"""
+
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
+        template = env.from_string(template_content)
+
+        # Test with default (should be true)
+        rendered = template.render()
+        assert "true" in rendered.lower()
+
+        # Test with explicit false
+        rendered = template.render(frp_install_transport_tls_enable="false")
+        assert "false" in rendered.lower()
+
+    def test_udp_packet_size_parameter(self, role_vars):
+        """Test that UDP packet size parameter is properly handled."""
+        import jinja2
+
+        template_content = (
+            """udpPacketSize = {{ frp_install_udp_packet_size | default(1500) }}"""
+        )
+
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
+        template = env.from_string(template_content)
+
+        # Test with default
+        rendered = template.render()
+        assert "udpPacketSize = 1500" in rendered
+
+        # Test with custom size
+        rendered = template.render(frp_install_udp_packet_size=2000)
+        assert "udpPacketSize = 2000" in rendered
+
+    def test_webserver_conditional_rendering(self, role_vars):
+        """Test that webServer section is conditionally rendered."""
+        import jinja2
+
+        template_content = """{% if frp_install_client_webserver_enabled | default(false) %}
+webServer.addr = "{{ frp_install_client_webserver_addr | default('127.0.0.1') }}"
+webServer.port = {{ frp_install_client_webserver_port | default(7400) }}
+{% else %}
+# Admin webServer is disabled
+{% endif %}"""
+
+        env = jinja2.Environment(autoescape=select_autoescape(["html", "xml"]))
+        template = env.from_string(template_content)
+
+        # Test with webServer disabled (default)
+        rendered = template.render()
+        assert "# Admin webServer is disabled" in rendered
+        assert "webServer.addr" not in rendered
+
+        # Test with webServer enabled
+        rendered = template.render(frp_install_client_webserver_enabled=True)
+        assert 'webServer.addr = "127.0.0.1"' in rendered
+        assert "webServer.port = 7400" in rendered
+        assert "# Admin webServer is disabled" not in rendered
+
+    def test_webserver_enabled_default_in_role_vars(self, role_vars):
+        """Test that webServer enabled flag has correct default in role vars."""
+        assert "frp_install_client_webserver_enabled" in role_vars
+        assert role_vars["frp_install_client_webserver_enabled"] is False
+
+    def test_frpc_template_has_all_new_parameters(self):
+        """Test that frpc.toml.j2 template contains all new parameters."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            content = f.read()
+
+        # Check for new parameters
+        assert "frp_install_client_user" in content, "Missing user parameter"
+        assert "frp_install_login_fail_exit" in content, (
+            "Missing loginFailExit parameter"
+        )
+        assert "frp_install_transport_protocol" in content, (
+            "Missing transport protocol parameter"
+        )
+        assert "frp_install_transport_connect_server_local_ip" in content, (
+            "Missing connectServerLocalIP parameter"
+        )
+        assert "frp_install_transport_tls_enable" in content, (
+            "Missing TLS enable parameter"
+        )
+        assert "frp_install_udp_packet_size" in content, (
+            "Missing UDP packet size parameter"
+        )
+        assert "frp_install_client_webserver_enabled" in content, (
+            "Missing webServer enabled conditional"
+        )
+
+    def test_frpc_template_webserver_conditional_structure(self):
+        """Test that frpc.toml.j2 template has proper conditional structure for webServer."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            content = f.read()
+
+        # Check for conditional blocks
+        assert "{% if frp_install_client_webserver_enabled" in content
+        assert "{% else %}" in content
+        assert "{% endif %}" in content
+
+        # Check that webServer configuration is inside conditional
+        assert "webServer.addr" in content
+        assert "webServer.port" in content
+        assert "webServer.user" in content
+        assert "webServer.password" in content
+        assert "webServer.pprofEnable" in content
+
+    def test_backward_compatibility_with_old_template(self):
+        """Test that new template maintains backward compatibility with old defaults."""
+        # This test verifies that the template contains the expected structure
+        # We'll skip full rendering since it requires Ansible filters
+
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        # Verify key configuration sections exist
+        assert "serverAddr" in template_content
+        assert "serverPort" in template_content
+        assert "auth.method" in template_content
+        assert "auth.token" in template_content
+        assert "log.to" in template_content
+        assert "transport.tcpMux" in template_content
+        assert "transport.poolCount" in template_content
+
+        # Verify all old parameters are still supported
+        assert "frp_install_client_server_addr" in template_content
+        assert "frp_install_client_server_port" in template_content
+        assert "frp_install_auth_method" in template_content
+        assert "frp_install_auth_token" in template_content
+        assert "frp_install_log_dir" in template_content
+        assert "frp_install_log_level" in template_content
+        assert "frp_install_transport_tcp_mux" in template_content
+        assert "frp_install_transport_pool_count" in template_content
+
+    def test_new_parameters_have_sensible_defaults(self):
+        """Test that all new parameters have sensible default values."""
+        # This test verifies that the template has sensible defaults set
+        # We'll check the template content rather than rendering it
+
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        # Check that sensible defaults are specified in the template
+        assert (
+            "frp_install_client_user" in template_content
+        )  # user rendered conditionally from defaults
+        assert "| default(true)" in template_content  # loginFailExit has default
+        assert "| default('tcp')" in template_content  # transport protocol has default
+        assert "| default(true)" in template_content  # TLS enabled by default
+        assert "| default(1500)" in template_content  # UDP packet size has default
+        assert "| default(false)" in template_content  # webServer disabled by default
+
+    def test_toml_format_compliance(self):
+        """Test that template follows TOML format."""
+        # This test verifies template structure follows TOML syntax
+
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        # Basic TOML format checks on template structure
+        assert " = " in template_content  # TOML uses = for assignments
+
+        # Check for proper string quoting in template
+        assert (
+            '"{{' in template_content or '= "' in template_content
+        )  # Strings should be quoted
+
+        # Check for key sections
+        assert "user = " in template_content
+        assert "serverAddr = " in template_content
+        assert "serverPort = " in template_content
+        assert "log.to = " in template_content
+        assert "log.level = " in template_content
+        assert "auth.method = " in template_content
+        assert "auth.token = " in template_content
+        assert "transport." in template_content
+
+        # Check for proxy examples section
+        assert "[[proxies]]" in template_content
+
+    def test_auth_token_has_no_hardcoded_fallback(self):
+        """Test that auth.token uses the variable directly without a hardcoded fallback.
+
+        Security: a hardcoded default token is an anti-pattern. The variable
+        frp_install_auth_token is defined as "" in defaults/main.yml and must
+        be set explicitly by the user.
+        """
+        for tpl_name in ("frpc.toml.j2", "frps.toml.j2"):
+            tpl_path = os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "roles",
+                "frp_install",
+                "templates",
+                tpl_name,
+            )
+            with open(tpl_path) as f:
+                content = f.read()
+
+            assert "12345678" not in content, (
+                f"{tpl_name} must not contain hardcoded token '12345678'"
+            )
+            assert "changeme" not in content, (
+                f"{tpl_name} must not contain hardcoded token 'changeme'"
+            )
+            assert 'auth_token }}"' in content or "auth_token }}" in content, (
+                f"{tpl_name} must render auth.token directly from frp_install_auth_token"
+            )
+
+    def test_client_user_is_conditionally_rendered(self):
+        """Test that client user field is only rendered when frp_install_client_user is set.
+
+        frp_install_client_user defaults to "" so the user = line must be
+        guarded by an if-block, not rendered unconditionally with a placeholder.
+        """
+        tpl_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+        with open(tpl_path) as f:
+            content = f.read()
+
+        # The user line must be inside an if block
+        assert "{% if frp_install_client_user %}" in content, (
+            "frpc.toml.j2 must guard 'user =' with {% if frp_install_client_user %}"
+        )
+        # No unconditional default placeholder
+        assert "default('your_name')" not in content, (
+            "frpc.toml.j2 must not use | default('your_name') — "
+            "empty default is set in defaults/main.yml"
+        )
+
+    def test_feature_gates_uses_bare_toml_keys(self):
+        """Test that featureGates rendering uses bare TOML keys, not JSON-quoted strings.
+
+        TOML keys should be bare identifiers (VirtualNet = true) not JSON strings
+        ("VirtualNet" = true).
+        """
+        tpl_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+        with open(tpl_path) as f:
+            content = f.read()
+
+        import re
+
+        # Find the featureGates for-loop block
+        fg_block = re.search(r"featureGates\s*=\s*\{[^}]*\}", content)
+        assert fg_block is not None, "featureGates block not found in frpc.toml.j2"
+
+        fg_text = fg_block.group(0)
+        # The key should NOT be passed through tojson (which adds JSON quotes)
+        assert "key | tojson" not in fg_text, (
+            "featureGates keys must use bare TOML format, not JSON-quoted strings"
+        )
+
+
+class TestConfigurationVariables:
+    """Test cases for all configuration variables."""
+
+    def test_server_kcp_protocol_variables(self):
+        """Test KCP protocol configuration variables for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        # Check KCP variables exist with enable flag
+        assert "frp_install_kcp_bind_port_enabled" in template_content
+        assert "frp_install_kcp_bind_port" in template_content
+        assert "kcpBindPort" in template_content
+
+    def test_server_quic_protocol_variables(self):
+        """Test QUIC protocol configuration variables for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        # Check QUIC bind port variables
+        assert "frp_install_quic_bind_port_enabled" in template_content
+        assert "frp_install_quic_bind_port" in template_content
+        assert "quicBindPort" in template_content
+
+        # Check QUIC transport options
+        assert "frp_install_transport_quic_enabled" in template_content
+        assert "frp_install_transport_quic_keepalive_period" in template_content
+        assert "frp_install_transport_quic_max_idle_timeout" in template_content
+        assert "frp_install_transport_quic_max_incoming_streams" in template_content
+        assert "transport.quic.keepalivePeriod" in template_content
+        assert "transport.quic.maxIdleTimeout" in template_content
+        assert "transport.quic.maxIncomingStreams" in template_content
+
+    def test_server_proxy_bind_address_variable(self):
+        """Test proxy bind address configuration variable for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_proxy_bind_addr_enabled" in template_content
+        assert "frp_install_proxy_bind_addr" in template_content
+        assert "proxyBindAddr" in template_content
+
+    def test_server_heartbeat_timeout_variable(self):
+        """Test heartbeat timeout configuration variable for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_transport_heartbeat_timeout_enabled" in template_content
+        assert "frp_install_transport_heartbeat_timeout" in template_content
+        assert "transport.heartbeatTimeout" in template_content
+
+    def test_server_tcp_keepalive_variable(self):
+        """Test TCP keepalive configuration variable for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_transport_tcp_keepalive_enabled" in template_content
+        assert "frp_install_transport_tcp_keepalive" in template_content
+        assert "transport.tcpKeepalive" in template_content
+
+    def test_server_vhost_variables(self):
+        """Test virtual host configuration variables for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        # Check vhost HTTP port
+        assert "frp_install_vhost_http_port_enabled" in template_content
+        assert "frp_install_vhost_http_port" in template_content
+        assert "vhostHTTPPort" in template_content
+
+        # Check vhost HTTPS port
+        assert "frp_install_vhost_https_port_enabled" in template_content
+        assert "frp_install_vhost_https_port" in template_content
+        assert "vhostHTTPSPort" in template_content
+
+        # Check vhost HTTP timeout
+        assert "frp_install_vhost_http_timeout_enabled" in template_content
+        assert "frp_install_vhost_http_timeout" in template_content
+        assert "vhostHTTPTimeout" in template_content
+
+    def test_server_tcpmux_variables(self):
+        """Test TCP multiplexing configuration variables for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        # Check tcpmux HTTP CONNECT port
+        assert "frp_install_tcpmux_http_connect_port_enabled" in template_content
+        assert "frp_install_tcpmux_http_connect_port" in template_content
+        assert "tcpmuxHTTPConnectPort" in template_content
+
+        # Check tcpmux passthrough
+        assert "frp_install_tcpmux_passthrough_enabled" in template_content
+        assert "frp_install_tcpmux_passthrough" in template_content
+        assert "tcpmuxPassthrough" in template_content
+
+    def test_server_dashboard_assets_dir_variable(self):
+        """Test dashboard assets directory configuration variable for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_dashboard_assets_dir_enabled" in template_content
+        assert "frp_install_dashboard_assets_dir" in template_content
+        assert "webServer.assetsDir" in template_content
+
+    def test_server_auth_additional_scopes_variable(self):
+        """Test auth additional scopes configuration variable for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_auth_additional_scopes_enabled" in template_content
+        assert "frp_install_auth_additional_scopes" in template_content
+        assert "auth.additionalScopes" in template_content
+
+    def test_server_auth_token_source_variables(self):
+        """Test auth token source configuration variables for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_auth_token_source_enabled" in template_content
+        assert "frp_install_auth_token_source_type" in template_content
+        assert "frp_install_auth_token_source_file_path" in template_content
+        assert "auth.tokenSource.type" in template_content
+        assert "auth.tokenSource.file.path" in template_content
+
+    def test_server_oidc_variables(self):
+        """Test OIDC authentication configuration variables for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_auth_oidc_enabled" in template_content
+        assert "frp_install_auth_oidc_issuer" in template_content
+        assert "frp_install_auth_oidc_audience" in template_content
+        assert "frp_install_auth_oidc_skip_expiry_check" in template_content
+        assert "frp_install_auth_oidc_skip_issuer_check" in template_content
+        assert "auth.oidc.issuer" in template_content
+        assert "auth.oidc.audience" in template_content
+        assert "auth.oidc.skipExpiryCheck" in template_content
+        assert "auth.oidc.skipIssuerCheck" in template_content
+
+    def test_server_user_conn_timeout_variable(self):
+        """Test user connection timeout configuration variable for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_user_conn_timeout_enabled" in template_content
+        assert "frp_install_user_conn_timeout" in template_content
+        assert "userConnTimeout" in template_content
+
+    def test_server_max_ports_per_client_variable(self):
+        """Test max ports per client configuration variable for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_max_ports_per_client_enabled" in template_content
+        assert "frp_install_max_ports_per_client" in template_content
+        assert "maxPortsPerClient" in template_content
+
+    def test_server_subdomain_host_variable(self):
+        """Test subdomain host configuration variable for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_subdomain_host_enabled" in template_content
+        assert "frp_install_subdomain_host" in template_content
+        assert "subDomainHost" in template_content
+
+    def test_server_custom_404_page_variable(self):
+        """Test custom 404 page configuration variable for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_custom_404_page_enabled" in template_content
+        assert "frp_install_custom_404_page" in template_content
+        assert "custom404Page" in template_content
+
+    def test_server_ssh_tunnel_gateway_variables(self):
+        """Test SSH tunnel gateway configuration variables for server."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_ssh_tunnel_gateway_enabled" in template_content
+        assert "frp_install_ssh_tunnel_gateway_bind_port" in template_content
+        assert "frp_install_ssh_tunnel_gateway_private_key_file" in template_content
+        assert (
+            "frp_install_ssh_tunnel_gateway_auto_gen_private_key_path"
+            in template_content
+        )
+        assert "frp_install_ssh_tunnel_gateway_authorized_keys_file" in template_content
+        assert "sshTunnelGateway.bindPort" in template_content
+        assert "sshTunnelGateway.privateKeyFile" in template_content
+        assert "sshTunnelGateway.autoGenPrivateKeyPath" in template_content
+        assert "sshTunnelGateway.authorizedKeysFile" in template_content
+
+    def test_client_nat_hole_stun_server_variable(self):
+        """Test NAT hole STUN server configuration variable for client."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_nat_hole_stun_server_enabled" in template_content
+        assert "frp_install_nat_hole_stun_server" in template_content
+        assert "natHoleStunServer" in template_content
+
+    def test_client_auth_additional_scopes_variable(self):
+        """Test auth additional scopes configuration variable for client."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_auth_additional_scopes_enabled" in template_content
+        assert "frp_install_auth_additional_scopes" in template_content
+        assert "auth.additionalScopes" in template_content
+
+    def test_client_auth_token_source_variables(self):
+        """Test auth token source configuration variables for client."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_auth_token_source_enabled" in template_content
+        assert "frp_install_auth_token_source_type" in template_content
+        assert "frp_install_auth_token_source_file_path" in template_content
+        assert "auth.tokenSource.type" in template_content
+        assert "auth.tokenSource.file.path" in template_content
+
+    def test_client_oidc_variables(self):
+        """Test OIDC authentication configuration variables for client."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_auth_oidc_enabled" in template_content
+        assert "frp_install_auth_oidc_client_id" in template_content
+        assert "frp_install_auth_oidc_client_secret" in template_content
+        assert "frp_install_auth_oidc_audience" in template_content
+        assert "frp_install_auth_oidc_scope" in template_content
+        assert "frp_install_auth_oidc_token_endpoint_url" in template_content
+        assert "auth.oidc.clientID" in template_content
+        assert "auth.oidc.clientSecret" in template_content
+        assert "auth.oidc.audience" in template_content
+        assert "auth.oidc.scope" in template_content
+        assert "auth.oidc.tokenEndpointURL" in template_content
+
+    def test_client_oidc_additional_params_variables(self):
+        """Test OIDC additional params configuration variables for client."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert (
+            "frp_install_auth_oidc_additional_endpoint_params_enabled"
+            in template_content
+        )
+        assert "frp_install_auth_oidc_additional_endpoint_params" in template_content
+        assert "frp_install_auth_oidc_trusted_ca_file" in template_content
+        assert "frp_install_auth_oidc_insecure_skip_verify_enabled" in template_content
+        assert "frp_install_auth_oidc_insecure_skip_verify" in template_content
+        assert "frp_install_auth_oidc_proxy_url" in template_content
+        assert "auth.oidc.additionalEndpointParams" in template_content
+        assert "auth.oidc.trustedCaFile" in template_content
+        assert "auth.oidc.insecureSkipVerify" in template_content
+        assert "auth.oidc.proxyURL" in template_content
+
+    def test_client_transport_dial_server_variables(self):
+        """Test transport dial server configuration variables for client."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_transport_dial_server_timeout_enabled" in template_content
+        assert "frp_install_transport_dial_server_timeout" in template_content
+        assert "frp_install_transport_dial_server_keepalive_enabled" in template_content
+        assert "frp_install_transport_dial_server_keepalive" in template_content
+        assert "transport.dialServerTimeout" in template_content
+        assert "transport.dialServerKeepalive" in template_content
+
+    def test_client_transport_proxy_url_variable(self):
+        """Test transport proxy URL configuration variable for client."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_transport_proxy_url" in template_content
+        assert "transport.proxyURL" in template_content
+
+    def test_client_transport_quic_variables(self):
+        """Test transport QUIC configuration variables for client."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_transport_quic_enabled" in template_content
+        assert "frp_install_transport_quic_keepalive_period" in template_content
+        assert "frp_install_transport_quic_max_idle_timeout" in template_content
+        assert "frp_install_transport_quic_max_incoming_streams" in template_content
+        assert "transport.quic.keepalivePeriod" in template_content
+        assert "transport.quic.maxIdleTimeout" in template_content
+        assert "transport.quic.maxIncomingStreams" in template_content
+
+    def test_client_transport_tls_custom_first_byte_variable(self):
+        """Test transport TLS custom first byte configuration variable for client."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert (
+            "frp_install_transport_tls_disable_custom_tls_first_byte_enabled"
+            in template_content
+        )
+        assert (
+            "frp_install_transport_tls_disable_custom_tls_first_byte"
+            in template_content
+        )
+        assert "transport.tls.disableCustomTLSFirstByte" in template_content
+
+    def test_client_transport_heartbeat_variables(self):
+        """Test transport heartbeat configuration variables for client."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_transport_heartbeat_enabled" in template_content
+        assert "frp_install_transport_heartbeat_interval" in template_content
+        assert "frp_install_transport_heartbeat_timeout" in template_content
+        assert "transport.heartbeatInterval" in template_content
+        assert "transport.heartbeatTimeout" in template_content
+
+    def test_client_dns_server_variable(self):
+        """Test DNS server configuration variable for client."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_dns_server" in template_content
+        assert "dnsServer" in template_content
+
+    def test_client_start_proxies_variable(self):
+        """Test start proxies configuration variable for client."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_start_proxies" in template_content
+        assert "start = " in template_content
+
+    def test_client_feature_gates_variables(self):
+        """Test feature gates configuration variables for client."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_feature_gates_enabled" in template_content
+        assert "frp_install_feature_gates" in template_content
+        assert "featureGates" in template_content
+
+    def test_client_virtual_net_address_variable(self):
+        """Test virtual network address configuration variable for client."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_virtual_net_address" in template_content
+        assert "virtualNet.address" in template_content
+
+    def test_client_includes_variable(self):
+        """Test includes configuration variable for client."""
+        template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(template_path) as f:
+            template_content = f.read()
+
+        assert "frp_install_includes" in template_content
+        assert "includes" in template_content
+
+    def test_enable_flags_default_to_false(self):
+        """Test that all enable flags default to false in templates."""
+        server_template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+        client_template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        # Read both templates
+        with open(server_template_path) as f:
+            server_content = f.read()
+        with open(client_template_path) as f:
+            client_content = f.read()
+
+        # Find all enable flags
+        import re
+
+        enable_flags_server = re.findall(
+            r"(\w+_enabled)\s*\|\s*default\((false|true)\)", server_content
+        )
+        enable_flags_client = re.findall(
+            r"(\w+_enabled)\s*\|\s*default\((false|true)\)", client_content
+        )
+
+        # Verify all enable flags default to false
+        for flag, default in enable_flags_server:
+            assert default == "false", (
+                f"Server enable flag {flag} should default to false, got {default}"
+            )
+
+        for flag, default in enable_flags_client:
+            assert default == "false", (
+                f"Client enable flag {flag} should default to false, got {default}"
+            )
+
+    def test_conditional_rendering_with_enable_flags(self):
+        """Test that templates use if statements with enable flags."""
+        server_template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+        client_template_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frpc.toml.j2",
+        )
+
+        with open(server_template_path) as f:
+            server_content = f.read()
+        with open(client_template_path) as f:
+            client_content = f.read()
+
+        # Verify conditional rendering patterns
+        assert "{% if " in server_content
+        assert "{% else %}" in server_content
+        assert "{% endif %}" in server_content
+
+        assert "{% if " in client_content
+        assert "{% else %}" in client_content
+        assert "{% endif %}" in client_content
+
+        # Verify that enable flags are used in conditionals
+        import re
+
+        # Check that enable flags are used in {% if %} statements
+        server_conditionals = re.findall(r"{% if (\w+_enabled)", server_content)
+        client_conditionals = re.findall(r"{% if (\w+_enabled)", client_content)
+
+        assert len(server_conditionals) > 0, (
+            "Server template should have enable flag conditionals"
+        )
+        assert len(client_conditionals) > 0, (
+            "Client template should have enable flag conditionals"
+        )
+
+    def test_server_auth_appears_before_transport(self):
+        """Test that auth section is ordered before transport in frps.toml.j2.
+
+        Matches FRP official docs ordering and frpc.toml.j2 convention: bind ports
+        → auth (REQUIRED, near top) → transport → dashboard → log → server limits.
+        """
+        tpl_path = os.path.join(
+            os.path.dirname(__file__),
+            "..",
+            "roles",
+            "frp_install",
+            "templates",
+            "frps.toml.j2",
+        )
+        with open(tpl_path) as f:
+            content = f.read()
+
+        auth_pos = content.index("auth.method")
+        transport_pos = content.index("transport.maxPoolCount")
+        dashboard_pos = content.index("webServer.addr")
+        log_pos = content.index("log.to")
+
+        assert auth_pos < transport_pos, (
+            "frps.toml.j2: auth.method must appear before transport settings"
+        )
+        assert transport_pos < dashboard_pos, (
+            "frps.toml.j2: transport settings must appear before dashboard settings"
+        )
+        assert dashboard_pos < log_pos, (
+            "frps.toml.j2: dashboard settings must appear before log settings"
+        )
+
+    def test_heartbeat_timeout_shared_variable_documented(self):
+        """Test that frp_install_transport_heartbeat_timeout is used in both templates.
+
+        This variable is intentionally shared: frps uses it as server heartbeat timeout
+        and frpc uses it as client heartbeat timeout. Both sides must be set consistently.
+        """
+        for tpl_name in ("frpc.toml.j2", "frps.toml.j2"):
+            tpl_path = os.path.join(
+                os.path.dirname(__file__),
+                "..",
+                "roles",
+                "frp_install",
+                "templates",
+                tpl_name,
+            )
+            with open(tpl_path) as f:
+                content = f.read()
+
+            assert "frp_install_transport_heartbeat_timeout" in content, (
+                f"{tpl_name} must reference frp_install_transport_heartbeat_timeout"
+            )
+            assert "transport.heartbeatTimeout" in content, (
+                f"{tpl_name} must render transport.heartbeatTimeout"
+            )

@@ -17,5 +17,5 @@ collections:
 
   # Optional: Include the collection being tested
   - name: wiphoo.frp
-    version: ">=0.1.0"
+    version: ">=0.2.0"
     # Local collection being tested (will be installed from build artifact)

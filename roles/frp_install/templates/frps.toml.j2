@@ -5,75 +5,290 @@
 # Please customize according to your needs
 
 # Basic server binding configuration
+# A literal address or host name for IPv6 must be enclosed
+# in square brackets, as in "[::1]:80", "[ipv6-host]:http" or "[ipv6-host%zone]:80"
+# For single "bindAddr" field, no need square brackets, like `bindAddr = "::"`.
 bindAddr = "{{ frp_install_server_addr | default('0.0.0.0') }}"
 bindPort = {{ frp_install_server_port | default(7000) }}
 
+# UDP port used for KCP protocol, it can be same with 'bindPort'.
+# If not set, KCP is disabled in frps.
+{% if frp_install_kcp_bind_port_enabled | default(false) %}
+kcpBindPort = {{ frp_install_kcp_bind_port | default(7000) }}
+{% else %}
+# kcpBindPort = 7000
+{% endif %}
+
+# UDP port used for QUIC protocol.
+# If not set, QUIC is disabled in frps.
+{% if frp_install_quic_bind_port_enabled | default(false) %}
+quicBindPort = {{ frp_install_quic_bind_port | default(7002) }}
+{% else %}
+# quicBindPort = 7002
+{% endif %}
+
+# Specify which address proxy will listen for, default value is same with bindAddr
+{% if frp_install_proxy_bind_addr_enabled | default(false) %}
+proxyBindAddr = "{{ frp_install_proxy_bind_addr | default('127.0.0.1') }}"
+{% else %}
+# proxyBindAddr = "127.0.0.1"
+{% endif %}
+
 # Authentication configuration (REQUIRED)
+# auth.method specifies what authentication method to use authenticate frpc with frps.
+# If "token" is specified - token will be read into login message.
+# If "oidc" is specified - OIDC (Open ID Connect) token will be issued using OIDC settings. By default, this value is "token".
 auth.method = "{{ frp_install_auth_method | default('token') }}"
-auth.token = "{{ frp_install_auth_token | default('changeme_default_token_123') }}"
 
-# Log configuration
-log.to = "{{ frp_install_log_dir | default('/var/log/frp') }}/frps.log"
-log.level = "{{ frp_install_log_level | default('info') }}"
-log.maxDays = {{ frp_install_log_max_days | default(3) }}
-log.disablePrintColor = {{ (frp_install_log_disable_print_color | default(false)) | bool | tojson }}
+# auth.additionalScopes specifies additional scopes to include authentication information.
+# Optional values are HeartBeats, NewWorkConns.
+{% if frp_install_auth_additional_scopes_enabled | default(false) %}
+auth.additionalScopes = {{ frp_install_auth_additional_scopes | default(['HeartBeats', 'NewWorkConns']) | tojson }}
+{% else %}
+# auth.additionalScopes = ["HeartBeats", "NewWorkConns"]
+{% endif %}
 
-# Dashboard configuration (accessible on unprivileged port)
+# auth token (REQUIRED - MUST match client)
+{% if frp_install_auth_token_source_enabled | default(false) %}
+# Using token from file (mutually exclusive with auth.token)
+auth.tokenSource.type = "{{ frp_install_auth_token_source_type | default('file') }}"
+auth.tokenSource.file.path = "{{ frp_install_auth_token_source_file_path | default('/etc/frp/token') }}"
+{% else %}
+auth.token = "{{ frp_install_auth_token }}"
+{% endif %}
+
+# alternatively, you can use tokenSource to load the token from a file
+# this is mutually exclusive with auth.token
+# auth.tokenSource.type = "file"
+# auth.tokenSource.file.path = "/etc/frp/token"
+
+# OIDC issuer specifies the issuer to verify OIDC tokens with.
+{% if frp_install_auth_oidc_enabled | default(false) %}
+auth.oidc.issuer = "{{ frp_install_auth_oidc_issuer | default('') }}"
+# OIDC audience specifies the audience OIDC tokens should contain when validated.
+auth.oidc.audience = "{{ frp_install_auth_oidc_audience | default('') }}"
+# OIDC skipExpiryCheck specifies whether to skip checking if the OIDC token is expired.
+auth.oidc.skipExpiryCheck = {{ frp_install_auth_oidc_skip_expiry_check | default(false) | bool | tojson }}
+# OIDC skipIssuerCheck specifies whether to skip checking if the OIDC token's issuer claim matches the issuer specified in OidcIssuer.
+auth.oidc.skipIssuerCheck = {{ frp_install_auth_oidc_skip_issuer_check | default(false) | bool | tojson }}
+{% else %}
+# auth.oidc.issuer = ""
+# OIDC audience specifies the audience OIDC tokens should contain when validated.
+# auth.oidc.audience = ""
+# OIDC skipExpiryCheck specifies whether to skip checking if the OIDC token is expired.
+# auth.oidc.skipExpiryCheck = false
+# OIDC skipIssuerCheck specifies whether to skip checking if the OIDC token's issuer claim matches the issuer specified in OidcIssuer.
+# auth.oidc.skipIssuerCheck = false
+{% endif %}
+
+# QUIC protocol options
+{% if frp_install_transport_quic_enabled | default(false) %}
+transport.quic.keepalivePeriod = {{ frp_install_transport_quic_keepalive_period | default(10) }}
+transport.quic.maxIdleTimeout = {{ frp_install_transport_quic_max_idle_timeout | default(30) }}
+transport.quic.maxIncomingStreams = {{ frp_install_transport_quic_max_incoming_streams | default(100000) }}
+{% else %}
+# transport.quic.keepalivePeriod = 10
+# transport.quic.maxIdleTimeout = 30
+# transport.quic.maxIncomingStreams = 100000
+{% endif %}
+
+# Heartbeat configure, it's not recommended to modify the default value
+# The default value of heartbeatTimeout is 90. Set negative value to disable it.
+# Note: frp_install_transport_heartbeat_timeout is shared with frpc — set it consistently on both sides.
+{% if frp_install_transport_heartbeat_timeout_enabled | default(false) %}
+transport.heartbeatTimeout = {{ frp_install_transport_heartbeat_timeout | default(90) }}
+{% else %}
+# transport.heartbeatTimeout = 90
+{% endif %}
+
+# Pool count in each proxy will keep no more than maxPoolCount.
+transport.maxPoolCount = {{ frp_install_transport_max_pool_count | default(5) }}
+
+# If tcp stream multiplexing is used, default is true
+transport.tcpMux = {{ frp_install_transport_tcp_mux | default(true) | bool | tojson }}
+
+# Specify keep alive interval for tcp mux.
+# only valid if tcpMux is true.
+transport.tcpMuxKeepaliveInterval = {{ frp_install_transport_tcp_mux_keepalive_interval | default(60) }}
+
+# tcpKeepalive specifies the interval between keep-alive probes for an active network connection between frpc and frps.
+# If negative, keep-alive probes are disabled.
+{% if frp_install_transport_tcp_keepalive_enabled | default(false) %}
+transport.tcpKeepalive = {{ frp_install_transport_tcp_keepalive | default(7200) }}
+{% else %}
+# transport.tcpKeepalive = 7200
+{% endif %}
+
+# transport.tls.force specifies whether to only accept TLS-encrypted connections. By default, the value is false.
+transport.tls.force = {{ frp_install_transport_tls_force | default(false) | bool | tojson }}
+
+# TLS certificate configuration (optional)
+{% if frp_install_transport_tls_cert_file is defined and frp_install_transport_tls_cert_file %}
+transport.tls.certFile = "{{ frp_install_transport_tls_cert_file }}"
+{% else %}
+# transport.tls.certFile = "server.crt"
+{% endif %}
+{% if frp_install_transport_tls_key_file is defined and frp_install_transport_tls_key_file %}
+transport.tls.keyFile = "{{ frp_install_transport_tls_key_file }}"
+{% else %}
+# transport.tls.keyFile = "server.key"
+{% endif %}
+{% if frp_install_transport_tls_trusted_ca_file is defined and frp_install_transport_tls_trusted_ca_file %}
+transport.tls.trustedCaFile = "{{ frp_install_transport_tls_trusted_ca_file }}"
+{% else %}
+# transport.tls.trustedCaFile = "ca.crt"
+{% endif %}
+
+# If you want to support virtual host, you must set the http port for listening (optional)
+# Note: http port and https port can be same with bindPort
+# WARNING: These require root privileges for standard ports (80, 443) and may cause "bind: permission denied" errors
+{% if frp_install_vhost_http_port_enabled | default(false) %}
+vhostHTTPPort = {{ frp_install_vhost_http_port | default(8080) }}   # Use unprivileged ports like 8080 instead of 80
+{% else %}
+# vhostHTTPPort = 8080   # Use unprivileged ports like 8080 instead of 80
+{% endif %}
+{% if frp_install_vhost_https_port_enabled | default(false) %}
+vhostHTTPSPort = {{ frp_install_vhost_https_port | default(8443) }}  # Use unprivileged ports like 8443 instead of 443
+{% else %}
+# vhostHTTPSPort = 8443  # Use unprivileged ports like 8443 instead of 443
+{% endif %}
+
+# Response header timeout(seconds) for vhost http server, default is 60s
+{% if frp_install_vhost_http_timeout_enabled | default(false) %}
+vhostHTTPTimeout = {{ frp_install_vhost_http_timeout | default(60) }}
+{% else %}
+# vhostHTTPTimeout = 60
+{% endif %}
+
+# tcpmuxHTTPConnectPort specifies the port that the server listens for TCP
+# HTTP CONNECT requests. If the value is 0, the server will not multiplex TCP
+# requests on one single port. If it's not - it will listen on this value for
+# HTTP CONNECT requests. By default, this value is 0.
+{% if frp_install_tcpmux_http_connect_port_enabled | default(false) %}
+tcpmuxHTTPConnectPort = {{ frp_install_tcpmux_http_connect_port | default(1337) }}
+{% else %}
+# tcpmuxHTTPConnectPort = 1337
+{% endif %}
+
+# If tcpmuxPassthrough is true, frps won't do any update on traffic.
+{% if frp_install_tcpmux_passthrough_enabled | default(false) %}
+tcpmuxPassthrough = {{ frp_install_tcpmux_passthrough | default(false) | bool | tojson }}
+{% else %}
+# tcpmuxPassthrough = false
+{% endif %}
+
+# Configure the web server to enable the dashboard for frps.
+# dashboard is available only if webServer.port is set.
 webServer.addr = "{{ frp_install_dashboard_addr | default('127.0.0.1') }}"
 webServer.port = {{ frp_install_dashboard_port | default(7500) }}
 webServer.user = "{{ frp_install_dashboard_user | default('admin') }}"
 webServer.password = "{{ frp_install_dashboard_password | default('admin') }}"
 
-# Transport configuration
-transport.maxPoolCount = {{ frp_install_transport_max_pool_count }}
-transport.tcpMux = {{ frp_install_transport_tcp_mux | lower }}
-transport.tcpMuxKeepaliveInterval = {{ frp_install_transport_tcp_mux_keepalive_interval }}
-
-# Port restrictions (optional, disabled by default)
-{% if frp_install_allow_ports is defined and frp_install_allow_ports %}
-allowPorts = {{ frp_install_allow_ports | tojson }}
+# TLS configuration for dashboard (optional)
+{% if frp_install_dashboard_tls_cert_file is defined and frp_install_dashboard_tls_cert_file %}
+webServer.tls.certFile = "{{ frp_install_dashboard_tls_cert_file }}"
+{% else %}
+# webServer.tls.certFile = "server.crt"
+{% endif %}
+{% if frp_install_dashboard_tls_key_file is defined and frp_install_dashboard_tls_key_file %}
+webServer.tls.keyFile = "{{ frp_install_dashboard_tls_key_file }}"
+{% else %}
+# webServer.tls.keyFile = "server.key"
 {% endif %}
 
-# ==========================================
-# Optional Configurations (commented out)
-# ==========================================
-# Uncomment and configure these as needed
-
-# KCP protocol support (optional)
-# kcpBindPort = 7000
-
-# HTTP/HTTPS virtual host support (requires root privileges for standard ports)
-# WARNING: These require root privileges and may cause "bind: permission denied" errors
-# vhostHTTPPort = 8080   # Use unprivileged ports like 8080 instead of 80
-# vhostHTTPSPort = 8443  # Use unprivileged ports like 8443 instead of 443
-# vhostHTTPTimeout = 60
-
-# TLS configuration (optional)
-# transport.tls.force = false
-
-# Subdomain support (optional)
-# subDomainHost = "frps.com"
-
-# Advanced configurations (optional)
-# userConnTimeout = 10
-# maxPortsPerClient = 0
-# udpPacketSize = 1500
-# detailedErrorsToClient = true
-# natholeAnalysisDataReserveHours = 168
-
-# Custom 404 page (optional)
-# custom404Page = "/path/to/404.html"
-
-# Alternative token loading from file (optional)
-# auth.tokenSource.type = "file"
-# auth.tokenSource.file.path = "/etc/frp/token"
-
-# Additional authentication scopes (optional)
-# auth.additionalScopes = ["HeartBeats", "NewWorkConns"]
-
-# Dashboard assets directory (optional)
+# Dashboard assets directory (only for debug mode)
+{% if frp_install_dashboard_assets_dir_enabled | default(false) %}
+webServer.assetsDir = "{{ frp_install_dashboard_assets_dir | default('./static') }}"
+{% else %}
 # webServer.assetsDir = "./static"
-# webServer.pprofEnable = false
+{% endif %}
 
-# Proxy binding address (optional)
-# proxyBindAddr = "127.0.0.1"
+# Enable golang pprof handlers in dashboard listener.
+# Dashboard port must be set first
+webServer.pprofEnable = {{ frp_install_dashboard_pprof_enable | default(false) | bool | tojson }}
+
+# enablePrometheus will export prometheus metrics on webServer in /metrics api.
+enablePrometheus = {{ frp_install_enable_prometheus | default(true) | bool | tojson }}
+
+# Log configuration
+# console or real logFile path like ./frps.log
+log.to = "{{ frp_install_log_dir | default('/var/log/frp') }}/frps.log"
+# trace, debug, info, warn, error
+log.level = "{{ frp_install_log_level | default('info') }}"
+log.maxDays = {{ frp_install_log_max_days | default(3) }}
+# disable log colors when log.to is console, default is false
+log.disablePrintColor = {{ (frp_install_log_disable_print_color | default(false)) | bool | tojson }}
+
+# DetailedErrorsToClient defines whether to send the specific error (with debug info) to frpc. By default, this value is true.
+detailedErrorsToClient = {{ frp_install_detailed_errors_to_client | default(true) | bool | tojson }}
+
+# userConnTimeout specifies the maximum time to wait for a work connection.
+{% if frp_install_user_conn_timeout_enabled | default(false) %}
+userConnTimeout = {{ frp_install_user_conn_timeout | default(10) }}
+{% else %}
+# userConnTimeout = 10
+{% endif %}
+
+# Port restrictions (optional, disabled by default)
+# Only allow frpc to bind ports you list. By default, there won't be any limit.
+{% if frp_install_allow_ports is defined and frp_install_allow_ports %}
+allowPorts = {{ frp_install_allow_ports | tojson }}
+{% else %}
+# allowPorts = [
+#   { start = 2000, end = 3000 },
+#   { single = 3001 },
+#   { single = 3003 },
+#   { start = 4000, end = 50000 }
+# ]
+{% endif %}
+
+# Max ports can be used for each client, default value is 0 means no limit
+{% if frp_install_max_ports_per_client_enabled | default(false) %}
+maxPortsPerClient = {{ frp_install_max_ports_per_client | default(0) }}
+{% else %}
+# maxPortsPerClient = 0
+{% endif %}
+
+# If subDomainHost is not empty, you can set subdomain when type is http or https in frpc's configure file
+# When subdomain is test, the host used by routing is test.frps.com
+{% if frp_install_subdomain_host_enabled | default(false) %}
+subDomainHost = "{{ frp_install_subdomain_host | default('frps.com') }}"
+{% else %}
+# subDomainHost = "frps.com"
+{% endif %}
+
+# Custom 404 page for HTTP requests
+{% if frp_install_custom_404_page_enabled | default(false) %}
+custom404Page = "{{ frp_install_custom_404_page | default('/path/to/404.html') }}"
+{% else %}
+# custom404Page = "/path/to/404.html"
+{% endif %}
+
+# Specify udp packet size, unit is byte. If not set, the default value is 1500.
+# This parameter should be same between client and server.
+# It affects the udp and sudp proxy.
+udpPacketSize = {{ frp_install_udp_packet_size | default(1500) }}
+
+# Retention time for NAT hole punching strategy data.
+natholeAnalysisDataReserveHours = {{ frp_install_nathole_analysis_data_reserve_hours | default(168) }}
+
+# SSH tunnel gateway
+# If you want to enable this feature, the bindPort parameter is required, while others are optional.
+# By default, this feature is disabled. It will be enabled if bindPort is greater than 0.
+{% if frp_install_ssh_tunnel_gateway_enabled | default(false) %}
+sshTunnelGateway.bindPort = {{ frp_install_ssh_tunnel_gateway_bind_port | default(2200) }}
+{% if frp_install_ssh_tunnel_gateway_private_key_file is defined and frp_install_ssh_tunnel_gateway_private_key_file %}
+sshTunnelGateway.privateKeyFile = "{{ frp_install_ssh_tunnel_gateway_private_key_file }}"
+{% endif %}
+{% if frp_install_ssh_tunnel_gateway_auto_gen_private_key_path is defined and frp_install_ssh_tunnel_gateway_auto_gen_private_key_path %}
+sshTunnelGateway.autoGenPrivateKeyPath = "{{ frp_install_ssh_tunnel_gateway_auto_gen_private_key_path }}"
+{% endif %}
+{% if frp_install_ssh_tunnel_gateway_authorized_keys_file is defined and frp_install_ssh_tunnel_gateway_authorized_keys_file %}
+sshTunnelGateway.authorizedKeysFile = "{{ frp_install_ssh_tunnel_gateway_authorized_keys_file }}"
+{% endif %}
+{% else %}
+# sshTunnelGateway.bindPort = 2200
+# sshTunnelGateway.privateKeyFile = "/home/frp-user/.ssh/id_rsa"
+# sshTunnelGateway.autoGenPrivateKeyPath = ""
+# sshTunnelGateway.authorizedKeysFile = "/home/frp-user/.ssh/authorized_keys"
+{% endif %}

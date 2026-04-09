@@ -11,16 +11,24 @@ The `frp_install` role provides comprehensive automation for deploying FRP in yo
 - **Downloads** FRP binaries from official GitHub releases
 - **Installs** frpc (client) and/or frps (server) components
 - **Creates** dedicated system user and directories
-- **Generates** configuration files from templates
+- **Generates** TOML configuration files from templates
 - **Manages** systemd services for automatic startup
 - **Configures** firewall rules (optional)
 - **Verifies** checksums for security
+
+### Configuration Format
+
+**TOML Only**: As of v0.1.0, this role exclusively uses TOML configuration format (FRP v0.52.0+). INI format support has been deprecated and removed.
+
+- ✅ **Supported**: TOML (frpc.toml.j2, frps.toml.j2)
+- ❌ **Deprecated**: INI format (removed in v0.1.0)
 
 ## Requirements
 
 - **Operating System**: Linux (Ubuntu, Debian, CentOS, RHEL, Fedora)
 - **Privileges**: Root access required (`become: true`)
 - **Python**: 3.11+ for Ansible execution
+- **FRP Version**: 0.52.0+ (TOML configuration format)
 - **Internet Access**: To download FRP releases
 
 ## Basic Usage
@@ -36,7 +44,8 @@ The `frp_install` role provides comprehensive automation for deploying FRP in yo
     - role: wiphoo.frp.frp_install
       vars:
         frp_install_files: ["frpc"]
-        frp_install_server_addr: "server.example.com"
+        frp_install_client_server_addr: "server.example.com"
+        frp_install_client_server_port: 7000
         frp_install_auth_token: "{{ vault_frp_token }}"
 ```
 
@@ -74,10 +83,10 @@ The `frp_install` role provides comprehensive automation for deploying FRP in yo
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `frp_install_version` | `"latest"` | FRP version to install |
+| `frp_install_version` | `"0.65.0"` | FRP version to install |
 | `frp_install_files` | `["frpc"]` | Components: frpc, frps, or both |
 | `frp_install_verify_checksums` | `true` | Verify download integrity |
-| `frp_install_dir` | `"/usr/local/bin"` | Binary installation directory |
+| `frp_install_dir` | `"/usr/local/bin/frp"` | Binary installation directory |
 
 ### Service Management
 
@@ -137,21 +146,23 @@ frp_install_group: "svcfrp"
 
 ### TLS Security
 
-TLS configuration is handled in the configuration templates. To enable TLS, you would need to customize the frp configuration files manually or extend the role templates.
+TLS is configured through role variables—no manual template edits required. For example:
+
+- `frp_install_transport_tls_enable: true`
+- **Client-specific**: `frp_install_client_tls_{cert_file,key_file,trusted_ca_file,server_name}`
+- **Server / transport**: `frp_install_transport_tls_{cert_file,key_file,trusted_ca_file}`
+
+Refer to the API documentation for the complete TLS variable reference.
 
 ### Proxy Configuration
 
-```yaml
-frp_proxies:
-  - name: "ssh"
-    type: "tcp"
-    local_port: 22
-    remote_port: 2222
+Define individual proxy stanzas in your `frpc.toml.j2` template (see comments near the bottom of the shipped template). Use `frp_install_start_proxies` to restrict which configured proxies start automatically:
 
-  - name: "web"
-    type: "http"
-    local_port: 80
-    custom_domains: ["app.example.com"]
+```yaml
+frp_install_start_proxies:
+  - "ssh"
+  - "web"
+  - "database"
 ```
 
 ## Examples

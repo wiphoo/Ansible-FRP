@@ -4,14 +4,19 @@ This page documents practical installation steps for the wiphoo.frp Ansible coll
 
 ## Requirements
 
-- **Ansible Core**: 2.15+ (automatically handled by uv/pip)
+- **Ansible Core**: 2.17+ (automatically handled by uv/pip)
 - **Python**: 3.11+ for development, 3.8+ for runtime
 - **Target Systems**: Linux (Ubuntu 20.04+, Debian 10+, CentOS 8+/RHEL 8+, Fedora 35+)
+- **FRP Version**: 0.52.0+ (TOML configuration format) - default: 0.65.0
 - **Network Access**: Internet connection to download FRP binaries (or provide local mirror)
 - **Privileges**: Root access required (`become: true`) for system installation
 - **Dependencies**:
   - `systemd` and `systemd-sysv` for service management (Ubuntu/Debian)
   - `systemd` package for other distributions
+
+## Configuration Format
+
+**Important**: This collection uses **TOML configuration format only** (FRP v0.52.0+). INI format support has been deprecated as of v0.1.0.
 
 ## Install the Collection
 
@@ -32,7 +37,7 @@ Using a requirements file:
 ```yaml
 collections:
   - name: wiphoo.frp
-    version: ">=0.1.0"
+    version: ">=0.2.0"
 ```
 
 ```bash

@@ -1,20 +1,17 @@
 # Installation, Usage & Examples
 
-Complete guide for installing, configuring, and deploying the wiphoo.frp Ansib# Transport optimization for high-throughput clients
-frp_install_transport_pool_count: 20
-frp_install_transport_tcp_mux: true
-frp_install_transport_tcp_mux_keepalive_interval: 30
-
-# Reduce resource usage for low-resource environments
-frp_install_transport_pool_count: 2
-frp_install_transport_tcp_mux_keepalive_interval: 120ction with practical examples.
+Complete guide for installing, configuring, and deploying the `wiphoo.frp` Ansible collection. The sections below cover installation prerequisites, quick-start playbooks, production-hardening patterns, and performance tuning tips.
 
 ## 📦 Installation
 
 ### Requirements
-- Ansible Core >=2.15.0, Python >=3.11
+- Ansible Core >=2.17.0, Python >=3.11
 - Linux (Ubuntu, Debian, CentOS/RHEL, Fedora)
+- FRP v0.52.0+ (TOML configuration format) - default: v0.65.0
 - Internet access and admin privileges
+
+### Configuration Format
+**TOML Only**: This collection uses TOML configuration format exclusively (INI support deprecated as of v0.1.0).
 
 ### Install Collection
 
@@ -27,7 +24,7 @@ ansible-galaxy collection install wiphoo.frp
 ```yaml
 collections:
   - name: wiphoo.frp
-    version: ">=0.1.0"
+    version: ">=0.2.0"
 ```
 ```bash
 ansible-galaxy collection install -r requirements.yml
@@ -84,11 +81,8 @@ ansible-galaxy collection list wiphoo.frp
         frp_install_files: ["frpc"]
         frp_install_client_server_addr: "your-server.com"
         frp_install_auth_token: "your-secure-token"
-        frp_proxies:
-          - name: "ssh"
-            type: "tcp"
-            local_port: 22
-            remote_port: 2222
+        frp_install_start_proxies:
+          - "ssh"  # Ensure matching proxy definitions in your frpc template
 ```
 
 ### Security Configuration
@@ -118,13 +112,13 @@ frp_install_transport_tcp_mux_keepalive_interval: 30
 **Client Optimization:**
 ```yaml
 # Transport optimization for high-throughput clients
-frp_transport_pool_count: 20
-frp_transport_tcp_mux: true
-frp_transport_tcp_mux_keepalive_interval: 30
+frp_install_transport_pool_count: 20
+frp_install_transport_tcp_mux: true
+frp_install_transport_tcp_mux_keepalive_interval: 30
 
 # Reduce resource usage for low-resource environments
-frp_transport_pool_count: 2
-frp_transport_tcp_mux_keepalive_interval: 120
+frp_install_transport_pool_count: 2
+frp_install_transport_tcp_mux_keepalive_interval: 120
 ```
 
 ## 🎯 Practical Examples
@@ -186,7 +180,7 @@ Use Vault for tokens and enable logging for audit:
         frp_install_dashboard_addr: "0.0.0.0"
         frp_install_dashboard_port: 7500
         frp_install_dashboard_user: "admin"
-        frp_install_dashboard_pwd: "{{ vault_dashboard_password }}"
+        frp_install_dashboard_password: "{{ vault_dashboard_password }}"
 
 - hosts: corp_clients
   become: true
@@ -290,8 +284,10 @@ frp_install_auth_token: "{{ vault_frp_token }}"
 
 **Server Optimization:**
 ```yaml
-frp_install_server_max_clients: 1000
-frp_install_server_max_ports_per_client: 10
+frp_install_user_conn_timeout_enabled: true
+frp_install_user_conn_timeout: 10
+frp_install_max_ports_per_client_enabled: true
+frp_install_max_ports_per_client: 10
 frp_install_log_level: "warn"
 frp_install_log_max_days: 7
 ```

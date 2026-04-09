@@ -4,7 +4,7 @@ galaxy_info:
   author: Wiphoo
   description: Installs frp (Fast Reverse Proxy) on supported systems.
   license: MIT
-  min_ansible_version: "2.9"
+  min_ansible_version: "2.17"
   platforms:
     - name: Ubuntu
       versions:

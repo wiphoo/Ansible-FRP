@@ -1,0 +1,348 @@
+---
+# Comprehensive Verification for Configuration Variables
+# This playbook verifies that all variables are properly rendered
+
+- name: Verify Configuration Variables
+  hosts: all
+  become: true
+  gather_facts: true
+
+  vars:
+    frp_install_config_dir: "/etc/frp"
+
+  tasks:
+    # ==========================================
+    # SERVER CONFIGURATION VERIFICATION
+    # ==========================================
+
+    - name: Read server configuration file
+      ansible.builtin.slurp:
+        src: "{{ frp_install_config_dir }}/frps.toml"
+      register: frp_install_frps_config_raw
+
+    - name: Set server configuration content
+      ansible.builtin.set_fact:
+        frp_install_frps_config: "{{ frp_install_frps_config_raw.content | b64decode }}"
+
+    - name: Display server configuration for debugging
+      ansible.builtin.debug:
+        msg: "{{ frp_install_frps_config }}"
+        verbosity: 2
+
+    # KCP Protocol
+    - name: Verify KCP bind port is enabled
+      ansible.builtin.assert:
+        that:
+          - '"kcpBindPort = 7000" in frp_install_frps_config'
+        fail_msg: "KCP bind port not configured"
+        success_msg: "✓ KCP bind port configured"
+
+    # QUIC Protocol
+    - name: Verify QUIC bind port is enabled
+      ansible.builtin.assert:
+        that:
+          - '"quicBindPort = 7002" in frp_install_frps_config'
+        fail_msg: "QUIC bind port not configured"
+        success_msg: "✓ QUIC bind port configured"
+
+    - name: Verify QUIC transport options are enabled
+      ansible.builtin.assert:
+        that:
+          - '"transport.quic.keepalivePeriod = 15" in frp_install_frps_config'
+          - '"transport.quic.maxIdleTimeout = 45" in frp_install_frps_config'
+          - '"transport.quic.maxIncomingStreams = 200000" in frp_install_frps_config'
+        fail_msg: "QUIC transport options not configured"
+        success_msg: "✓ QUIC transport options configured"
+
+    # Proxy Bind Address
+    - name: Verify proxy bind address is enabled
+      ansible.builtin.assert:
+        that:
+          - '"proxyBindAddr" in frp_install_frps_config'
+        fail_msg: "Proxy bind address not configured"
+        success_msg: "✓ Proxy bind address configured"
+
+    # Transport Heartbeat
+    - name: Verify transport heartbeat timeout is enabled
+      ansible.builtin.assert:
+        that:
+          - '"transport.heartbeatTimeout = 120" in frp_install_frps_config'
+        fail_msg: "Transport heartbeat timeout not configured"
+        success_msg: "✓ Transport heartbeat timeout configured"
+
+    # Transport TCP Keepalive
+    - name: Verify TCP keepalive is enabled
+      ansible.builtin.assert:
+        that:
+          - '"transport.tcpKeepalive = 3600" in frp_install_frps_config'
+        fail_msg: "TCP keepalive not configured"
+        success_msg: "✓ TCP keepalive configured"
+
+    # Virtual Host
+    - name: Verify vhost HTTP port is enabled
+      ansible.builtin.assert:
+        that:
+          - '"vhostHTTPPort = 8080" in frp_install_frps_config'
+        fail_msg: "VHost HTTP port not configured"
+        success_msg: "✓ VHost HTTP port configured"
+
+    - name: Verify vhost HTTPS port is enabled
+      ansible.builtin.assert:
+        that:
+          - '"vhostHTTPSPort = 8443" in frp_install_frps_config'
+        fail_msg: "VHost HTTPS port not configured"
+        success_msg: "✓ VHost HTTPS port configured"
+
+    - name: Verify vhost HTTP timeout is enabled
+      ansible.builtin.assert:
+        that:
+          - '"vhostHTTPTimeout = 90" in frp_install_frps_config'
+        fail_msg: "VHost HTTP timeout not configured"
+        success_msg: "✓ VHost HTTP timeout configured"
+
+    # TCP Multiplexing
+    - name: Verify tcpmux HTTP CONNECT port is enabled
+      ansible.builtin.assert:
+        that:
+          - '"tcpmuxHTTPConnectPort = 1338" in frp_install_frps_config'
+        fail_msg: "TCPMux HTTP CONNECT port not configured"
+        success_msg: "✓ TCPMux HTTP CONNECT port configured"
+
+    - name: Verify tcpmux passthrough is enabled
+      ansible.builtin.assert:
+        that:
+          - '"tcpmuxPassthrough = true" in frp_install_frps_config'
+        fail_msg: "TCPMux passthrough not configured"
+        success_msg: "✓ TCPMux passthrough configured"
+
+    # Dashboard
+    - name: Verify dashboard assets directory is enabled
+      ansible.builtin.assert:
+        that:
+          - '"webServer.assetsDir" in frp_install_frps_config'
+          - '"/opt/frp/static" in frp_install_frps_config'
+        fail_msg: "Dashboard assets directory not configured"
+        success_msg: "✓ Dashboard assets directory configured"
+
+    # Authentication
+    - name: Verify auth additional scopes are enabled
+      ansible.builtin.assert:
+        that:
+          - '"auth.additionalScopes" in frp_install_frps_config'
+          - '"HeartBeats" in frp_install_frps_config'
+          - '"NewWorkConns" in frp_install_frps_config'
+        fail_msg: "Auth additional scopes not configured"
+        success_msg: "✓ Auth additional scopes configured"
+
+    # Connection Timeout
+    - name: Verify user connection timeout is enabled
+      ansible.builtin.assert:
+        that:
+          - '"userConnTimeout = 15" in frp_install_frps_config'
+        fail_msg: "User connection timeout not configured"
+        success_msg: "✓ User connection timeout configured"
+
+    # Port Configuration
+    - name: Verify max ports per client is enabled
+      ansible.builtin.assert:
+        that:
+          - '"maxPortsPerClient = 100" in frp_install_frps_config'
+        fail_msg: "Max ports per client not configured"
+        success_msg: "✓ Max ports per client configured"
+
+    # Subdomain and Custom Pages
+    - name: Verify subdomain host is enabled
+      ansible.builtin.assert:
+        that:
+          - '"subDomainHost" in frp_install_frps_config'
+          - '"test.frps.local" in frp_install_frps_config'
+        fail_msg: "Subdomain host not configured"
+        success_msg: "✓ Subdomain host configured"
+
+    - name: Verify custom 404 page is enabled
+      ansible.builtin.assert:
+        that:
+          - '"custom404Page" in frp_install_frps_config'
+          - '"/opt/frp/404.html" in frp_install_frps_config'
+        fail_msg: "Custom 404 page not configured"
+        success_msg: "✓ Custom 404 page configured"
+
+    # SSH Tunnel Gateway
+    - name: Verify SSH tunnel gateway is enabled
+      ansible.builtin.assert:
+        that:
+          - '"sshTunnelGateway.bindPort = 2222" in frp_install_frps_config'
+          - '"sshTunnelGateway.privateKeyFile" in frp_install_frps_config'
+          - '"sshTunnelGateway.authorizedKeysFile" in frp_install_frps_config'
+        fail_msg: "SSH tunnel gateway not configured"
+        success_msg: "✓ SSH tunnel gateway configured"
+
+    # ==========================================
+    # CLIENT CONFIGURATION VERIFICATION
+    # ==========================================
+
+    - name: Read client configuration file
+      ansible.builtin.slurp:
+        src: "{{ frp_install_config_dir }}/frpc.toml"
+      register: frp_install_frpc_config_raw
+
+    - name: Set client configuration content
+      ansible.builtin.set_fact:
+        frp_install_frpc_config: "{{ frp_install_frpc_config_raw.content | b64decode }}"
+
+    - name: Display client configuration for debugging
+      ansible.builtin.debug:
+        msg: "{{ frp_install_frpc_config }}"
+        verbosity: 2
+
+    # NAT Hole Punching
+    - name: Verify NAT hole STUN server is enabled
+      ansible.builtin.assert:
+        that:
+          - '"natHoleStunServer" in frp_install_frpc_config'
+          - '"stun.l.google.com:19302" in frp_install_frpc_config'
+        fail_msg: "NAT hole STUN server not configured"
+        success_msg: "✓ NAT hole STUN server configured"
+
+    # Authentication (client)
+    - name: Verify client auth additional scopes are enabled
+      ansible.builtin.assert:
+        that:
+          - '"auth.additionalScopes" in frp_install_frpc_config'
+          - '"HeartBeats" in frp_install_frpc_config'
+          - '"NewWorkConns" in frp_install_frpc_config'
+        fail_msg: "Client auth additional scopes not configured"
+        success_msg: "✓ Client auth additional scopes configured"
+
+    # Transport Dial Server
+    - name: Verify transport dial server timeout is enabled
+      ansible.builtin.assert:
+        that:
+          - '"transport.dialServerTimeout = 15" in frp_install_frpc_config'
+        fail_msg: "Transport dial server timeout not configured"
+        success_msg: "✓ Transport dial server timeout configured"
+
+    - name: Verify transport dial server keepalive is enabled
+      ansible.builtin.assert:
+        that:
+          - '"transport.dialServerKeepalive = 3600" in frp_install_frpc_config'
+        fail_msg: "Transport dial server keepalive not configured"
+        success_msg: "✓ Transport dial server keepalive configured"
+
+    # Transport QUIC (client)
+    - name: Verify client QUIC transport options are enabled
+      ansible.builtin.assert:
+        that:
+          - '"transport.quic.keepalivePeriod = 15" in frp_install_frpc_config'
+          - '"transport.quic.maxIdleTimeout = 45" in frp_install_frpc_config'
+          - '"transport.quic.maxIncomingStreams = 200000" in frp_install_frpc_config'
+        fail_msg: "Client QUIC transport options not configured"
+        success_msg: "✓ Client QUIC transport options configured"
+
+    # Transport TLS
+    - name: Verify transport TLS custom first byte is configured
+      ansible.builtin.assert:
+        that:
+          - '"transport.tls.disableCustomTLSFirstByte = true" in frp_install_frpc_config'
+        fail_msg: "Transport TLS custom first byte not configured"
+        success_msg: "✓ Transport TLS custom first byte configured"
+
+    # Transport Heartbeat (client)
+    - name: Verify client transport heartbeat is enabled
+      ansible.builtin.assert:
+        that:
+          - '"transport.heartbeatInterval = 20" in frp_install_frpc_config'
+        fail_msg: "Client transport heartbeat not configured"
+        success_msg: "✓ Client transport heartbeat configured"
+
+    # DNS Server
+    - name: Verify DNS server is configured
+      ansible.builtin.assert:
+        that:
+          - '"dnsServer" in frp_install_frpc_config'
+          - '"8.8.8.8" in frp_install_frpc_config'
+        fail_msg: "DNS server not configured"
+        success_msg: "✓ DNS server configured"
+
+    # Proxy Selection
+    - name: Verify start proxies list is configured
+      ansible.builtin.assert:
+        that:
+          - '"start = " in frp_install_frpc_config'
+        fail_msg: "Start proxies list not configured"
+        success_msg: "✓ Start proxies list configured"
+
+    # Feature Gates
+    - name: Verify feature gates are enabled
+      ansible.builtin.assert:
+        that:
+          - '"featureGates" in frp_install_frpc_config'
+          - '"VirtualNet" in frp_install_frpc_config'
+        fail_msg: "Feature gates not configured"
+        success_msg: "✓ Feature gates configured"
+
+    # Virtual Network
+    - name: Verify virtual network address is configured
+      ansible.builtin.assert:
+        that:
+          - '"virtualNet.address" in frp_install_frpc_config'
+          - '"100.86.10.1/24" in frp_install_frpc_config'
+        fail_msg: "Virtual network address not configured"
+        success_msg: "✓ Virtual network address configured"
+
+    # Configuration Includes
+    - name: Verify includes are configured
+      ansible.builtin.assert:
+        that:
+          - '"includes" in frp_install_frpc_config'
+        fail_msg: "Includes not configured"
+        success_msg: "✓ Includes configured"
+
+    # ==========================================
+    # SUMMARY
+    # ==========================================
+
+    - name: Display comprehensive validation summary
+      ansible.builtin.debug:
+        msg: |
+          ==========================================
+          🎉 VARIABLES VALIDATION SUCCESS
+          ==========================================
+
+          ALL CONFIGURATION VARIABLES VERIFIED:
+
+          ✅ SERVER (frps.toml):
+             • KCP Protocol ✓
+             • QUIC Protocol ✓
+             • QUIC Transport Options ✓
+             • Proxy Bind Address ✓
+             • Transport Heartbeat Timeout ✓
+             • TCP Keepalive ✓
+             • Virtual Host (HTTP/HTTPS) ✓
+             • Virtual Host Timeout ✓
+             • TCPMux HTTP CONNECT ✓
+             • TCPMux Passthrough ✓
+             • Dashboard Assets Dir ✓
+             • Auth Additional Scopes ✓
+             • User Connection Timeout ✓
+             • Max Ports Per Client ✓
+             • Subdomain Host ✓
+             • Custom 404 Page ✓
+             • SSH Tunnel Gateway ✓
+
+          ✅ CLIENT (frpc.toml):
+             • NAT Hole STUN Server ✓
+             • Auth Additional Scopes ✓
+             • Transport Dial Server Timeout ✓
+             • Transport Dial Server Keepalive ✓
+             • QUIC Transport Options ✓
+             • TLS Custom First Byte ✓
+             • Transport Heartbeat ✓
+             • DNS Server ✓
+             • Start Proxies List ✓
+             • Feature Gates ✓
+             • Virtual Network Address ✓
+             • Configuration Includes ✓
+
+          🏆 RESULT: All configuration variables are
+                     successfully rendered and accessible!

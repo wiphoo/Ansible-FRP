@@ -8,14 +8,14 @@
     - name: Check frp install directory
       ansible.builtin.stat:
         path: "{{ frp_install_dir }}"
-      register: frp_inst_dir
+      register: frp_install_inst_dir
       changed_when: false
 
     - name: Assert frp install directory exists
       ansible.builtin.assert:
         that:
-          - frp_inst_dir.stat.exists
-          - frp_inst_dir.stat.isdir
+          - frp_install_inst_dir.stat.exists
+          - frp_install_inst_dir.stat.isdir
         fail_msg: "FRP install dir {{ frp_install_dir }} is missing or not a directory"
 
     - name: Check that frp binaries exist
@@ -24,7 +24,7 @@
       loop:
         - frpc
         - frps
-      register: frp_binaries
+      register: frp_install_binaries
 
     - name: Verify frp binaries are executable
       ansible.builtin.assert:
@@ -32,19 +32,19 @@
           - item.stat.exists
           - item.stat.executable
         fail_msg: "FRP binary {{ item.item }} is not executable or does not exist"
-      loop: "{{ frp_binaries.results }}"
+      loop: "{{ frp_install_binaries.results }}"
 
     - name: Check frp configuration directory
       ansible.builtin.stat:
         path: "{{ frp_install_config_dir }}"
-      register: frp_cfg_dir
+      register: frp_install_cfg_dir
       changed_when: false
 
     - name: Assert frp configuration directory exists
       ansible.builtin.assert:
         that:
-          - frp_cfg_dir.stat.exists
-          - frp_cfg_dir.stat.isdir
+          - frp_install_cfg_dir.stat.exists
+          - frp_install_cfg_dir.stat.isdir
         fail_msg: "FRP config dir {{ frp_install_config_dir }} is missing or not a directory"
 
     - name: Check that frp user exists

@@ -9,7 +9,7 @@ namespace: wiphoo
 name: frp
 
 # The version of the collection. Must be compatible with semantic versioning
-version: 0.1.0
+version: 0.2.0
 
 # The path to the Markdown (.md) readme file. This path is relative to the root of the collection
 readme: README.md
@@ -38,9 +38,14 @@ tags: [frp, proxy, reverseproxy, networking, installation, security, hardening, 
 # L(specifiers,https://python-semanticversion.readthedocs.io/en/latest/#requirement-specification). Multiple version
 # range specifiers can be set and are separated by ','
 dependencies:
+  # Required for UFW firewall configuration (community.general.ufw module)
+  # Optional feature - role will gracefully handle if not available
   community.general: ">=11.0.0,<12.0.0"
-  ansible.posix: ">=2.0.0,<3.0.0"
-  community.docker: ">=4.0.0,<5.0.0"
+
+# Note: Additional dependencies for Molecule testing (not required for role usage):
+# - ansible.posix: ">=2.0.0,<3.0.0" (for Molecule test scenarios)
+# - community.docker: ">=4.0.0,<5.0.0" (for Docker-based Molecule testing)
+# These are specified in roles/frp_install/molecule/requirements.yml
 
 # The URL of the originating SCM repository
 repository: https://github.com/wiphoo/Ansible-FRP
@@ -59,27 +64,116 @@ issues: https://github.com/wiphoo/Ansible-FRP/issues
 # uses 'fnmatch' to match the files or directories. Some directories and files like 'galaxy.yml', '*.pyc', '*.retry',
 # and '.git' are always filtered. Mutually exclusive with 'manifest'
 build_ignore:
-  - .venv/
+  # Virtual environments
   - .venv
-  - .ansible/
+  - .venv/
+  - venv
+  - venv/
+  - env
+  - env/
+
+  # Ansible local cache and collections (at any level)
   - .ansible
+  - .ansible/
+  - "*/.ansible"
+  - "*/.ansible/"
+  - collections
   - collections/
-  - collections/*
-  - collections/**/*
+  - "*/collections"
+  - "*/collections/"
+
+  # Python cache and build artifacts
+  - .mypy_cache
   - .mypy_cache/
-  - .mypy_cache/**/*
+  - .pytest_cache
   - .pytest_cache/
+  - .ruff_cache
+  - .ruff_cache/
+  - __pycache__
   - __pycache__/
   - "*.pyc"
+  - "*.pyo"
+  - "*.pyd"
   - .coverage
+  - .coverage.*
+  - coverage.xml
+  - htmlcov
   - htmlcov/
+  - .tox
   - .tox/
-  - .cache/
-  - "*.retry"
+  - .nox
+  - .nox/
+  - "*.egg-info"
+  - "*.egg-info/"
+
+  # Development and testing files
+  - tests
+  - tests/
+  - test-results
   - test-results/
+  - test-output
   - test-output/
+  - scripts
+  - scripts/
+
+  # Documentation build files (keep docs/ for Galaxy display, exclude build configs)
+  - mkdocs.yml
+  - site/
+  - site/**/*
+
+  # Configuration files for development
+  - pyproject.toml
+  - uv.lock
+  - codecov.yml
+  - .python-version
+  - .pre-commit-config.yaml
+  - .ansible-lint
+  - .yamllint
+  - .gitignore
+  - .nojekyll
+
+  # IDE and editor files
+  - .vscode
+  - .vscode/
+  - .idea
+  - .idea/
+  - "*.swp"
+  - "*.swo"
+  - "*~"
+
+  # Operating system files
   - .DS_Store
   - Thumbs.db
+  - ehthumbs.db
+  - "._*"
+
+  # Temporary and backup files
+  - "*.retry"
+  - "*.tmp"
+  - "*.bak"
+  - "*.backup"
+  - .cache/
+  - .tmp/
+
+  # Logs
+  - "*.log"
+  - logs/
+
+  # Molecule test infrastructure (dev-only, not needed for collection users)
+  - "roles/*/molecule/"
+  - "roles/*/.molecule/"
+
+  # Release and review artifacts (not part of the published collection)
+  - "RELEASE_REVIEW*.md"
+  - "COVERAGE_SUMMARY.md"
+  - "PR_REVIEW.md"
+  - "SONAR_REVIEW.md"
+
+  # Build artifacts
+  - "*.tar.gz"
+  - wiphoo-frp-*.tar.gz
+  - build/
+  - dist/
 
 # A dict controlling use of manifest directives used in building the collection artifact. The key 'directives' is a
 # list of MANIFEST.in style

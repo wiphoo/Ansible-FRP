@@ -261,3 +261,6 @@ wiphoo-frp-*.tar.gz
 .idea/
 *.swp
 *.swo
+
+# Pre-commit cache
+.pre-commit-cache/

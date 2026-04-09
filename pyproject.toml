@@ -1,12 +1,13 @@
 [project]
 name = "wiphoo-ansible-frp"
-version = "0.1.0"
+version = "0.2.0"
 description = "Ansible collection for Fast Reverse Proxy (frp) installation and management"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     # Core Ansible runtime dependency
-    "ansible-core>=2.15.0",
+    # Updated to 2.17.0+ for better Python 3.11/3.12 support and security fixes
+    "ansible-core>=2.17.0",
 ]
 
 [project.optional-dependencies]

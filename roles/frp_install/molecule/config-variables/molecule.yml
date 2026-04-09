@@ -28,7 +28,7 @@ provisioner:
     group_vars:
       all:
         # Test with all configuration variables set to non-default values
-        frp_install_version: "0.63.0"
+        frp_install_version: "0.65.0"
         frp_install_create_service: false  # No systemd in container
 
         # Authentication
