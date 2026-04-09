@@ -7,7 +7,7 @@
   tasks:
     - name: Check frp binaries version
       ansible.builtin.command: "{{ frp_install_dir }}/{{ item }} --version"
-      register: frp_version_check
+      register: frp_install_version_check
       changed_when: false
       ignore_errors: true
       loop: "{{ frp_install_files }}"
@@ -17,19 +17,19 @@
         that: frp_install_version in item.stdout
         fail_msg: "frp version does not match expected version {{ frp_install_version }} for {{ item.item }}"
       when: item.rc == 0
-      loop: "{{ frp_version_check.results }}"
+      loop: "{{ frp_install_version_check.results }}"
 
     - name: Check file permissions
       ansible.builtin.stat:
         path: "{{ frp_install_dir }}/{{ item }}"
       loop: "{{ frp_install_files }}"
-      register: file_permissions
+      register: frp_install_file_permissions
 
     - name: Verify files exist
       ansible.builtin.assert:
         that: item.stat.exists | default(false)
         fail_msg: "File {{ item.item }} is missing"
-      loop: "{{ file_permissions.results }}"
+      loop: "{{ frp_install_file_permissions.results }}"
 
     - name: Verify file ownership
       ansible.builtin.assert:
@@ -37,7 +37,7 @@
           - item.stat.pw_name == frp_install_user
           - item.stat.gr_name == frp_install_group
         fail_msg: "File {{ item.item }} has incorrect ownership"
-      loop: "{{ file_permissions.results }}"
+      loop: "{{ frp_install_file_permissions.results }}"
       when: item.stat.exists | default(false)
 
     - name: Gather package facts
