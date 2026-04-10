@@ -10,41 +10,47 @@ on:
         type: boolean
         default: false
   pull_request:
-    branches: [main, master]
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+    branches:
+      - main
+      - master
 
 concurrency:
-  group: release-${{ github.event.pull_request.head.ref || github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   quality:
     name: Quality Check
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-    - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-      with:
-        python-version: '3.12'
-    - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
-    - run: uv sync --extra dev --extra test
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
+        with:
+          python-version: '3.12'
+      - uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
+      - run: uv sync --extra dev --extra test
 
-    - name: Install collections
-      uses: ./.github/actions/install-collections
+      - name: Install collections
+        uses: ./.github/actions/install-collections
 
-    - name: Run pre-commit hooks
-      env:
-        ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
-        ANSIBLE_ROLES_PATH: ${{ github.workspace }}/roles
-      run: uv run pre-commit run --all-files --show-diff-on-failure
+      - name: Run pre-commit hooks
+        env:
+          ANSIBLE_COLLECTIONS_PATH: "${{ github.workspace }}/collections"
+          ANSIBLE_ROLES_PATH: "${{ github.workspace }}/roles"
+        run: uv run pre-commit run --all-files --show-diff-on-failure
 
-    - name: Lint Ansible code
-      env:
-        ANSIBLE_COLLECTIONS_PATH: ${{ github.workspace }}/collections
-      run: uv run ansible-lint roles/
+      - name: Lint Ansible code
+        env:
+          ANSIBLE_COLLECTIONS_PATH: "${{ github.workspace }}/collections"
+        run: uv run ansible-lint roles/
 
   release:
     name: Build & Publish
@@ -91,7 +97,7 @@ jobs:
         path: wiphoo-frp-*.tar.gz
 
     - name: Publish to Galaxy
-      if: github.event_name != 'pull_request' && (github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run))
+      if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && !inputs.dry_run)
       run: |
         FILE=$(ls -1 wiphoo-frp-*.tar.gz | head -1)
         echo "Publishing $FILE to Ansible Galaxy..."
